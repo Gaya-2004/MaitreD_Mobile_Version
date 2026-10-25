@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "Data Udipi app Testing",
-    "slug": "data-udipi-app",
+    "name": "MaitreD",
+    "slug": "maitred-app",
+    "owner": "gayatriks-team",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "restaurantnative",
+    "scheme": "maitred",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon.png",
@@ -16,10 +17,10 @@
         "UIBackgroundModes": [
           "voip"
         ],
-        "NSMicrophoneUsageDescription": "Allow Data Udipi App to access your microphone for the voice assistant.",
-        "NSCameraUsageDescription": "Allow Data Udipi App to access your camera to scan table QR codes."
+        "NSMicrophoneUsageDescription": "Allow MaitreD to access your microphone for the voice assistant.",
+        "NSCameraUsageDescription": "Allow MaitreD to access your camera to scan table QR codes."
       },
-      "bundleIdentifier": "com.dataudipi.app"
+      "bundleIdentifier": "com.maitred.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -59,20 +60,20 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Data Udipi to access your camera to scan table QR codes."
+          "cameraPermission": "Allow MaitreD to access your camera to scan table QR codes."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Data Udipi to access your photos for profile pictures.",
-          "cameraPermission": "Allow Data Udipi to access your camera to take profile pictures."
+          "photosPermission": "Allow MaitreD to access your photos for profile pictures.",
+          "cameraPermission": "Allow MaitreD to access your camera to take profile pictures."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Data Udipi to use your location to find nearby addresses."
+          "locationAlwaysAndWhenInUsePermission": "Allow MaitreD to use your location to find nearby addresses."
         }
       ],
       [
