@@ -1,0 +1,105 @@
+{
+  "expo": {
+    "name": "Data Udipi app Testing",
+    "slug": "data-udipi-app",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "restaurantnative",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "config": {
+        "googleMapsApiKey": "AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg"
+      },
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "voip"
+        ],
+        "NSMicrophoneUsageDescription": "Allow Data Udipi App to access your microphone for the voice assistant.",
+        "NSCameraUsageDescription": "Allow Data Udipi App to access your camera to scan table QR codes."
+      },
+      "bundleIdentifier": "com.dataudipi.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg"
+        }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "package": "com.dataudipi.app",
+      "versionCode": 3
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/icon.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Data Udipi to access your camera to scan table QR codes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Data Udipi to access your photos for profile pictures.",
+          "cameraPermission": "Allow Data Udipi to access your camera to take profile pictures."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Data Udipi to use your location to find nearby addresses."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      "@config-plugins/react-native-webrtc",
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "root": "src/app"
+      },
+      "eas": {
+        "projectId": "927f995e-93f1-4348-83d6-2b4a4753993c"
+      }
+    }
+  }
+}

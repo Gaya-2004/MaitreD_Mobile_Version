@@ -1,0 +1,13 @@
+# EAS Build ignore file
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+lint-output*.txt
+.git/
+.vscode/
+.claude/
+qr_codes_output/
+android/
+ios/

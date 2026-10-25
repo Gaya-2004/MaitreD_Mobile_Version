@@ -1,0 +1,587 @@
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, Animated, Easing, ScrollView, TextInput, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width, height } = Dimensions.get('window');
+
+type UIState = 'greeting' | 'suggestions' | 'chat';
+
+interface Message {
+  id: string;
+  sender: 'user' | 'agent';
+  text?: string;
+  isCarousel?: boolean;
+}
+
+interface Props {
+  visible: boolean;
+  onClose: () => void;
+}
+
+const AudioWaveform = () => {
+  const bars = Array.from({ length: 24 }).map((_, i) => useRef(new Animated.Value(0.2)).current);
+
+  useEffect(() => {
+    const animations = bars.map((anim, index) => {
+      const delay = index * 50;
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: Math.random() * 0.8 + 0.2,
+            duration: 400 + Math.random() * 200,
+            delay,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0.2,
+            duration: 400 + Math.random() * 200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+    });
+
+    Animated.stagger(50, animations).start();
+
+    return () => {
+      animations.forEach(a => a.stop());
+    };
+  }, []);
+
+  return (
+    <View style={styles.waveformContainer}>
+      {bars.map((anim, index) => {
+        const heightMultiplier = 1 - Math.abs(index - 12) / 12; // Taller in the middle
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.waveBar,
+              {
+                transform: [{ scaleY: Animated.multiply(anim, heightMultiplier * 3) }],
+                opacity: 0.6,
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
+
+export default function VoiceAgentModal({ visible, onClose }: Props) {
+  const insets = useSafeAreaInsets();
+  const [uiState, setUiState] = useState<UIState>('greeting');
+  const [inputText, setInputText] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Reset state when opened
+  useEffect(() => {
+    if (visible) {
+      setUiState('greeting');
+      setMessages([]);
+      setInputText('');
+    }
+  }, [visible]);
+
+  const handleSend = (text: string) => {
+    if (!text.trim()) return;
+    
+    // Add user message
+    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text };
+    setMessages(prev => [...prev, userMsg]);
+    setInputText('');
+    
+    if (uiState !== 'chat') {
+      setUiState('chat');
+    }
+
+    // Simulate Agent Response
+    setTimeout(() => {
+      let agentMsg: Message;
+      if (text.toLowerCase().includes('dosa') || text.toLowerCase().includes('special')) {
+        agentMsg = {
+          id: (Date.now() + 1).toString(),
+          sender: 'agent',
+          text: 'Dosa Varieties menu :',
+          isCarousel: true,
+        };
+      } else {
+        agentMsg = {
+          id: (Date.now() + 1).toString(),
+          sender: 'agent',
+          text: 'Got it! I am just a placeholder for now, but soon I will process this order.',
+        };
+      }
+      setMessages(prev => [...prev, agentMsg]);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, 1000);
+  };
+
+  const handleSuggestion = (prompt: string) => {
+    handleSend(prompt);
+  };
+
+  const startListening = () => {
+    if (uiState === 'greeting') {
+      setUiState('suggestions');
+    } else {
+      // Toggle listening logic later
+    }
+  };
+
+  const renderGreeting = () => (
+    <View style={styles.stateContainer}>
+      <Text style={styles.greetingTitle}>Hi! I'm your Voice Agent.</Text>
+      <Text style={styles.greetingSubtitle}>How can I help you today?</Text>
+    </View>
+  );
+
+  const renderSuggestions = () => (
+    <View style={styles.suggestionsContainer}>
+      {['Show me popular items', 'Add 2 Masala Dosa to my cart', "What are today's specials?", 'Talk to waiter'].map((prompt, idx) => (
+        <TouchableOpacity key={idx} style={styles.suggestionPill} onPress={() => handleSuggestion(prompt)}>
+          <View style={styles.suggestionIconWrapper}>
+            <Ionicons name="person-circle" size={16} color="#ff3400" />
+          </View>
+          <Text style={styles.suggestionText}>{prompt}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderChat = () => (
+    <ScrollView 
+      ref={scrollViewRef}
+      style={styles.chatScroll} 
+      contentContainerStyle={styles.chatScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.agentGreetingRow}>
+        <Image source={require('../../assets/images/chef_mascot.png')} style={styles.chatAvatar} resizeMode="contain" />
+        <View style={styles.agentBubble}>
+          <Text style={styles.agentBubbleText}>Hello, what you gonna eat today?</Text>
+        </View>
+      </View>
+
+      {messages.map((msg) => (
+        <View key={msg.id} style={msg.sender === 'user' ? styles.userRow : styles.agentRow}>
+          {msg.sender === 'agent' && (
+            <Image source={require('../../assets/images/chef_mascot.png')} style={styles.chatAvatar} resizeMode="contain" />
+          )}
+          
+          <View style={msg.sender === 'user' ? styles.userBubbleWrapper : styles.agentBubbleWrapper}>
+            {msg.sender === 'user' ? (
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+                <View style={styles.userBubble}>
+                  <Text style={styles.userBubbleText}>{msg.text}</Text>
+                </View>
+                <View style={styles.userAvatar}>
+                  <Ionicons name="person" size={16} color="#fff" />
+                </View>
+              </View>
+            ) : (
+              <View style={styles.agentBubbleContent}>
+                {msg.text && <Text style={styles.agentBubbleText}>{msg.text}</Text>}
+                
+                {msg.isCarousel && (
+                  <View style={styles.carouselWrapper}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                      {[
+                        { title: 'Breakfast', img: require('../../assets/images/frontpage_bg.png') },
+                        { title: 'Lunch', img: require('../../assets/images/frontpage_bg.png') },
+                        { title: 'Dinner', img: require('../../assets/images/frontpage_bg.png') },
+                      ].map((item, i) => (
+                        <TouchableOpacity key={i} style={styles.carouselCard}>
+                          <Image source={item.img} style={styles.carouselImg} />
+                          <Text style={styles.carouselTitle}>{item.title}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                    <TouchableOpacity style={styles.seeListBtn}>
+                      <Ionicons name="arrow-back" size={12} color="#ff3400" />
+                      <Text style={styles.seeListText}>See menu list in the left column</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      ))}
+    </ScrollView>
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.overlay}
+      >
+        <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
+        
+        <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+          <View style={styles.dragHandle} />
+          
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Talk To Your Agent</Text>
+            {uiState === 'chat' && (
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                <Ionicons name="close" size={20} color="#666" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Top Section with Mascot & Waveform */}
+          <View style={[styles.mascotSection, uiState === 'chat' && styles.mascotSectionCompact]}>
+            <View style={styles.mascotWrapper}>
+              <AudioWaveform />
+              <Image source={require('../../assets/images/chef_mascot.png')} style={styles.mascotImg} resizeMode="contain" />
+              {uiState !== 'greeting' && (
+                <View style={styles.micBadge}>
+                  <Ionicons name="person" size={20} color="#fff" />
+                </View>
+              )}
+            </View>
+            {uiState !== 'greeting' && (
+              <View style={styles.badgeUnderMascot}>
+                <Text style={styles.badgeUnderMascotText}>Deliciously Vegetarian</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Dynamic Content Body */}
+          <View style={[styles.body, uiState === 'chat' && { flex: 1, justifyContent: 'flex-start' }]}>
+            {uiState === 'greeting' && renderGreeting()}
+            {uiState === 'suggestions' && renderSuggestions()}
+            {uiState === 'chat' && renderChat()}
+          </View>
+
+          {/* Persistent Input Footer */}
+          <View style={styles.footer}>
+            <View style={styles.inputWrapper}>
+              <TextInput 
+                style={styles.input}
+                placeholder="Tap To Speak Or Just Hey...."
+                placeholderTextColor="#999"
+                value={inputText}
+                onChangeText={setInputText}
+                onSubmitEditing={() => handleSend(inputText)}
+              />
+              <TouchableOpacity style={styles.micBtn} onPress={startListening}>
+                <Ionicons name="mic" size={20} color="#ff3400" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  container: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    height: '92%',
+    paddingHorizontal: 20,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  mascotSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+    position: 'relative',
+    height: 180,
+    justifyContent: 'center',
+  },
+  mascotSectionCompact: {
+    height: 140,
+    marginBottom: 10,
+  },
+  mascotWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mascotImg: {
+    width: 140,
+    height: 140,
+    zIndex: 10,
+  },
+  waveformContainer: {
+    position: 'absolute',
+    width: '120%',
+    height: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    zIndex: 1,
+  },
+  waveBar: {
+    width: 3,
+    height: 20,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2,
+  },
+  micBadge: {
+    position: 'absolute',
+    bottom: -10,
+    backgroundColor: '#ff3400',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  badgeUnderMascot: {
+    backgroundColor: '#00a01d',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  badgeUnderMascotText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  body: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  greetingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  greetingSubtitle: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  suggestionsContainer: {
+    width: '100%',
+    gap: 12,
+    paddingTop: 20,
+  },
+  suggestionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    alignSelf: 'flex-start',
+  },
+  suggestionIconWrapper: {
+    marginRight: 10,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  chatScroll: {
+    width: '100%',
+    flex: 1,
+  },
+  chatScrollContent: {
+    paddingVertical: 10,
+    gap: 16,
+  },
+  agentGreetingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  chatAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f5',
+  },
+  agentBubble: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    maxWidth: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  agentBubbleContent: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  agentBubbleText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  userRow: {
+    alignItems: 'flex-end',
+    width: '100%',
+  },
+  agentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    width: '100%',
+  },
+  userBubbleWrapper: {
+    maxWidth: '85%',
+  },
+  agentBubbleWrapper: {
+    maxWidth: '85%',
+  },
+  userBubble: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+    padding: 12,
+    borderRadius: 12,
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  userBubbleText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  userAvatar: {
+    backgroundColor: '#ff3400',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carouselWrapper: {
+    marginTop: 12,
+  },
+  carouselCard: {
+    width: 90,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  carouselImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginBottom: 8,
+  },
+  carouselTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333',
+  },
+  seeListBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 4,
+  },
+  seeListText: {
+    color: '#ff3400',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  footer: {
+    paddingTop: 16,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ff6b4a',
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    height: 50,
+    backgroundColor: '#fafafa',
+  },
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+  },
+  micBtn: {
+    padding: 8,
+  },
+});
