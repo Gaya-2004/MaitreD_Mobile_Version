@@ -226,7 +226,7 @@ export default function Profile() {
             useFavoritesStore.getState().clearFavorites();
             usePaymentMethodStore.getState().clearPaymentMethods();
             usePaymentStore.getState().clearPayment();
-            router.replace('/login');
+            router.replace('/home');
           },
         },
       ]

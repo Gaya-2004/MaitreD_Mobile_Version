@@ -24,6 +24,10 @@ export default function SignupScreen() {
   const [errorInfo, setErrorInfo] = useState<ErrorState | null>(null);
 
   useEffect(() => {
+    router.replace('/home');
+  }, [router]);
+
+  useEffect(() => {
     const nameSub = DeviceEventEmitter.addListener('set_signup_name', (val) => setName(val));
     const phoneSub = DeviceEventEmitter.addListener('set_signup_phone', (val) => setPhone(val));
 

@@ -2,27 +2,16 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Image, StyleSheet, Dimensions, StatusBar, TouchableOpacity, Animated, Easing, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useAuthStore, useRestaurantStore } from '../store';
 
 const { width, height } = Dimensions.get('window');
 const isSmallDevice = height < 750;
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
-  const { selectedOutlet } = useRestaurantStore();
 
   const navigateToHome = useCallback(() => {
-    if (isAuthenticated) {
-      if (selectedOutlet) {
-        router.replace('/home');
-      } else {
-        router.replace('/outlet-selector');
-      }
-    } else {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, selectedOutlet, router]);
+    router.replace('/home');
+  }, [router]);
 
   useEffect(() => {
     const timer = setTimeout(navigateToHome, 3500);

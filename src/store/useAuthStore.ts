@@ -26,6 +26,14 @@ const webSafeStorage = {
   },
 };
 
+const DEFAULT_GUEST_USER = {
+  customerId: 1,
+  customerName: 'Guest User',
+  phone: '9876543210',
+  token: 'guest_token',
+  isAuthenticated: true,
+};
+
 interface AuthState {
   customerId: number | null;
   customerName: string | null;
@@ -42,11 +50,11 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      customerId: null,
-      customerName: null,
-      phone: null,
-      token: null,
-      isAuthenticated: false,
+      customerId: DEFAULT_GUEST_USER.customerId,
+      customerName: DEFAULT_GUEST_USER.customerName,
+      phone: DEFAULT_GUEST_USER.phone,
+      token: DEFAULT_GUEST_USER.token,
+      isAuthenticated: true,
       _hasHydrated: false,
 
       login: (data) => set({ 
@@ -57,18 +65,23 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: true 
       }),
       logout: () => set({ 
-        customerId: null, 
-        customerName: null, 
-        phone: null, 
-        token: null, 
-        isAuthenticated: false 
+        ...DEFAULT_GUEST_USER,
       }),
       setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
-      name: 'auth-storage-v3',
+      name: 'auth-storage-v4',
       storage: createJSONStorage(() => webSafeStorage),
       onRehydrateStorage: () => (state) => {
+        if (!state?.isAuthenticated || !state?.phone) {
+          useAuthStore.setState({
+            customerId: DEFAULT_GUEST_USER.customerId,
+            customerName: DEFAULT_GUEST_USER.customerName,
+            phone: DEFAULT_GUEST_USER.phone,
+            token: DEFAULT_GUEST_USER.token,
+            isAuthenticated: true,
+          });
+        }
         state?.setHasHydrated(true);
       },
     }

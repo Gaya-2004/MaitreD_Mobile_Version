@@ -41,6 +41,17 @@ export interface MenuItem {
   category: string;
 }
 
+export const DEFAULT_OUTLET = {
+  id: "1",
+  restaurant_id: 1,
+  name: "Data Udipi — Mugalivakkam",
+  address: "Mount-Poonamallee Road, Mugalivakkam, Chennai 600125",
+  lat: 13.0210,
+  lng: 80.1614,
+  open: true,
+  comingSoon: false,
+};
+
 interface RestaurantState {
   selectedOutlet: any | null;
   categories: Category[];
@@ -54,18 +65,24 @@ interface RestaurantState {
 export const useRestaurantStore = create<RestaurantState>()(
   persist(
     (set) => ({
-      selectedOutlet: null,
+      selectedOutlet: DEFAULT_OUTLET,
       categories: [{ id: "all", label: "All Menu" }],
       menuItems: [],
 
-      setSelectedOutlet: (selectedOutlet) => set({ selectedOutlet }),
+      setSelectedOutlet: (selectedOutlet) => set({ selectedOutlet: selectedOutlet || DEFAULT_OUTLET }),
       setCategories: (categories) => set({ categories }),
       setMenuItems: (menuItems) => set({ menuItems }),
     }),
     {
-      name: 'restaurant-storage',
+      name: 'restaurant-storage-v2',
       storage: createJSONStorage(() => webSafeStorage),
-      partialize: (state) => ({ selectedOutlet: state.selectedOutlet }), // Only persist outlet
+      partialize: (state) => ({ selectedOutlet: state.selectedOutlet || DEFAULT_OUTLET }),
+      onRehydrateStorage: () => (state) => {
+        if (!state?.selectedOutlet) {
+          useRestaurantStore.setState({ selectedOutlet: DEFAULT_OUTLET });
+        }
+      },
     }
   )
 );
+

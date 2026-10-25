@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
@@ -9,6 +9,10 @@ import { customerApi } from '../../services/apiService';
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuthStore();
+  
+  useEffect(() => {
+    router.replace('/home');
+  }, [router]);
   
   interface ErrorState {
     title: string;
