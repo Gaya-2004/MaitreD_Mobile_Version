@@ -422,7 +422,7 @@ export default function CateringEventDetails() {
               <TouchableOpacity style={[styles.alertBtn, {flex: 1, backgroundColor: '#f0f0f0'}]} onPress={() => setShowTimePicker(false)}>
                 <Text style={[styles.alertBtnText, {color: '#333'}]}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.alertBtn, {flex: 1, backgroundColor: '#ff4500'}]} onPress={() => {
+              <TouchableOpacity style={[styles.alertBtn, {flex: 1, backgroundColor: '#DF9B34'}]} onPress={() => {
                 let h = selectedHour || '12';
                 let m = selectedMinute.padStart(2, '0');
                 if (m === '0' || m === '00' || !selectedMinute) m = '00';
@@ -442,17 +442,17 @@ export default function CateringEventDetails() {
     <Modal visible={alertConfig.visible} transparent animationType="fade">
       <View style={styles.alertOverlay}>
         <View style={styles.alertBox}>
-          <View style={[styles.alertIconBg, { backgroundColor: alertConfig.title === 'Success' ? '#e6ffe6' : '#ffe5e0' }]}>
+          <View style={[styles.alertIconBg, { backgroundColor: alertConfig.title === 'Success' ? '#e6ffe6' : '#FFF5E5' }]}>
             <Ionicons 
               name={alertConfig.title === 'Success' ? 'checkmark-circle' : 'warning'} 
               size={40} 
-              color={alertConfig.title === 'Success' ? '#4CAF50' : '#ff4500'} 
+              color={alertConfig.title === 'Success' ? '#4CAF50' : '#DF9B34'} 
             />
           </View>
           <Text style={styles.alertTitle}>{alertConfig.title}</Text>
           <Text style={styles.alertMessage}>{alertConfig.message}</Text>
           <TouchableOpacity 
-            style={[styles.alertBtn, { backgroundColor: alertConfig.title === 'Success' ? '#4CAF50' : '#ff4500' }]} 
+            style={[styles.alertBtn, { backgroundColor: alertConfig.title === 'Success' ? '#4CAF50' : '#DF9B34' }]} 
             onPress={() => setAlertConfig({ ...alertConfig, visible: false })}
           >
             <Text style={styles.alertBtnText}>Okay</Text>
@@ -609,9 +609,9 @@ export default function CateringEventDetails() {
               activeOpacity={0.7}
             >
               {isDetectingLocation ? (
-                <ActivityIndicator size="small" color="#ff4500" style={{ marginRight: 4 }} />
+                <ActivityIndicator size="small" color="#DF9B34" style={{ marginRight: 4 }} />
               ) : (
-                <Ionicons name="navigate-circle-outline" size={15} color="#ff4500" style={{ marginRight: 4 }} />
+                <Ionicons name="navigate-circle-outline" size={15} color="#DF9B34" style={{ marginRight: 4 }} />
               )}
               <Text style={styles.detectLocationText}>
                 {isDetectingLocation ? 'Locating...' : 'Use Current Location'}
@@ -641,7 +641,7 @@ export default function CateringEventDetails() {
                       <Ionicons
                         name={addr.type?.toLowerCase() === 'work' ? 'briefcase-outline' : 'home-outline'}
                         size={12}
-                        color={isSelected ? '#fff' : '#ff4500'}
+                        color={isSelected ? '#fff' : '#DF9B34'}
                         style={{ marginRight: 4 }}
                       />
                       <Text
@@ -661,7 +661,7 @@ export default function CateringEventDetails() {
             styles.addressInputWrapper,
             showPredictions && addressPredictions.length > 0 && styles.addressInputWrapperActive
           ]}>
-            <Ionicons name="location-sharp" size={18} color="#ff4500" style={styles.addressPinIcon} />
+            <Ionicons name="location-sharp" size={18} color="#DF9B34" style={styles.addressPinIcon} />
             <TextInput 
               style={styles.addressTextInput} 
               value={address}
@@ -674,7 +674,7 @@ export default function CateringEventDetails() {
             />
             <View style={styles.addressActionIcons}>
               {isSearchingAddress && (
-                <ActivityIndicator size="small" color="#ff4500" style={{ marginRight: 6 }} />
+                <ActivityIndicator size="small" color="#DF9B34" style={{ marginRight: 6 }} />
               )}
               {address.trim().length > 0 && (
                 <TouchableOpacity 
@@ -714,7 +714,7 @@ export default function CateringEventDetails() {
                       activeOpacity={0.7}
                     >
                       <View style={styles.markerCircle}>
-                        <Ionicons name="location-sharp" size={13} color="#ff4500" />
+                        <Ionicons name="location-sharp" size={13} color="#DF9B34" />
                       </View>
                       <View style={styles.predictionTextContainer}>
                         <Text style={styles.predictionMainText} numberOfLines={1}>{mainText}</Text>
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 10,
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: 'bold',
     letterSpacing: 1,
     marginBottom: 2,
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressActive: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   asterisk: {
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   input: {
     borderWidth: 1,
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   },
   guestCounter: {
     borderWidth: 1,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
   guestInput: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#ff4500',
+    color: '#DF9B34',
     padding: 0,
     margin: 0,
   },
@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   segmentBtnActive: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   segmentText: {
     fontSize: 14,
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   },
   detectLocationText: {
     fontSize: 11,
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: '700',
   },
   savedAddressesContainer: {
@@ -918,8 +918,8 @@ const styles = StyleSheet.create({
     maxWidth: 220,
   },
   savedChipActive: {
-    backgroundColor: '#ff4500',
-    borderColor: '#ff4500',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   savedChipText: {
     fontSize: 11,
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
   addressInputWrapperActive: {
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
   },
   addressPinIcon: {
     marginRight: 8,
@@ -966,7 +966,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderTopWidth: 0,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
     elevation: 4,
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
   predictionsHeaderTitle: {
     fontSize: 9,
     fontWeight: 'bold',
-    color: '#ff4500',
+    color: '#DF9B34',
     letterSpacing: 0.5,
   },
   poweredByGoogle: {
@@ -1178,8 +1178,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   ampmBtnActive: {
-    backgroundColor: '#ff4500',
-    borderColor: '#ff4500',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   ampmText: {
     fontSize: 12,

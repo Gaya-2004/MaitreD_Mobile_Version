@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
@@ -39,8 +39,8 @@ export default function Profile() {
           latitude: item.latitude != null ? Number(item.latitude) : undefined,
           longitude: item.longitude != null ? Number(item.longitude) : undefined,
           icon: item.address_type.toLowerCase() === 'home' ? 'home' : (item.address_type.toLowerCase() === 'work' ? 'briefcase' : 'location'),
-          iconBg: item.address_type.toLowerCase() === 'home' ? '#ffe5e5' : (item.address_type.toLowerCase() === 'work' ? '#e6f2ff' : '#e6ffe6'),
-          iconColor: item.address_type.toLowerCase() === 'home' ? '#ff4500' : (item.address_type.toLowerCase() === 'work' ? '#1e90ff' : '#00cc66'),
+          iconBg: item.address_type.toLowerCase() === 'home' ? '#FFF5E5' : (item.address_type.toLowerCase() === 'work' ? '#e6f2ff' : '#e6ffe6'),
+          iconColor: item.address_type.toLowerCase() === 'home' ? '#DF9B34' : (item.address_type.toLowerCase() === 'work' ? '#1e90ff' : '#00cc66'),
           isDefault: item.is_default
         }));
         setAddresses(formattedAddresses);
@@ -74,6 +74,13 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle='dark-content' backgroundColor='#fff' />
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
 
       {/* Header */}
       <View style={styles.header}>
@@ -86,11 +93,11 @@ export default function Profile() {
       <ScrollView 
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff4500']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />}
       >
         {loading ? (
           <View style={{ alignItems: 'center', marginTop: 40 }}>
-            <ActivityIndicator size="large" color="#ff4500" />
+            <ActivityIndicator size="large" color="#DF9B34" />
             <Text style={{ color: '#888', marginTop: 10 }}>Loading addresses...</Text>
           </View>
         ) : addresses.length === 0 ? (
@@ -123,8 +130,8 @@ export default function Profile() {
                   <Text style={styles.actionText}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => handleDeleteAddress(item.id)}>
-                  <Ionicons name="trash-outline" size={16} color="#ff4500" />
-                  <Text style={[styles.actionText, { color: '#ff4500' }]}>Delete</Text>
+                  <Ionicons name="trash-outline" size={16} color="#DF9B34" />
+                  <Text style={[styles.actionText, { color: '#DF9B34' }]}>Delete</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -240,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   addNewBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -331,7 +331,7 @@ export default function OrderDetailsScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#FF4500" />
+        <ActivityIndicator size="large" color="#DF9B34" />
       </SafeAreaView>
     );
   }
@@ -341,7 +341,7 @@ export default function OrderDetailsScreen() {
       <SafeAreaView style={[styles.container, styles.center]}>
         <Text style={{ fontSize: 16, color: '#666', marginBottom: 16 }}>Order details not found</Text>
         <TouchableOpacity style={styles.backButtonSimple} onPress={handleBack}>
-          <Text style={{ color: '#FF4500', fontWeight: 'bold' }}>Go Back</Text>
+          <Text style={{ color: '#DF9B34', fontWeight: 'bold' }}>Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#FF4500',
+    borderColor: '#DF9B34',
   },
   topHeader: {
     flexDirection: 'row',
@@ -626,12 +626,12 @@ const styles = StyleSheet.create({
   grandTotalLabel: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FF4500',
+    color: '#DF9B34',
   },
   grandTotalValue: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FF4500',
+    color: '#DF9B34',
   },
   metaSection: {
     marginBottom: 18,
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#FF4500',
+    backgroundColor: '#DF9B34',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -51,7 +51,7 @@ const itemStyles = StyleSheet.create({
   priceVal: { fontSize: 12, fontWeight: 'bold', color: '#000' },
   stepper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 4, borderWidth: 1, borderColor: '#f4f4f4', padding: 2 },
   stepBtnMinus: { backgroundColor: '#f2f2f2', padding: 2, borderRadius: 2 },
-  stepBtnPlus: { backgroundColor: '#ff3400', padding: 2, borderRadius: 2 },
+  stepBtnPlus: { backgroundColor: '#DF9B34', padding: 2, borderRadius: 2 },
   stepBtnDisabled: { opacity: 0.5 },
   stepVal: { fontSize: 12, color: '#000', width: 24, textAlign: 'center' },
 });
@@ -555,7 +555,7 @@ export default function App() {
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image 
-          source={require('../../../assets/images/Dataudupi.png')} 
+          source={require('../../../assets/images/maitred_logo.png')} 
           style={styles.logoImageFull} 
           resizeMode="contain"
         />
@@ -637,6 +637,13 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
       {renderHeader()}
 
       <View style={styles.searchSection}>
@@ -721,12 +728,12 @@ export default function App() {
           windowSize={5}
           removeClippedSubviews={Platform.OS !== 'web'}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff4500']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />}
         />
       ) : (
         <View style={styles.emptyContainer}>
           {isLoading ? (
-            <ActivityIndicator size="large" color="#ff4500" />
+            <ActivityIndicator size="large" color="#DF9B34" />
           ) : (
             <>
               <Ionicons name="fast-food-outline" size={48} color="#ccc" />
@@ -932,7 +939,7 @@ export default function App() {
                           </Text>
                         </View>
                         <Text style={styles.itemModalTitle}>{selectedItem.name}</Text>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#ff4500', marginBottom: 8 }}>Rs. {selectedItem.price}</Text>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#DF9B34', marginBottom: 8 }}>Rs. {selectedItem.price}</Text>
                         {selectedItem.desc ? <Text style={styles.itemModalDesc}>{selectedItem.desc}</Text> : null}
                       </ScrollView>
 
@@ -1095,7 +1102,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   tableCircle: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     borderRadius: 16,
     width: 32,
     height: 32,
@@ -1106,7 +1113,7 @@ const styles = StyleSheet.create({
   },
   tableCircleText: { color: '#fff', fontSize: 16, fontWeight: 'bold', fontFamily: 'serif' },
   logoContainer: { flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'center' },
-  logoImageFull: { width: 140, height: 36, resizeMode: 'contain' },
+  logoImageFull: { width: 160, height: 42, resizeMode: 'contain' },
   globeIcon: {
     width: 32, height: 32,
     borderRadius: 16,
@@ -1166,7 +1173,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dfdfdf',
   },
-  catTabActive: { backgroundColor: '#ff5a1f', borderColor: '#ff5a1f' },
+  catTabActive: { backgroundColor: '#DF9B34', borderColor: '#DF9B34' },
   catText: { fontSize: 12, color: '#555', fontWeight: '500' },
   catTextActive: { color: '#fff', fontWeight: 'bold' },
   gridContainer: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 8 },
@@ -1203,7 +1210,7 @@ const styles = StyleSheet.create({
   priceVal: { fontSize: 12, fontWeight: 'bold', color: '#000' },
   stepper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 4, borderWidth: 1, borderColor: '#f4f4f4', padding: 2 },
   stepBtnMinus: { backgroundColor: '#f2f2f2', padding: 2, borderRadius: 2 },
-  stepBtnPlus: { backgroundColor: '#ff3400', padding: 2, borderRadius: 2 },
+  stepBtnPlus: { backgroundColor: '#DF9B34', padding: 2, borderRadius: 2 },
   stepBtnDisabled: { opacity: 0.5 },
   stepVal: { fontSize: 12, color: '#000', width: 24, textAlign: 'center' },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 64 },
@@ -1327,7 +1334,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   orderTypeActive: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
   },
   orderTypeActiveText: {
     color: '#fff',
@@ -1398,7 +1405,7 @@ const styles = StyleSheet.create({
   cartItemPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   cartItemRight: {
     alignItems: 'flex-end',
@@ -1411,7 +1418,7 @@ const styles = StyleSheet.create({
   cartItemTotalValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   cartItemTax: {
     fontSize: 8,
@@ -1508,7 +1515,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   itemModalAddBtn: {
-    backgroundColor: '#ff3400', // Application's primary orange tone
+    backgroundColor: '#DF9B34', // Application's primary orange tone
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1543,7 +1550,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   modalStepBtnPlus: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     padding: 8,
     borderRadius: 6,
   },

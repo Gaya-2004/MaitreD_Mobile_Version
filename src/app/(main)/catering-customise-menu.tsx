@@ -281,7 +281,7 @@ export default function CustomiseMenu() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#ff4500" style={{ marginTop: 50 }} />
+        <ActivityIndicator size="large" color="#DF9B34" style={{ marginTop: 50 }} />
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
           {categories.map(cat => (
@@ -299,7 +299,7 @@ export default function CustomiseMenu() {
                         <View>
                           <Text style={styles.itemNameCrossed}>{item.name}</Text>
                           <View style={styles.swapArrowRow}>
-                            <Ionicons name="arrow-forward" size={12} color="#ff4500" style={{ marginRight: 4 }} />
+                            <Ionicons name="arrow-forward" size={12} color="#DF9B34" style={{ marginRight: 4 }} />
                             <Text style={styles.swappedNewName}>{customization.new_item_name}</Text>
                             {customization.price_adjustment_per_person !== 0 && (
                               <Text style={styles.swapPriceTag}>
@@ -324,8 +324,8 @@ export default function CustomiseMenu() {
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       {!customization && item.is_swappable && (
-                        <TouchableOpacity style={[styles.actionBtn, { borderColor: '#ff4500', marginRight: 8 }]} onPress={() => openSwapModal(item)}>
-                          <Text style={[styles.actionBtnText, { color: '#ff4500' }]}>SWAP</Text>
+                        <TouchableOpacity style={[styles.actionBtn, { borderColor: '#DF9B34', marginRight: 8 }]} onPress={() => openSwapModal(item)}>
+                          <Text style={[styles.actionBtnText, { color: '#DF9B34' }]}>SWAP</Text>
                         </TouchableOpacity>
                       )}
                       {!customization && item.is_removable && (
@@ -349,7 +349,7 @@ export default function CustomiseMenu() {
           {/* Added items section */}
           {addedItems.length > 0 && (
              <View style={styles.categoryBlock}>
-                <Text style={[styles.categoryTitle, { color: '#ff4500' }]}>EXTRA ADDED ITEMS</Text>
+                <Text style={[styles.categoryTitle, { color: '#DF9B34' }]}>EXTRA ADDED ITEMS</Text>
                 {addedItems.map(addItem => (
                   <View key={addItem.id} style={styles.itemRow}>
                     <View style={styles.vegBox}>
@@ -373,7 +373,7 @@ export default function CustomiseMenu() {
           )}
 
           <TouchableOpacity style={styles.addBtnContainer} onPress={openAddModal}>
-            <Ionicons name="add-circle-outline" size={20} color="#ff4500" style={{ marginRight: 6 }} />
+            <Ionicons name="add-circle-outline" size={20} color="#DF9B34" style={{ marginRight: 6 }} />
             <Text style={styles.addBtnText}>ADD ITEM</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -416,7 +416,7 @@ export default function CustomiseMenu() {
             <Text style={styles.modalSubtitle}>Choose an alternative item</Text>
 
             {loadingSwapOptions ? (
-              <ActivityIndicator size="large" color="#ff4500" style={{ marginVertical: 30 }} />
+              <ActivityIndicator size="large" color="#DF9B34" style={{ marginVertical: 30 }} />
             ) : swapOptions.length === 0 ? (
               <Text style={styles.noOptionsText}>No swap options available for this item.</Text>
             ) : (
@@ -428,11 +428,11 @@ export default function CustomiseMenu() {
                     </View>
                     <Text style={styles.swapOptionName}>{opt.name}</Text>
                     {opt.price_change_per_person !== 0 && (
-                      <Text style={[styles.priceChange, { color: opt.price_change_per_person > 0 ? '#ff4500' : '#4CAF50' }]}>
+                      <Text style={[styles.priceChange, { color: opt.price_change_per_person > 0 ? '#DF9B34' : '#4CAF50' }]}>
                         {opt.price_change_per_person > 0 ? '+' : ''}Rs. {opt.price_change_per_person}/person
                       </Text>
                     )}
-                    {savingSwap ? <ActivityIndicator size="small" color="#ff4500" style={{ marginLeft: 8 }} /> : null}
+                    {savingSwap ? <ActivityIndicator size="small" color="#DF9B34" style={{ marginLeft: 8 }} /> : null}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -454,7 +454,7 @@ export default function CustomiseMenu() {
             <Text style={styles.modalSubtitle}>Choose an item to add to your package</Text>
 
             {loadingSwapOptions ? (
-              <ActivityIndicator size="large" color="#ff4500" style={{ marginVertical: 30 }} />
+              <ActivityIndicator size="large" color="#DF9B34" style={{ marginVertical: 30 }} />
             ) : addOptions.length === 0 ? (
               <Text style={styles.noOptionsText}>No items available to add.</Text>
             ) : (
@@ -466,11 +466,11 @@ export default function CustomiseMenu() {
                     </View>
                     <Text style={styles.swapOptionName}>{opt.name}</Text>
                     {opt.price_change_per_person !== 0 && (
-                      <Text style={[styles.priceChange, { color: '#ff4500' }]}>
+                      <Text style={[styles.priceChange, { color: '#DF9B34' }]}>
                         +Rs. {opt.price_change_per_person}/person
                       </Text>
                     )}
-                    {savingSwap ? <ActivityIndicator size="small" color="#ff4500" style={{ marginLeft: 8 }} /> : null}
+                    {savingSwap ? <ActivityIndicator size="small" color="#DF9B34" style={{ marginLeft: 8 }} /> : null}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -487,15 +487,15 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#fff' },
   backBtn: { marginRight: 15 },
   headerText: { flex: 1 },
-  stepText: { fontSize: 10, fontWeight: '700', color: '#ff4500', letterSpacing: 1 },
+  stepText: { fontSize: 10, fontWeight: '700', color: '#DF9B34', letterSpacing: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginTop: 2 },
   progressBar: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   progressSeg: { flex: 1, height: 4, backgroundColor: '#f0f0f0', borderRadius: 2, marginHorizontal: 2 },
-  progressActive: { backgroundColor: '#ff4500' },
+  progressActive: { backgroundColor: '#DF9B34' },
   pkgSummary: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#fff', marginBottom: 4 },
   pkgName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
   pkgMeta: { fontSize: 12, color: '#888', marginTop: 2 },
-  pkgTotal: { fontSize: 18, fontWeight: 'bold', color: '#ff4500' },
+  pkgTotal: { fontSize: 18, fontWeight: 'bold', color: '#DF9B34' },
   swapHint: { backgroundColor: '#fff7f4', paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#ffe0d0' },
   swapHintText: { fontSize: 12, color: '#cc4400', lineHeight: 18 },
   categoryBlock: { marginTop: 16, paddingHorizontal: 20 },
@@ -507,16 +507,16 @@ const styles = StyleSheet.create({
   itemName: { fontSize: 14, color: '#333', fontWeight: '500' },
   itemNameCrossed: { fontSize: 13, color: '#bbb', textDecorationLine: 'line-through', fontWeight: '400' },
   swapArrowRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  swappedNewName: { fontSize: 14, fontWeight: '700', color: '#ff4500' },
+  swappedNewName: { fontSize: 14, fontWeight: '700', color: '#DF9B34' },
   swapPriceTag: { fontSize: 11, color: '#ff6633', marginLeft: 6, fontWeight: '600', backgroundColor: '#ffe8e0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   actionBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6, borderWidth: 1 },
   actionBtnText: { fontSize: 11, fontWeight: 'bold' },
   revertBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 1, borderColor: '#ccc', backgroundColor: '#f9f9f9' },
   revertBtnText: { fontSize: 12, fontWeight: '600', color: '#666', marginLeft: 3 },
-  addBtnContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, padding: 14, borderWidth: 1, borderColor: '#ff4500', borderRadius: 12, borderStyle: 'dashed' },
-  addBtnText: { fontSize: 14, fontWeight: 'bold', color: '#ff4500' },
+  addBtnContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, padding: 14, borderWidth: 1, borderColor: '#DF9B34', borderRadius: 12, borderStyle: 'dashed' },
+  addBtnText: { fontSize: 14, fontWeight: 'bold', color: '#DF9B34' },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', padding: 20, borderTopWidth: 1, borderTopColor: '#eee', elevation: 8 },
-  proceedBtn: { backgroundColor: '#ff4500', paddingVertical: 15, borderRadius: 12, alignItems: 'center' },
+  proceedBtn: { backgroundColor: '#DF9B34', paddingVertical: 15, borderRadius: 12, alignItems: 'center' },
   proceedBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalBox: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },

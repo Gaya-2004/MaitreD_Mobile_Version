@@ -267,7 +267,7 @@ export default function PaymentScreen() {
               ...(prefillUpi ? { upi: prefillUpi } : {}),
               ...(prefillWallet ? { wallet: prefillWallet } : {})
             },
-            theme: { color: '#ff3400' },
+            theme: { color: '#DF9B34' },
             handler: function (response: any) {
               // Direct success callback for Web
               router.replace({
@@ -575,7 +575,7 @@ export default function PaymentScreen() {
               }
             </Text>
             <View style={styles.delFeeRow}>
-              <Ionicons name="bicycle" size={14} color="#ff3400" />
+              <Ionicons name="bicycle" size={14} color="#DF9B34" />
               <Text style={styles.delFeeText}>
                 Delivery Fee: ₹{deliveryFee.toFixed(0)}
               </Text>
@@ -598,7 +598,7 @@ export default function PaymentScreen() {
           <View style={styles.delMethodsList}>
             <TouchableOpacity style={[styles.delMethodItem, selectedMethod === 'UPI' && styles.delMethodItemActive]} onPress={() => setSelectedMethod('UPI')} activeOpacity={0.8}>
               <View style={styles.delMethodIcon}>
-                <Ionicons name="phone-portrait-outline" size={24} color="#ff3400" />
+                <Ionicons name="phone-portrait-outline" size={24} color="#DF9B34" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.delMethodName}>UPI / Online Payment</Text>
@@ -644,7 +644,7 @@ export default function PaymentScreen() {
 
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../../assets/images/Dataudupi.png')}
+            source={require('../../../assets/images/maitred_logo.png')}
             style={styles.logoImageFull}
             resizeMode="contain"
           />
@@ -715,7 +715,7 @@ export default function PaymentScreen() {
               {/* Info Box rendered if UPI is selected */}
               {selectedMethod === 'UPI' && (
                 <View style={styles.paymentInfoBox}>
-                  <Ionicons name="information-circle-outline" size={20} color="#ff3400" />
+                  <Ionicons name="information-circle-outline" size={20} color="#DF9B34" />
                   <Text style={styles.paymentInfoText}>
                     You will be redirected securely to Razorpay checkout where you can choose GPay, PhonePe, Paytm, Cards, or Netbanking.
                   </Text>
@@ -807,7 +807,7 @@ export default function PaymentScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.backHomeBtn, { flex: 1, backgroundColor: '#ff3400', marginLeft: 8 }]}
+                style={[styles.backHomeBtn, { flex: 1, backgroundColor: '#DF9B34', marginLeft: 8 }]}
                 onPress={handleCancelOrder}
               >
                 <Ionicons name="close" size={18} color="#fff" style={{ marginRight: 6 }} />
@@ -843,8 +843,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoImageFull: {
-    width: 130,
-    height: 32,
+    width: 155,
+    height: 40,
   },
   tableBadge: {
     flexDirection: 'row',
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   tableCircle: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
   methodSelected: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ff3400',
+    borderColor: '#DF9B34',
   },
   methodIconWrap: {
     width: 40,
@@ -943,7 +943,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   iconBgOrange: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
   },
   methodTextContainer: {
     flex: 1,
@@ -971,8 +971,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   radioSelected: {
-    borderColor: '#ff3400',
-    backgroundColor: '#ff3400',
+    borderColor: '#DF9B34',
+    backgroundColor: '#DF9B34',
   },
   bottomSection: {
     paddingHorizontal: 16,
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   },
   summaryAmount: {
     fontSize: 12,
-    color: '#ff3400',
+    color: '#DF9B34',
     fontWeight: 'bold',
   },
   summarySuffix: {
@@ -1041,7 +1041,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff5f2',
-    borderColor: '#ffd5cc',
+    borderColor: '#FDE68A',
     borderWidth: 1,
     borderRadius: 12,
     padding: 12,
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
   delInfoPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   delInfoAddress: {
     fontSize: 12,
@@ -1219,7 +1219,7 @@ const styles = StyleSheet.create({
     borderColor: '#f0f0f0',
   },
   delMethodItemActive: {
-    borderColor: '#ff3400',
+    borderColor: '#DF9B34',
   },
   delMethodIcon: {
     marginRight: 12,
@@ -1315,7 +1315,7 @@ const styles = StyleSheet.create({
   },
   tryAgainBtn: {
     flex: 1,
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

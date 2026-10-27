@@ -140,7 +140,7 @@ export default function CateringOrderSuccess() {
         <View style={styles.content}>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#ff4500" style={{ marginVertical: 30 }} />
+            <ActivityIndicator size="large" color="#DF9B34" style={{ marginVertical: 30 }} />
           ) : (
             <>
               {/* Payment Record */}
@@ -392,8 +392,8 @@ const styles = StyleSheet.create({
     borderColor: '#27ae60',
   },
   timelineDotPending: {
-    backgroundColor: '#ff4500',
-    borderColor: '#ff4500',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   timelineDotFuture: {
     backgroundColor: '#f0f0f0',
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   timelineLabelPending: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: '700',
   },
   timelineLabelFuture: {
@@ -447,17 +447,17 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   supportEmail: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: '600',
   },
   viewOrderBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
     marginBottom: 14,
     elevation: 2,
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

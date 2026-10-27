@@ -81,7 +81,7 @@ export default function DeliveryUnavailableModal({
           {/* Icon Badge */}
           <View style={styles.iconContainer}>
             <View style={styles.iconCircle}>
-              <Ionicons name="bicycle-outline" size={32} color="#ff3400" />
+              <Ionicons name="bicycle-outline" size={32} color="#DF9B34" />
             </View>
             <View style={styles.warningBadge}>
               <Ionicons name="alert" size={14} color="#ffffff" />
@@ -293,12 +293,12 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: '100%',
     flexDirection: 'row',
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ff3400',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

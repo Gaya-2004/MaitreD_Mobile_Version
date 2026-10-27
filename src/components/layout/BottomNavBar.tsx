@@ -36,7 +36,7 @@ export default function BottomNavBar({ activeTab, onSearchPress }: BottomNavBarP
         <Ionicons
           name={activeTab === 'home' ? 'home' : 'home-outline'}
           size={24}
-          color={activeTab === 'home' ? '#ff4500' : '#888'}
+          color={activeTab === 'home' ? '#DF9B34' : '#888'}
         />
         <Text style={[styles.navText, activeTab === 'home' && styles.navTextActive]}>
           Home
@@ -51,7 +51,7 @@ export default function BottomNavBar({ activeTab, onSearchPress }: BottomNavBarP
         <Ionicons
           name={activeTab === 'search' ? 'search' : 'search-outline'}
           size={24}
-          color={activeTab === 'search' ? '#ff4500' : '#888'}
+          color={activeTab === 'search' ? '#DF9B34' : '#888'}
         />
         <Text style={[styles.navText, activeTab === 'search' && styles.navTextActive]}>
           Search
@@ -66,7 +66,7 @@ export default function BottomNavBar({ activeTab, onSearchPress }: BottomNavBarP
         <Ionicons
           name={activeTab === 'orders' ? 'receipt' : 'receipt-outline'}
           size={24}
-          color={activeTab === 'orders' ? '#ff4500' : '#888'}
+          color={activeTab === 'orders' ? '#DF9B34' : '#888'}
         />
         <Text style={[styles.navText, activeTab === 'orders' && styles.navTextActive]}>
           Orders
@@ -81,7 +81,7 @@ export default function BottomNavBar({ activeTab, onSearchPress }: BottomNavBarP
         <Ionicons
           name={activeTab === 'profile' ? 'person' : 'person-outline'}
           size={24}
-          color={activeTab === 'profile' ? '#ff4500' : '#888'}
+          color={activeTab === 'profile' ? '#DF9B34' : '#888'}
         />
         <Text style={[styles.navText, activeTab === 'profile' && styles.navTextActive]}>
           Profile
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   navTextActive: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: '700',
   },
 });

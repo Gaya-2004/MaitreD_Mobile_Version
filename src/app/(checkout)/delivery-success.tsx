@@ -312,7 +312,7 @@ export default function DeliverySuccessScreen() {
 
         {/* Restaurant Pill */}
         <View style={styles.restaurantPill}>
-          <Ionicons name="fast-food-outline" size={14} color="#ff3400" />
+          <Ionicons name="fast-food-outline" size={14} color="#DF9B34" />
           <Text style={styles.restaurantPillText}>{selectedOutlet?.name || 'Data Udipi'} has accepted your order</Text>
         </View>
 
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   activeLine: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
   },
   inactiveLine: {
     backgroundColor: '#e0e0e0',
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   activeDot: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
   },
   inactiveDot: {
     backgroundColor: '#e0e0e0',
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   progressLabelActive: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   progressLabelInactive: {
     fontSize: 11,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   detailAmount: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   restaurantPill: {
     flexDirection: 'row',

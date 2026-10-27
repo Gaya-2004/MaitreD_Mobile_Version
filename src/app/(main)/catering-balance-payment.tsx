@@ -166,11 +166,11 @@ export default function BalancePayment() {
       <Modal visible={alertVisible} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '80%', alignItems: 'center' }}>
-            <Ionicons name="warning-outline" size={48} color="#ff4500" style={{ marginBottom: 12 }} />
+            <Ionicons name="warning-outline" size={48} color="#DF9B34" style={{ marginBottom: 12 }} />
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 8, textAlign: 'center' }}>{alertConfig.title}</Text>
             <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>{alertConfig.message}</Text>
             <TouchableOpacity 
-              style={{ backgroundColor: '#ff4500', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8, width: '100%', alignItems: 'center' }}
+              style={{ backgroundColor: '#DF9B34', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8, width: '100%', alignItems: 'center' }}
               onPress={() => setAlertVisible(false)}
             >
               <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>OK</Text>
@@ -308,11 +308,11 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#fff' },
   backBtn: { marginRight: 15 },
   headerText: { flex: 1 },
-  stepText: { fontSize: 10, fontWeight: '700', color: '#ff4500', letterSpacing: 1 },
+  stepText: { fontSize: 10, fontWeight: '700', color: '#DF9B34', letterSpacing: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginTop: 2 },
   progressBar: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   progressSeg: { flex: 1, height: 4, backgroundColor: '#f0f0f0', borderRadius: 2, marginHorizontal: 2 },
-  progressActive: { backgroundColor: '#ff4500' },
+  progressActive: { backgroundColor: '#DF9B34' },
   amountCard: {
     backgroundColor: '#fff', margin: 16, borderRadius: 16, padding: 24,
     alignItems: 'center', elevation: 2,
@@ -330,13 +330,13 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: '#eee',
     elevation: 1,
   },
-  payOptionSelected: { borderColor: '#ff4500', borderWidth: 1.5 },
+  payOptionSelected: { borderColor: '#DF9B34', borderWidth: 1.5 },
   radioOuter: {
     width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#ccc',
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
-  radioOuterSelected: { borderColor: '#ff4500' },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#ff4500' },
+  radioOuterSelected: { borderColor: '#DF9B34' },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#DF9B34' },
   payOptionTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
   payOptionSub: { fontSize: 12, color: '#888', marginTop: 2 },
   upiIconRow: { flexDirection: 'row', gap: 4 },
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#eee'
   },
   avatarCircle: {
-    width: 42, height: 42, borderRadius: 21, backgroundColor: '#ff4500',
+    width: 42, height: 42, borderRadius: 21, backgroundColor: '#DF9B34',
     alignItems: 'center', justifyContent: 'center', marginRight: 14
   },
   avatarText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
@@ -360,14 +360,14 @@ const styles = StyleSheet.create({
     width: 20, height: 20, borderRadius: 4, borderWidth: 1.5, borderColor: '#ccc',
     marginRight: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 2
   },
-  checkboxChecked: { backgroundColor: '#ff4500', borderColor: '#ff4500' },
+  checkboxChecked: { backgroundColor: '#DF9B34', borderColor: '#DF9B34' },
   termsText: { fontSize: 13, color: '#555', flex: 1, lineHeight: 19 },
-  termsLink: { color: '#ff4500', fontWeight: '600' },
+  termsLink: { color: '#DF9B34', fontWeight: '600' },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff',
     padding: 20, borderTopWidth: 1, borderTopColor: '#eee', elevation: 8
   },
-  payBtn: { backgroundColor: '#ff4500', paddingVertical: 17, borderRadius: 14, alignItems: 'center' },
+  payBtn: { backgroundColor: '#DF9B34', paddingVertical: 17, borderRadius: 14, alignItems: 'center' },
   payBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 },
 });
 

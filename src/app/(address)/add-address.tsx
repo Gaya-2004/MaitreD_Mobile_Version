@@ -291,7 +291,7 @@ export default function AddAddress() {
       state: 'Tamil Nadu',
       pincode: '600001',
       icon: addressType === 'Home' ? 'home' : addressType === 'Work' ? 'briefcase' : 'location',
-      iconBg: addressType === 'Home' ? '#ff4500' : addressType === 'Work' ? '#e6f2ff' : '#e6ffe6',
+      iconBg: addressType === 'Home' ? '#DF9B34' : addressType === 'Work' ? '#e6f2ff' : '#e6ffe6',
       iconColor: addressType === 'Home' ? '#fff' : addressType === 'Work' ? '#1e90ff' : '#00cc66',
       isDefault: addresses.length === 0
     };
@@ -339,6 +339,13 @@ export default function AddAddress() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle='dark-content' backgroundColor='#fff' />
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
       
       {/* Header */}
       <View style={styles.header}>
@@ -352,7 +359,7 @@ export default function AddAddress() {
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false} 
         keyboardShouldPersistTaps='handled'
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff4500']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />}
       >
         
         {/* Search Bar */}
@@ -441,8 +448,8 @@ export default function AddAddress() {
           )}
           {isLocating && (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.85)', justifyContent: 'center', alignItems: 'center' }]}>
-              <ActivityIndicator size="large" color="#ff4500" />
-              <Text style={{ marginTop: 10, fontWeight: 'bold', color: '#ff4500', fontSize: 13 }}>Detecting your location...</Text>
+              <ActivityIndicator size="large" color="#DF9B34" />
+              <Text style={{ marginTop: 10, fontWeight: 'bold', color: '#DF9B34', fontSize: 13 }}>Detecting your location...</Text>
             </View>
           )}
           
@@ -452,7 +459,7 @@ export default function AddAddress() {
               style={{ position: 'absolute', bottom: 16, right: 16, backgroundColor: '#fff', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 }} 
               onPress={() => detectLocation(true)}
             >
-              <Ionicons name="locate" size={24} color="#ff4500" />
+              <Ionicons name="locate" size={24} color="#DF9B34" />
             </TouchableOpacity>
           )}
         </View>
@@ -753,8 +760,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   typeBtnActive: {
-    borderColor: '#ff4500',
-    backgroundColor: '#fff5f0',
+    borderColor: '#DF9B34',
+    backgroundColor: '#FFF5E5',
   },
   typeText: {
     fontSize: 14,
@@ -762,7 +769,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   typeTextActive: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: 'bold',
   },
   row: {
@@ -851,7 +858,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   saveBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     marginHorizontal: 20,
     marginTop: 10,
     marginBottom: 20,

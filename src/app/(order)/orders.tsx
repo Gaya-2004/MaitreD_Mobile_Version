@@ -614,7 +614,7 @@ export default function Orders() {
           </View>
           <View style={[styles.infoBadge, isCancelled ? { backgroundColor: '#fee2e2' } : isPaid ? { backgroundColor: '#e8f5e9' } : (isPartiallyPaid ? {backgroundColor: '#e3f2fd'} : { backgroundColor: '#fff3e0' })]}>
             <Text style={styles.infoBadgeLabel}>Payment</Text>
-            <Text style={[styles.infoBadgeValue, { color: isCancelled ? '#dc2626' : isPaid ? '#16a34a' : (isPartiallyPaid ? '#0284c7' : '#ff4500'), fontWeight: 'bold' }]}>
+            <Text style={[styles.infoBadgeValue, { color: isCancelled ? '#dc2626' : isPaid ? '#16a34a' : (isPartiallyPaid ? '#0284c7' : '#DF9B34'), fontWeight: 'bold' }]}>
               {isCancelled ? 'Cancelled' : isPaid ? 'Paid' : (isPartiallyPaid ? 'Partially Paid' : (order.order_type === 'Delivery' ? 'Cash on Delivery' : (isCounter ? 'Pay at Counter' : 'Pay Later')))}
             </Text>
           </View>
@@ -626,9 +626,9 @@ export default function Orders() {
           ) : (
             <View style={[styles.orderImage, { backgroundColor: '#fff0eb', alignItems: 'center', justifyContent: 'center' }]}>
               {isCatering ? (
-                <Ionicons name="people-outline" size={26} color="#ff4500" />
+                <Ionicons name="people-outline" size={26} color="#DF9B34" />
               ) : (
-                <Ionicons name="restaurant-outline" size={26} color="#ff4500" />
+                <Ionicons name="restaurant-outline" size={26} color="#DF9B34" />
               )}
             </View>
           )}
@@ -660,7 +660,7 @@ export default function Orders() {
             </TouchableOpacity>
           ) : isUnpaidDineIn ? (
             <TouchableOpacity 
-              style={[styles.reorderBtn, { backgroundColor: '#ff4500', borderColor: '#ff4500', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
+              style={[styles.reorderBtn, { backgroundColor: '#DF9B34', borderColor: '#DF9B34', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
               onPress={() => handleOrderPress(order)}
               activeOpacity={0.8}
             >
@@ -668,7 +668,7 @@ export default function Orders() {
             </TouchableOpacity>
           ) : (order.order_type === 'Delivery' || order.order_type === 'Takeaway' || order.order_type === 'Take Away') && !['COMPLETED', 'SERVED', 'DELIVERED', 'CANCELLED'].includes((order.status || '').toUpperCase()) ? (
             <TouchableOpacity 
-              style={[styles.reorderBtn, { backgroundColor: '#ff4500', borderColor: '#ff4500', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
+              style={[styles.reorderBtn, { backgroundColor: '#DF9B34', borderColor: '#DF9B34', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
               onPress={() => handleOrderPress(order)}
               activeOpacity={0.8}
             >
@@ -676,7 +676,7 @@ export default function Orders() {
             </TouchableOpacity>
           ) : isUnpaidNonCatering ? (
             <TouchableOpacity 
-              style={[styles.reorderBtn, { backgroundColor: '#ff4500', borderColor: '#ff4500', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
+              style={[styles.reorderBtn, { backgroundColor: '#DF9B34', borderColor: '#DF9B34', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
               onPress={() => handleOrderPress(order)}
               activeOpacity={0.8}
             >
@@ -684,7 +684,7 @@ export default function Orders() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity 
-              style={[styles.reorderBtn, { backgroundColor: '#fff', borderColor: '#ff4500', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
+              style={[styles.reorderBtn, { backgroundColor: '#fff', borderColor: '#DF9B34', minWidth: 100, alignItems: 'center', justifyContent: 'center' }]} 
               onPress={() => {
                 if (isCatering) {
                   router.push({ pathname: '/catering-order-details', params: { orderId: order.dbId } });
@@ -694,7 +694,7 @@ export default function Orders() {
               }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.reorderText, { color: '#ff4500', fontWeight: 'bold' }]}>View Details</Text>
+              <Text style={[styles.reorderText, { color: '#DF9B34', fontWeight: 'bold' }]}>View Details</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -711,8 +711,8 @@ export default function Orders() {
                   <Text style={{ fontSize: 10, color: '#777' }}>{formatDate(p.created_at)}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', color: p.payment_status === 'SUCCESS' ? '#16a34a' : '#ff4500' }}>Rs. {p.amount}</Text>
-                  <Text style={{ fontSize: 10, color: p.payment_status === 'SUCCESS' ? '#16a34a' : '#ff4500', marginTop: 2 }}>{p.payment_status}</Text>
+                  <Text style={{ fontSize: 13, fontWeight: 'bold', color: p.payment_status === 'SUCCESS' ? '#16a34a' : '#DF9B34' }}>Rs. {p.amount}</Text>
+                  <Text style={{ fontSize: 10, color: p.payment_status === 'SUCCESS' ? '#16a34a' : '#DF9B34', marginTop: 2 }}>{p.payment_status}</Text>
                 </View>
               </View>
             ))}
@@ -725,6 +725,13 @@ export default function Orders() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle='dark-content' backgroundColor='#fff' />
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
       
       {/* Header */}
       <View style={styles.header}>
@@ -761,7 +768,7 @@ export default function Orders() {
 
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100 }}>
-          <ActivityIndicator size="large" color="#ff4500" />
+          <ActivityIndicator size="large" color="#DF9B34" />
           <Text style={{ marginTop: 10, color: '#666' }}>Loading your orders...</Text>
         </View>
       ) : (
@@ -775,7 +782,7 @@ export default function Orders() {
           removeClippedSubviews={Platform.OS !== 'web'}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff4500']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />}
           ListEmptyComponent={
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 80 }}>
               <Ionicons name="receipt-outline" size={54} color="#ccc" />
@@ -833,8 +840,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   filterBtnActive: {
-    backgroundColor: '#ff4500',
-    borderColor: '#ff4500',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   filterText: {
     fontSize: 14,
@@ -896,7 +903,7 @@ const styles = StyleSheet.create({
     color: '#00cc66',
   },
   statusTextCancelled: {
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   orderDetails: {
     flexDirection: 'row',
@@ -926,10 +933,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
   },
   reorderText: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontSize: 14,
     fontWeight: 'bold',
   },

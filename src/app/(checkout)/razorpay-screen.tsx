@@ -72,7 +72,7 @@ export default function RazorpayScreen() {
         }
         .loading .spinner {
           border: 4px solid #f3f3f3;
-          border-top: 4px solid #ff3400;
+          border-top: 4px solid #DF9B34;
           border-radius: 50%;
           width: 40px;
           height: 40px;
@@ -182,7 +182,7 @@ export default function RazorpayScreen() {
                   container.style.cssText = 'margin: 10px 0 14px 0; padding: 10px 12px; background: #fff8f6; border: 1.5px solid #ffccba; border-radius: 10px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;';
 
                   var header = doc.createElement('div');
-                  header.style.cssText = 'font-size: 11px; font-weight: 700; color: #ff3400; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; text-transform: uppercase; letter-spacing: 0.5px;';
+                  header.style.cssText = 'font-size: 11px; font-weight: 700; color: #DF9B34; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; text-transform: uppercase; letter-spacing: 0.5px;';
                   header.innerHTML = '<span>💳 Choose Saved Card</span><span style="font-size: 10px; color: #00a01d; font-weight: 600;">Tap to fill</span>';
                   container.appendChild(header);
 
@@ -252,7 +252,7 @@ export default function RazorpayScreen() {
             ${activeCard ? `saved_card_title: '${activeCard.title}',` : ''}
           },
           theme: {
-            color: '#ff3400'
+            color: '#DF9B34'
           },
           handler: function(response) {
             window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -408,7 +408,7 @@ export default function RazorpayScreen() {
         <View style={styles.savedCardsNativeSection}>
           <View style={styles.savedCardsTitleRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="card" size={15} color="#ff3400" style={{ marginRight: 6 }} />
+              <Ionicons name="card" size={15} color="#DF9B34" style={{ marginRight: 6 }} />
               <Text style={styles.savedCardsSectionTitle}>YOUR SAVED CARDS</Text>
             </View>
             {copiedToast ? (
@@ -485,7 +485,7 @@ export default function RazorpayScreen() {
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#ff3400" />
+            <ActivityIndicator size="large" color="#DF9B34" />
             <Text style={styles.loadingText}>Loading Razorpay...</Text>
           </View>
         )}
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   savedCardsSectionTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#ff3400',
+    color: '#DF9B34',
     letterSpacing: 0.5,
   },
   savedCardsHint: {
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   nativeCardItemSelected: {
-    borderColor: '#ff3400',
+    borderColor: '#DF9B34',
     backgroundColor: '#fff9f7',
     borderWidth: 1.5,
   },
@@ -612,13 +612,13 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     alignItems: 'center',
     justifyContent: 'center',
   },
   tapToUseText: {
     fontSize: 10,
-    color: '#ff3400',
+    color: '#DF9B34',
     fontWeight: '600',
   },
   nativeCardTitle: {

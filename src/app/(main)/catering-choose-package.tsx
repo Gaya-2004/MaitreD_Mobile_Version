@@ -297,7 +297,7 @@ export default function ChoosePackage() {
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#ff4500" />
+          <ActivityIndicator size="large" color="#DF9B34" />
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -325,7 +325,7 @@ export default function ChoosePackage() {
                     <View style={styles.vegDot} />
                   </View>
                   <Text style={styles.pkgTitle}>{pkg.name}</Text>
-                  {isSelected && <Ionicons name="checkmark-circle" size={20} color="#ff4500" style={{ marginLeft: 6 }} />}
+                  {isSelected && <Ionicons name="checkmark-circle" size={20} color="#DF9B34" style={{ marginLeft: 6 }} />}
                 </TouchableOpacity>
                 
                 {!isExpanded ? (
@@ -339,7 +339,7 @@ export default function ChoosePackage() {
                         activeOpacity={0.7}
                       >
                         <Text style={styles.showMoreText}>Show more</Text>
-                        <Ionicons name="chevron-down" size={14} color="#ff4500" style={{ marginLeft: 3 }} />
+                        <Ionicons name="chevron-down" size={14} color="#DF9B34" style={{ marginLeft: 3 }} />
                       </TouchableOpacity>
 
                       <TouchableOpacity 
@@ -356,7 +356,7 @@ export default function ChoosePackage() {
                   <View style={styles.expandedContainer}>
                     <View style={styles.expandedTitleRow}>
                       <View style={styles.allCountBadge}>
-                        <Ionicons name="restaurant-outline" size={13} color="#ff4500" style={{ marginRight: 4 }} />
+                        <Ionicons name="restaurant-outline" size={13} color="#DF9B34" style={{ marginRight: 4 }} />
                         <Text style={styles.allCountBadgeText}>
                           All Items ({allItems.length > 0 ? allItems.length : 'Menu'})
                         </Text>
@@ -368,7 +368,7 @@ export default function ChoosePackage() {
                         activeOpacity={0.7}
                       >
                         <Text style={styles.showMoreText}>Show less</Text>
-                        <Ionicons name="chevron-up" size={14} color="#ff4500" style={{ marginLeft: 3 }} />
+                        <Ionicons name="chevron-up" size={14} color="#DF9B34" style={{ marginLeft: 3 }} />
                       </TouchableOpacity>
                     </View>
 
@@ -390,9 +390,9 @@ export default function ChoosePackage() {
                       onPress={() => openPackageModal(pkg)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="layers-outline" size={13} color="#ff4500" style={{ marginRight: 5 }} />
+                      <Ionicons name="layers-outline" size={13} color="#DF9B34" style={{ marginRight: 5 }} />
                       <Text style={styles.viewDetailsModalLinkText}>View full category breakdown</Text>
-                      <Ionicons name="arrow-forward" size={11} color="#ff4500" style={{ marginLeft: 3 }} />
+                      <Ionicons name="arrow-forward" size={11} color="#DF9B34" style={{ marginLeft: 3 }} />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -473,7 +473,7 @@ export default function ChoosePackage() {
 
             {loadingModalItems ? (
               <View style={styles.modalLoader}>
-                <ActivityIndicator size="small" color="#ff4500" />
+                <ActivityIndicator size="small" color="#DF9B34" />
                 <Text style={styles.modalLoaderText}>Loading menu items...</Text>
               </View>
             ) : (
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   stepText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#ff4500',
+    color: '#DF9B34',
     letterSpacing: 1,
     marginBottom: 4,
   },
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   progressActive: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   tabContainer: {
     backgroundColor: '#fff',
@@ -607,8 +607,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   tabBtnActive: {
-    backgroundColor: '#ff4500',
-    borderColor: '#ff4500',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   tabText: {
     fontSize: 14,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   cardSelected: {
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderWidth: 1.5,
   },
   cardHeader: {
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
   showMoreText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   viewAllBtn: {
     flexDirection: 'row',
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
   allCountBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#ff4500',
+    color: '#DF9B34',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
   viewDetailsModalLinkText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   modalOverlay: {
     flex: 1,
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   modalSelectBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   perPerson: {
     fontSize: 14,
@@ -916,16 +916,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     backgroundColor: '#fff',
   },
   selectBtnActive: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   selectBtnText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   selectBtnTextActive: {
     color: '#fff',
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   proceedBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',

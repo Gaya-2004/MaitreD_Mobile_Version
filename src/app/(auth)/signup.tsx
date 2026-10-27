@@ -105,6 +105,13 @@ export default function SignupScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -112,7 +119,7 @@ export default function SignupScreen() {
         <View style={styles.content}>
           <View style={styles.header}>
             <Image 
-              source={require('../../../assets/images/Dataudupi-Title.jpg')} 
+              source={require('../../../assets/images/maitred_logo_dark.png')} 
               style={styles.logo} 
               resizeMode="contain"
             />
@@ -222,8 +229,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 200,
-    height: 80,
+    width: 240,
+    height: 60,
     marginBottom: 20,
   },
   title: {
@@ -313,13 +320,13 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   loginBtn: {
-    backgroundColor: '#FF4B1F',
+    backgroundColor: '#DF9B34',
     borderRadius: 12,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
-    shadowColor: '#FF4B1F',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -345,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signupLink: {
-    color: '#FF4B1F',
+    color: '#DF9B34',
     fontSize: 14,
     fontWeight: 'bold',
   },

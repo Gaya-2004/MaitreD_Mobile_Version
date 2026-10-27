@@ -235,7 +235,7 @@ export default function Profile() {
 
   // ── Menu items ──
   const menuItems = [
-    { id: 1, title: 'My Addresses', icon: 'location-outline', iconColor: '#ff4500', iconBg: '#ffe5e5', route: '/my-addresses' },
+    { id: 1, title: 'My Addresses', icon: 'location-outline', iconColor: '#DF9B34', iconBg: '#FFF5E5', route: '/my-addresses' },
     { id: 2, title: 'Payment Methods', icon: 'card-outline', iconColor: '#1e90ff', iconBg: '#e6f2ff', route: '/payment-methods' },
     { id: 3, title: 'Order History', icon: 'receipt-outline', iconColor: '#00cc66', iconBg: '#e6ffe6', route: '/orders' },
     { id: 4, title: 'Favourite Orders', icon: 'heart-outline', iconColor: '#ff6699', iconBg: '#ffe6f0', route: '/favourites' },
@@ -250,6 +250,13 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
 
       {/* Header */}
       <View style={styles.header}>
@@ -265,13 +272,13 @@ export default function Profile() {
       <ScrollView 
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff4500']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />}
       >
 
         {/* User Card */}
         <View style={styles.userCard}>
           {loading ? (
-            <ActivityIndicator size="small" color="#ff4500" style={{ margin: 20 }} />
+            <ActivityIndicator size="small" color="#DF9B34" style={{ margin: 20 }} />
           ) : (
             <>
               {/* Avatar */}
@@ -326,8 +333,8 @@ export default function Profile() {
                     {/* Loyalty points — only shown if actually > 0 in backend */}
                     {(profile?.loyalty_points ?? 0) > 0 ? (
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                        <Ionicons name="gift-outline" size={12} color="#ff4500" />
-                        <Text style={[styles.userDetails, { marginLeft: 4, marginBottom: 0, color: '#ff4500', fontWeight: 'bold' }]}>
+                        <Ionicons name="gift-outline" size={12} color="#DF9B34" />
+                        <Text style={[styles.userDetails, { marginLeft: 4, marginBottom: 0, color: '#DF9B34', fontWeight: 'bold' }]}>
                           {profile!.loyalty_points} Loyalty Points
                         </Text>
                       </View>
@@ -356,7 +363,7 @@ export default function Profile() {
                     setIsEditing(true);
                   }}
                 >
-                  <Ionicons name="pencil" size={16} color="#ff4500" />
+                  <Ionicons name="pencil" size={16} color="#DF9B34" />
                 </TouchableOpacity>
               )}
             </>
@@ -395,20 +402,20 @@ export default function Profile() {
       <Modal animationType="fade" transparent={true} visible={customAlert.visible} onRequestClose={() => setCustomAlert(prev => ({ ...prev, visible: false }))}>
         <View style={styles.alertOverlay}>
           <View style={styles.alertBox}>
-            <View style={[styles.alertIconBg, customAlert.type === 'success' && { backgroundColor: '#e6ffe6' }, customAlert.type === 'error' && { backgroundColor: '#ffe5e0' }, customAlert.type === 'info' && { backgroundColor: '#e6f2ff' }]}>
-              <Ionicons name={customAlert.type === 'success' ? 'checkmark-circle' : customAlert.type === 'error' ? 'alert-circle' : 'information-circle'} size={48} color={customAlert.type === 'success' ? '#00cc66' : customAlert.type === 'error' ? '#ff4500' : '#1e90ff'} />
+            <View style={[styles.alertIconBg, customAlert.type === 'success' && { backgroundColor: '#e6ffe6' }, customAlert.type === 'error' && { backgroundColor: '#FFF5E5' }, customAlert.type === 'info' && { backgroundColor: '#e6f2ff' }]}>
+              <Ionicons name={customAlert.type === 'success' ? 'checkmark-circle' : customAlert.type === 'error' ? 'alert-circle' : 'information-circle'} size={48} color={customAlert.type === 'success' ? '#00cc66' : customAlert.type === 'error' ? '#DF9B34' : '#1e90ff'} />
             </View>
             <Text style={styles.alertTitle}>{customAlert.title}</Text>
             <Text style={styles.alertMessage}>{customAlert.message}</Text>
             <View style={[styles.alertBtnContainer, customAlert.buttons && customAlert.buttons.length > 2 ? { flexDirection: 'column' } : { flexDirection: 'row' }]}>
               {customAlert.buttons && customAlert.buttons.length > 0 ? (
                 customAlert.buttons.map((btn, index) => (
-                  <TouchableOpacity key={index} style={[styles.alertBtn, btn.style === 'cancel' ? { backgroundColor: '#f0f0f0', borderWidth: 1, borderColor: '#ccc' } : { backgroundColor: '#ff4500' }, (!customAlert.buttons || customAlert.buttons.length <= 2) && { flex: 1 }]} onPress={() => { setCustomAlert(prev => ({ ...prev, visible: false })); if (btn.onPress) btn.onPress(); }}>
+                  <TouchableOpacity key={index} style={[styles.alertBtn, btn.style === 'cancel' ? { backgroundColor: '#f0f0f0', borderWidth: 1, borderColor: '#ccc' } : { backgroundColor: '#DF9B34' }, (!customAlert.buttons || customAlert.buttons.length <= 2) && { flex: 1 }]} onPress={() => { setCustomAlert(prev => ({ ...prev, visible: false })); if (btn.onPress) btn.onPress(); }}>
                     <Text style={[styles.alertBtnText, btn.style === 'cancel' && { color: '#666' }]}>{btn.text}</Text>
                   </TouchableOpacity>
                 ))
               ) : (
-                <TouchableOpacity style={[styles.alertBtn, customAlert.type === 'success' && { backgroundColor: '#00cc66' }, customAlert.type === 'error' && { backgroundColor: '#ff4500' }, customAlert.type === 'info' && { backgroundColor: '#1e90ff' }]} onPress={() => { setCustomAlert(prev => ({ ...prev, visible: false })); if (customAlert.onConfirm) customAlert.onConfirm(); }}>
+                <TouchableOpacity style={[styles.alertBtn, customAlert.type === 'success' && { backgroundColor: '#00cc66' }, customAlert.type === 'error' && { backgroundColor: '#DF9B34' }, customAlert.type === 'info' && { backgroundColor: '#1e90ff' }]} onPress={() => { setCustomAlert(prev => ({ ...prev, visible: false })); if (customAlert.onConfirm) customAlert.onConfirm(); }}>
                   <Text style={styles.alertBtnText}>Continue</Text>
                 </TouchableOpacity>
               )}
@@ -456,7 +463,7 @@ const styles = StyleSheet.create({
   placeholderImage: { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
   cameraBtn: {
     position: 'absolute', bottom: 0, right: 0,
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     width: 24, height: 24, borderRadius: 12,
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: '#fff',
@@ -503,10 +510,10 @@ const styles = StyleSheet.create({
   menuTitle: { fontSize: 15, fontWeight: '600', color: '#333' },
   logoutBtn: {
     paddingVertical: 15, borderRadius: 25,
-    borderWidth: 1, borderColor: '#ff4500',
+    borderWidth: 1, borderColor: '#DF9B34',
     alignItems: 'center', backgroundColor: '#fff',
   },
-  logoutText: { color: '#ff4500', fontSize: 16, fontWeight: 'bold' },
+  logoutText: { color: '#DF9B34', fontSize: 16, fontWeight: 'bold' },
   bottomNav: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     flexDirection: 'row', justifyContent: 'space-around',

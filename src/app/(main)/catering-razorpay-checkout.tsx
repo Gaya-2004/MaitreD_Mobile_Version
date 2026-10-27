@@ -135,7 +135,7 @@ export default function CateringRazorpayCheckout() {
           session_id: '${sessionId}',
           order_type: 'CATERING_ADVANCE'
         },
-        theme: { color: '#ff4500' },
+        theme: { color: '#DF9B34' },
         modal: {
           ondismiss: function() {
             window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'PAYMENT_CANCELLED' }));
@@ -295,7 +295,7 @@ export default function CateringRazorpayCheckout() {
       {verifying && (
         <View style={styles.verifyingOverlay}>
           <View style={styles.verifyingCard}>
-            <ActivityIndicator size="large" color="#ff4500" />
+            <ActivityIndicator size="large" color="#DF9B34" />
             <Text style={styles.verifyingTitle}>Verifying Payment</Text>
             <Text style={styles.verifyingSubtitle}>Please wait while we confirm your payment...</Text>
           </View>

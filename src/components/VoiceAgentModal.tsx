@@ -101,6 +101,13 @@ export default function VoiceAgentModal() {
   }
 
   // ── Reflexive Content Mapping ──────────────────────────────────────────────
+  const CHATBOT_QUICK_SUGGESTIONS = [
+    'Show me popular items',
+    'Add 2 Masala Dosa to my cart',
+    "What are today's specials?",
+    'Talk to waiter',
+  ];
+
   const routeContext = React.useMemo(() => {
     if (isForYouScreen) {
       return {
@@ -110,12 +117,7 @@ export default function VoiceAgentModal() {
         fabTitle: "Agent's Picks",
         fabSubtitle: '✨ For You',
         fabCompact: false,
-        suggestions: [
-          'What dishes are recommended for me?',
-          'Tell me about today\'s personalized combos',
-          'Why was Curd Vadai recommended for me?',
-          'Add recommended items to my cart',
-        ],
+        suggestions: CHATBOT_QUICK_SUGGESTIONS,
       };
     }
     if (isCheckoutScreen) {
@@ -126,12 +128,7 @@ export default function VoiceAgentModal() {
         fabTitle: 'Agent Help',
         fabSubtitle: 'Bill & Order',
         fabCompact: true,
-        suggestions: [
-          'What is my final total bill amount?',
-          'Can you apply the best discount code?',
-          'Switch order to Pay Later Dine-In',
-          'Review items currently in my cart',
-        ],
+        suggestions: CHATBOT_QUICK_SUGGESTIONS,
       };
     }
     if (isMenuScreen) {
@@ -142,12 +139,7 @@ export default function VoiceAgentModal() {
         fabTitle: 'Talk to Agent',
         fabSubtitle: 'Ask about dishes',
         fabCompact: false,
-        suggestions: [
-          'What are today\'s South Indian specials?',
-          'Show pure vegetarian breakfast options',
-          'Add 2 Masala Dosas to my cart',
-          'Do you have authentic filter coffee?',
-        ],
+        suggestions: CHATBOT_QUICK_SUGGESTIONS,
       };
     }
     if (isOrdersScreen) {
@@ -158,12 +150,7 @@ export default function VoiceAgentModal() {
         fabTitle: 'Order Help',
         fabSubtitle: 'Track order',
         fabCompact: false,
-        suggestions: [
-          'Where is my active order right now?',
-          'What is my estimated delivery time?',
-          'Reorder my previous meal',
-          'Help me contact restaurant support',
-        ],
+        suggestions: CHATBOT_QUICK_SUGGESTIONS,
       };
     }
     if (isRewardsScreen) {
@@ -174,27 +161,17 @@ export default function VoiceAgentModal() {
         fabTitle: 'Agent Rewards',
         fabSubtitle: 'Points & deals',
         fabCompact: false,
-        suggestions: [
-          'How many reward points do I have?',
-          'How can I redeem my loyalty points?',
-          'Show available discount vouchers',
-          'How do I earn more Udipi points?',
-        ],
+        suggestions: CHATBOT_QUICK_SUGGESTIONS,
       };
     }
     return {
       screenKey: 'home',
-      badgeLabel: 'Udipi Dining Assistant',
+      badgeLabel: 'MaitreD Dining Assistant',
       badgeIcon: 'restaurant' as const,
       fabTitle: 'Talk to Agent',
       fabSubtitle: 'Tap to speak',
       fabCompact: false,
-      suggestions: [
-        'What should I eat today?',
-        'Show me today\'s special menu',
-        'Add Masala Dosa to my cart',
-        'Track my current order',
-      ],
+      suggestions: CHATBOT_QUICK_SUGGESTIONS,
     };
   }, [pathname]);
 
@@ -373,7 +350,7 @@ export default function VoiceAgentModal() {
                   <Text style={styles.fabPillTitle}>{routeContext.fabTitle}</Text>
                   {isForYouScreen && (
                     <View style={styles.fabAiMiniBadge}>
-                      <Ionicons name="sparkles" size={9} color="#ff4500" />
+                      <Ionicons name="sparkles" size={9} color="#DF9B34" />
                     </View>
                   )}
                 </View>
@@ -381,7 +358,7 @@ export default function VoiceAgentModal() {
                   <Ionicons
                     name={isConnected ? 'radio' : isForYouScreen ? 'sparkles-outline' : 'mic'}
                     size={11}
-                    color={isConnected ? '#0BA01E' : '#ff4500'}
+                    color={isConnected ? '#0BA01E' : '#DF9B34'}
                   />
                   <Text style={[styles.fabPillSubtitle, isConnected && styles.fabPillSubtitleLive]}>
                     {isConnected ? 'Live' : routeContext.fabSubtitle}
@@ -403,9 +380,9 @@ export default function VoiceAgentModal() {
             <View style={styles.header}>
               <View style={styles.headerLeft}>
                 <View style={styles.headerTitleRow}>
-                  <Text style={styles.headerTitle}>Data Udipi Assistant</Text>
+                  <Text style={styles.headerTitle}>MaitreD Assistant</Text>
                   <View style={styles.contextBadge}>
-                    <Ionicons name={routeContext.badgeIcon} size={11} color="#ff4500" />
+                    <Ionicons name={routeContext.badgeIcon} size={11} color="#DF9B34" />
                     <Text style={styles.contextBadgeText}>{routeContext.badgeLabel}</Text>
                   </View>
                 </View>
@@ -426,13 +403,10 @@ export default function VoiceAgentModal() {
             <View style={styles.avatarContainer}>
               <Animated.View style={[styles.pulseRing, { transform: [{ scale: pulseAnim }] }]} />
               <Image
-                source={require('../../assets/images/agent_waiter.png')}
+                source={require('../../assets/images/chatbot_chef_full.png')}
                 style={styles.chefAvatar}
                 resizeMode="contain"
               />
-              <View style={[styles.statusBadge, isConnected ? styles.statusBadgeActive : null]}>
-                <FontAwesome5 name={isConnected ? 'microphone' : 'user-tie'} size={11} color="white" />
-              </View>
             </View>
 
             {/* Chat Body */}
@@ -446,7 +420,7 @@ export default function VoiceAgentModal() {
                 /* Empty State */
                 <View style={styles.emptyState}>
                   <Text style={styles.greetingTitle}>
-                    {isConnecting ? 'Connecting…' : isConnected ? 'Listening to you…' : "Hi! I'm your Udipi Chef."}
+                    {isConnecting ? 'Connecting…' : isConnected ? 'Listening to you…' : "Hi! I'm your MaitreD Chef."}
                   </Text>
                   <Text style={styles.greetingSubtitle}>How can I help you today?</Text>
                   <View style={styles.suggestionsContainer}>
@@ -459,7 +433,7 @@ export default function VoiceAgentModal() {
                         activeOpacity={0.75}
                       >
                         <View style={styles.suggestionIconBg}>
-                          <FontAwesome5 name="lightbulb" size={11} color="#ff4500" />
+                          <FontAwesome5 name="lightbulb" size={11} color="#DF9B34" />
                         </View>
                         <Text style={styles.suggestionText}>{sug}</Text>
                         <Ionicons name="arrow-forward" size={13} color="#bbb" style={{ marginLeft: 'auto' }} />
@@ -602,7 +576,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.14,
     shadowRadius: 6,
@@ -622,8 +596,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
   },
   fabActive: {
-    backgroundColor: '#fff5f0',
-    borderColor: '#ff4500',
+    backgroundColor: '#FFF5E5',
+    borderColor: '#DF9B34',
     borderWidth: 1.8,
   },
   fabTouchable: {
@@ -635,13 +609,13 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#fff5ee',
+    backgroundColor: '#FFF5E5',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#ffd8be',
+    borderColor: '#FDE68A',
   },
   fabAvatarBgCompact: {
     width: 46,
@@ -650,12 +624,14 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
   fabChefMascot: {
-    width: 36,
-    height: 36,
+    width: '100%',
+    height: '100%',
+    transform: [{ scale: 1.12 }],
   },
   fabChefMascotCompact: {
-    width: 44,
-    height: 44,
+    width: '100%',
+    height: '100%',
+    transform: [{ scale: 1.12 }],
   },
   fabCompactLiveDot: {
     position: 'absolute',
@@ -763,7 +739,7 @@ const styles = StyleSheet.create({
   contextBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -782,20 +758,20 @@ const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 14,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 2,
     position: 'relative',
   },
   pulseRing: {
     position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255, 69, 0, 0.08)',
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(223, 155, 52, 0.08)',
   },
   chefAvatar: {
-    width: 120,
-    height: 120,
+    width: 125,
+    height: 206,
     zIndex: 2,
   },
   statusBadge: {
@@ -907,14 +883,15 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   tinyChef: {
-    width: 26,
-    height: 26,
+    width: '100%',
+    height: '100%',
+    transform: [{ scale: 1.1 }],
   },
   smallAvatarUser: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
@@ -961,7 +938,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     borderRadius: 28,
     paddingVertical: 15,
   },

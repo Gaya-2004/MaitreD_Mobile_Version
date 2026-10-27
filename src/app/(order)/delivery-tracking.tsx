@@ -360,7 +360,7 @@ export default function DeliveryTrackingScreen() {
                   title={activeRestaurant.name || 'Restaurant'}
                 >
                   <View style={styles.restaurantMarker}>
-                    <Ionicons name="restaurant" size={14} color="#ff3400" />
+                    <Ionicons name="restaurant" size={14} color="#DF9B34" />
                   </View>
                 </Marker>
               )}
@@ -400,7 +400,7 @@ export default function DeliveryTrackingScreen() {
                   destination={{ latitude: customerLocation.latitude!, longitude: customerLocation.longitude! }}
                   apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
                   strokeWidth={4}
-                  strokeColor="#ff3400"
+                  strokeColor="#DF9B34"
                 />
               ) : Polyline && riderLocation && customerLocation?.latitude && (
                 <Polyline
@@ -408,7 +408,7 @@ export default function DeliveryTrackingScreen() {
                     { latitude: riderLocation.latitude, longitude: riderLocation.longitude },
                     { latitude: customerLocation.latitude!, longitude: customerLocation.longitude! },
                   ]}
-                  strokeColor="#ff3400"
+                  strokeColor="#DF9B34"
                   strokeWidth={3}
                   lineDashPattern={[8, 4]}
                 />
@@ -441,7 +441,7 @@ export default function DeliveryTrackingScreen() {
               <View style={styles.riderAvatarBox}>
                 {isSearchingRider ? (
                   <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                    <Ionicons name="search" size={22} color="#ff3400" />
+                    <Ionicons name="search" size={22} color="#DF9B34" />
                   </Animated.View>
                 ) : (
                   <Ionicons name="person" size={24} color="#555" />
@@ -469,10 +469,10 @@ export default function DeliveryTrackingScreen() {
       {!isSearchingRider && (
         <View style={styles.riderActions}>
           <TouchableOpacity style={styles.actionBtn} onPress={handleCallRider}>
-            <Ionicons name="call" size={18} color="#ff3400" />
+            <Ionicons name="call" size={18} color="#DF9B34" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Chat', 'Live chat coming soon!')}>
-            <Ionicons name="chatbubble-ellipses" size={18} color="#ff3400" />
+            <Ionicons name="chatbubble-ellipses" size={18} color="#DF9B34" />
           </TouchableOpacity>
         </View>
       )}
@@ -533,7 +533,7 @@ export default function DeliveryTrackingScreen() {
                 }
               }
 
-              const timeColor = isCompleted ? '#00a01d' : isActive ? '#ff3400' : '#ccc';
+              const timeColor = isCompleted ? '#00a01d' : isActive ? '#DF9B34' : '#ccc';
 
               return (
                 <React.Fragment key={idx}>
@@ -557,11 +557,11 @@ export default function DeliveryTrackingScreen() {
 
   {/* Current Status Banner */ }
   <View style={styles.statusBanner}>
-    <View style={[styles.statusIconCircle, { backgroundColor: isSearchingRider ? '#fff5f0' : '#e6f7ec' }]}>
+    <View style={[styles.statusIconCircle, { backgroundColor: isSearchingRider ? '#FFF5E5' : '#e6f7ec' }]}>
       <Ionicons
         name={isSearchingRider ? 'search' : isOutForDelivery ? 'bicycle' : 'restaurant'}
         size={20}
-        color={isSearchingRider ? '#ff3400' : '#00a01d'}
+        color={isSearchingRider ? '#DF9B34' : '#00a01d'}
       />
     </View>
     <View style={{ flex: 1, marginLeft: 12 }}>
@@ -721,10 +721,10 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     marginRight: 5,
   },
-  liveText: { fontSize: 11, fontWeight: 'bold', color: '#ff3400' },
+  liveText: { fontSize: 11, fontWeight: 'bold', color: '#DF9B34' },
   container: { flex: 1 },
   mapContainer: {
     width: '100%',
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
   mapImage: { width: '100%', height: '100%' },
   restaurantMarker: {
     width: 34, height: 34, borderRadius: 17, backgroundColor: '#fff',
-    borderWidth: 2, borderColor: '#ff3400', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#DF9B34', alignItems: 'center', justifyContent: 'center',
   },
   riderMarker: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: '#ff2a2a',
@@ -772,13 +772,13 @@ const styles = StyleSheet.create({
   actionBtn: {
     width: 42, height: 42, borderRadius: 21, backgroundColor: '#fff',
     borderWidth: 1, borderColor: '#ffe6e0', alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#ff3400', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 1,
+    shadowColor: '#DF9B34', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 1,
   },
   detailsContainer: { padding: 20 },
   orderInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   infoLabel: { fontSize: 11, color: '#888', marginBottom: 4 },
   orderIdVal: { fontSize: 17, fontWeight: 'bold', color: '#000' },
-  etaVal: { fontSize: 17, fontWeight: 'bold', color: '#ff3400' },
+  etaVal: { fontSize: 17, fontWeight: 'bold', color: '#DF9B34' },
   divider: { height: 1, backgroundColor: '#f0f0f0', marginVertical: 18 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#000', marginBottom: 16 },
   progressTracker: {
@@ -789,17 +789,17 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', marginBottom: 6,
   },
   stepCompleted: { backgroundColor: '#00a01d' },
-  stepActive: { backgroundColor: '#fff', borderWidth: 2.5, borderColor: '#ff3400' },
-  innerDot: { width: 9, height: 9, borderRadius: 4.5, backgroundColor: '#ff3400' },
+  stepActive: { backgroundColor: '#fff', borderWidth: 2.5, borderColor: '#DF9B34' },
+  innerDot: { width: 9, height: 9, borderRadius: 4.5, backgroundColor: '#DF9B34' },
   stepPending: { backgroundColor: '#fff', borderWidth: 2, borderColor: '#ddd' },
   stepText: { fontSize: 10, fontWeight: '700', textAlign: 'center', marginBottom: 3 },
   stepTextCompleted: { color: '#00a01d' },
-  stepTextActive: { color: '#ff3400' },
+  stepTextActive: { color: '#DF9B34' },
   stepTextPending: { color: '#ccc' },
   stepTime: { fontSize: 9 },
   stepLine: { flex: 1, height: 2.5, marginTop: 9, marginHorizontal: 2 },
   lineCompleted: { backgroundColor: '#00a01d' },
-  lineActive: { backgroundColor: '#ff3400' },
+  lineActive: { backgroundColor: '#DF9B34' },
   linePending: { backgroundColor: '#e0e0e0' },
   statusBanner: {
     flexDirection: 'row', alignItems: 'center',
@@ -820,7 +820,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: '#e0e0e0', paddingTop: 12, marginTop: 4,
   },
   subtotalLabel: { fontSize: 14, fontWeight: 'bold', color: '#000' },
-  subtotalValue: { fontSize: 14, fontWeight: 'bold', color: '#ff3400' },
+  subtotalValue: { fontSize: 14, fontWeight: 'bold', color: '#DF9B34' },
   cancelCard: {
     flexDirection: 'row',
     alignItems: 'center',

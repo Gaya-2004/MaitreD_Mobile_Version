@@ -108,7 +108,7 @@ export default function Rewards() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Ionicons name="information-circle" size={28} color="#ff4500" />
+              <Ionicons name="information-circle" size={28} color="#DF9B34" />
               <Text style={styles.modalTitle}>How It Works</Text>
             </View>
             <Text style={styles.modalText}>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   balanceCard: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     borderRadius: 15,
     padding: 20,
     marginBottom: 25,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   modalCloseBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

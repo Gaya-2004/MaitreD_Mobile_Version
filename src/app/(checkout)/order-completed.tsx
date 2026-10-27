@@ -201,7 +201,7 @@ export default function OrderCompletedScreen() {
 
   // ── Theming by order type ──
   const headerColor = '#16a34a';
-  const accentColor = '#ff5a1f';
+  const accentColor = '#DF9B34';
 
   const headerIcon = isTakeAway ? 'bag-check-outline' : isDelivery ? 'bicycle-outline' : 'restaurant-outline';
   const headerTitle = isTakeAway ? 'Picked Up!' : isDelivery ? 'Delivered!' : 'Order Served!';
@@ -251,7 +251,7 @@ export default function OrderCompletedScreen() {
           <View style={styles.loyaltyCard}>
             <View style={styles.loyaltyLeft}>
               <Ionicons name="gift-outline" size={18} color={accentColor} />
-              <Text style={styles.loyaltyLabel}>Data Udipi Club Points</Text>
+              <Text style={styles.loyaltyLabel}>MaitreD Club Points</Text>
             </View>
             <Text style={styles.loyaltyPoints}>+{loyaltyPoints} points</Text>
           </View>
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff5f0',
+    backgroundColor: '#FFF5E5',
     borderWidth: 1,
     borderColor: '#ffd5c2',
     borderRadius: 16,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   loyaltyPoints: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#ff5a1f',
+    color: '#DF9B34',
   },
 
   // Card
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   tagPillSelected: {
     backgroundColor: '#fff0eb',
-    borderColor: '#ff5a1f',
+    borderColor: '#DF9B34',
   },
   tagText: {
     fontSize: 12,
@@ -507,16 +507,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   tagTextSelected: {
-    color: '#ff5a1f',
+    color: '#DF9B34',
     fontWeight: '700',
   },
   submitBtn: {
-    backgroundColor: '#ff5a1f',
+    backgroundColor: '#DF9B34',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ff5a1f',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -602,11 +602,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff5a1f',
+    backgroundColor: '#DF9B34',
     borderRadius: 24,
     paddingVertical: 15,
     marginBottom: 10,
-    shadowColor: '#ff5a1f',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.22,
     shadowRadius: 6,
@@ -621,15 +621,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff5f0',
+    backgroundColor: '#FFF5E5',
     borderRadius: 24,
     paddingVertical: 13,
     marginBottom: 8,
     borderWidth: 1.5,
-    borderColor: '#ff5a1f',
+    borderColor: '#DF9B34',
   },
   invoiceText: {
-    color: '#ff5a1f',
+    color: '#DF9B34',
     fontSize: 14,
     fontWeight: '700',
   },

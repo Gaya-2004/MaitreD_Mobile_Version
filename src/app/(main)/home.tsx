@@ -232,7 +232,7 @@ export default function Home() {
   const [baseOffersList] = useState(() => {
     const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6;
     const base = [
-      { id: '1', discount: '30% OFF', subtitle: 'On Your First Order', color: '#ff4500' },
+      { id: '1', discount: '30% OFF', subtitle: 'On Your First Order', color: '#DF9B34' },
       { id: '2', discount: '5% OFF', subtitle: 'On 5th Day (5 Days Continuous Orders)', color: '#4CAF50' },
     ];
     if (isWeekend) {
@@ -826,18 +826,25 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle='dark-content' backgroundColor='#fff' />
+      {/* Background image matching landing page */}
+      <Image
+        source={require('../../../assets/images/landing_food_bg.jpg')}
+        style={[StyleSheet.absoluteFill, { opacity: 0.08 }]}
+        resizeMode="cover"
+        blurRadius={Platform.OS === 'ios' ? 14 : 9}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff4500']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />
         }
       >
 
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/')}>
-            <Image source={require('../../../assets/images/Dataudupi-Title.jpg')} style={styles.logo} resizeMode='contain' />
+            <Image source={require('../../../assets/images/maitred_logo_dark.png')} style={styles.logo} resizeMode='contain' />
           </TouchableOpacity>
           <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/profile')}>
             <View style={[styles.profileImg, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
@@ -845,15 +852,6 @@ export default function Home() {
             </View>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.locationContainer}
-          onPress={() => router.push('/outlet-selector')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name='location' size={16} color='#ff4500' />
-          <Text style={styles.locationText}>{selectedBranchName}</Text>
-          <Ionicons name='chevron-down' size={16} color='#000' />
-        </TouchableOpacity>
 
         {/* Search */}
         <View style={styles.searchBar}>
@@ -870,7 +868,7 @@ export default function Home() {
           />
           {searchText.trim().length > 0 && (
             <TouchableOpacity onPress={() => handleSearchSubmit(searchText)} style={{ padding: 4 }}>
-              <Ionicons name='arrow-forward-circle' size={22} color='#ff4500' />
+              <Ionicons name='arrow-forward-circle' size={22} color='#DF9B34' />
             </TouchableOpacity>
           )}
         </View>
@@ -985,18 +983,18 @@ export default function Home() {
             {tableNumber ? (
               <View style={styles.tableStatusRow}>
                 <View style={styles.tableStatusLeft}>
-                  <Ionicons name="restaurant" size={20} color="#ff4500" />
+                  <Ionicons name="restaurant" size={20} color="#DF9B34" />
                   <Text style={styles.tableStatusText}>
-                    Seated at Table <Text style={{ fontWeight: 'bold', color: '#ff4500' }}>{tableNumber.replace('T-', '')}</Text>
-                    {tableStatus ? <Text style={{ color: tableStatus.toLowerCase() === 'vacant' ? '#4CAF50' : '#ff4500' }}> ({tableStatus})</Text> : null}
+                    Seated at Table <Text style={{ fontWeight: 'bold', color: '#DF9B34' }}>{tableNumber.replace('T-', '')}</Text>
+                    {tableStatus ? <Text style={{ color: tableStatus.toLowerCase() === 'vacant' ? '#4CAF50' : '#DF9B34' }}> ({tableStatus})</Text> : null}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity style={styles.tableActionBtn} onPress={handleDineInPress}>
                     <Text style={styles.tableActionText}>Change</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.tableActionBtn, { backgroundColor: '#ffe5e0' }]} onPress={handleClearTable}>
-                    <Text style={[styles.tableActionText, { color: '#ff4500' }]}>Leave</Text>
+                  <TouchableOpacity style={[styles.tableActionBtn, { backgroundColor: '#FFF5E5' }]} onPress={handleClearTable}>
+                    <Text style={[styles.tableActionText, { color: '#DF9B34' }]}>Leave</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1006,7 +1004,7 @@ export default function Home() {
                   <Ionicons name="qr-code-outline" size={20} color="#666" />
                   <Text style={[styles.tableStatusText, { color: '#666' }]}>Scan table QR code to start</Text>
                 </View>
-                <TouchableOpacity style={[styles.tableActionBtn, { backgroundColor: '#ff4500' }]} onPress={handleDineInPress}>
+                <TouchableOpacity style={[styles.tableActionBtn, { backgroundColor: '#DF9B34' }]} onPress={handleDineInPress}>
                   <Text style={[styles.tableActionText, { color: '#fff' }]}>Scan QR</Text>
                 </TouchableOpacity>
               </View>
@@ -1030,7 +1028,7 @@ export default function Home() {
               params: { orderType: activeTab === 'Dine-in' ? 'Dine In' : activeTab, tableNumber: activeTab === 'Dine-in' ? (tableNumber || '') : '' }
             });
           }}>
-            <Text style={[styles.seeAllText, { color: '#ff4500' }]}>For You ✨</Text>
+            <Text style={[styles.seeAllText, { color: '#DF9B34' }]}>For You ✨</Text>
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
@@ -1113,7 +1111,7 @@ export default function Home() {
                       onPress={() => decrementQuantity(dish.id)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="remove" size={14} color="#ff4500" />
+                      <Ionicons name="remove" size={14} color="#DF9B34" />
                     </TouchableOpacity>
                     <Text style={styles.dishStepVal}>{cart[dish.id].quantity}</Text>
                     <TouchableOpacity
@@ -1170,7 +1168,7 @@ export default function Home() {
             <View style={styles.scannerModalContainer}>
               <View style={styles.modalHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="qr-code-outline" size={22} color="#ff4500" />
+                  <Ionicons name="qr-code-outline" size={22} color="#DF9B34" />
                   <Text style={styles.modalTitle}>Scan Table QR Code</Text>
                 </View>
                 <TouchableOpacity onPress={handleCloseScanner} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -1182,7 +1180,7 @@ export default function Home() {
               {!Device.isDevice && Platform.OS === 'ios' ? (
                 <View style={styles.simulatorFallbackContainer}>
                   <View style={styles.simulatedViewfinder}>
-                    <Ionicons name="qr-code" size={56} color="#ff4500" />
+                    <Ionicons name="qr-code" size={56} color="#DF9B34" />
                     <View style={styles.simulatedScanFrame} />
                   </View>
                   <View style={styles.simBadge}>
@@ -1210,7 +1208,7 @@ export default function Home() {
                   )}
                   {!cameraReady && (
                     <View style={styles.cameraLoadingOverlay}>
-                      <ActivityIndicator size="large" color="#ff4500" />
+                      <ActivityIndicator size="large" color="#DF9B34" />
                       <Text style={{ color: '#fff', fontSize: 12, marginTop: 8, fontWeight: '600' }}>
                         Starting camera...
                       </Text>
@@ -1225,7 +1223,7 @@ export default function Home() {
                 </View>
               ) : (
                 <View style={styles.webFallbackContainer}>
-                  <Ionicons name="camera-outline" size={44} color="#ff4500" style={{ marginBottom: 10 }} />
+                  <Ionicons name="camera-outline" size={44} color="#DF9B34" style={{ marginBottom: 10 }} />
                   <Text style={{ fontSize: 16, fontWeight: '700', color: '#222', marginBottom: 6, textAlign: 'center' }}>
                     Camera Access Needed
                   </Text>
@@ -1263,7 +1261,7 @@ export default function Home() {
                         paddingHorizontal: 12,
                         paddingVertical: 6,
                         borderRadius: 6,
-                        backgroundColor: mockTableNumber === tbl ? '#ff4500' : '#f0f0f0',
+                        backgroundColor: mockTableNumber === tbl ? '#DF9B34' : '#f0f0f0',
                       }}
                       onPress={() => {
                         setMockTableNumber(tbl);
@@ -1286,7 +1284,7 @@ export default function Home() {
                     value={mockTableNumber}
                   />
                   <TouchableOpacity
-                    style={{ backgroundColor: '#ff4500', paddingHorizontal: 16, height: 40, justifyContent: 'center', borderRadius: 8 }}
+                    style={{ backgroundColor: '#DF9B34', paddingHorizontal: 16, height: 40, justifyContent: 'center', borderRadius: 8 }}
                     onPress={() => verifyTableAndEnter(mockTableNumber || 'T-01')}
                     disabled={isVerifyingTable}
                   >
@@ -1374,7 +1372,7 @@ export default function Home() {
                           </Text>
                         </View>
                         <Text style={styles.itemModalTitle}>{selectedItem.name}</Text>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#ff4500', marginBottom: 8 }}>Rs. {selectedItem.price}</Text>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#DF9B34', marginBottom: 8 }}>Rs. {selectedItem.price}</Text>
                         {selectedItem.desc ? <Text style={styles.itemModalDesc}>{selectedItem.desc}</Text> : null}
                       </ScrollView>
 
@@ -1433,7 +1431,7 @@ export default function Home() {
             <View style={[
               styles.alertIconBg,
               customAlert.type === 'success' && { backgroundColor: '#e6ffe6' },
-              customAlert.type === 'error' && { backgroundColor: '#ffe5e0' },
+              customAlert.type === 'error' && { backgroundColor: '#FFF5E5' },
               customAlert.type === 'info' && { backgroundColor: '#e6f2ff' }
             ]}>
               <Ionicons
@@ -1449,7 +1447,7 @@ export default function Home() {
                   customAlert.type === 'success'
                     ? '#00cc66'
                     : customAlert.type === 'error'
-                      ? '#ff4500'
+                      ? '#DF9B34'
                       : '#1e90ff'
                 }
               />
@@ -1465,7 +1463,7 @@ export default function Home() {
                       styles.alertBtn,
                       btn.style === 'cancel'
                         ? { backgroundColor: '#f0f0f0', borderWidth: 1, borderColor: '#ccc' }
-                        : { backgroundColor: '#ff4500' },
+                        : { backgroundColor: '#DF9B34' },
                       (!customAlert.buttons || customAlert.buttons.length <= 2) && { flex: 1 }
                     ]}
                     onPress={() => {
@@ -1488,7 +1486,7 @@ export default function Home() {
                   style={[
                     styles.alertBtn,
                     customAlert.type === 'success' && { backgroundColor: '#00cc66' },
-                    customAlert.type === 'error' && { backgroundColor: '#ff4500' },
+                    customAlert.type === 'error' && { backgroundColor: '#DF9B34' },
                     customAlert.type === 'info' && { backgroundColor: '#1e90ff' }
                   ]}
                   onPress={() => {
@@ -1694,10 +1692,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 0,
+    marginBottom: 16,
   },
   logo: {
-    width: 150,
-    height: 40,
+    width: 140,
+    height: 36,
   },
   profileBtn: {
     padding: 5,
@@ -1706,16 +1705,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    gap: 5,
-  },
-  locationText: {
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   searchBar: {
     flexDirection: 'row',
@@ -1783,7 +1772,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   orderNowBtn: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
@@ -1813,7 +1802,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   activeTabBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   tabText: {
     fontSize: 14,
@@ -1835,7 +1824,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   seeAllText: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: '600',
   },
   categoriesScroll: {
@@ -1908,14 +1897,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   addBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
@@ -1932,7 +1921,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     borderWidth: 1.5,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -1944,14 +1933,14 @@ const styles = StyleSheet.create({
   dishStepVal: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#ff4500',
+    color: '#DF9B34',
     minWidth: 20,
     textAlign: 'center',
   },
   dishStepBtnPlus: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   floatingContainer: {
     position: 'absolute',
@@ -2024,7 +2013,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   orderTypeActive: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
   },
   orderTypeActiveText: {
     color: '#fff',
@@ -2090,7 +2079,7 @@ const styles = StyleSheet.create({
   cartItemPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   cartItemRight: {
     alignItems: 'flex-end',
@@ -2111,7 +2100,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   stepBtnPlus: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     padding: 2,
     borderRadius: 2,
   },
@@ -2176,11 +2165,11 @@ const styles = StyleSheet.create({
   tableStatusCard: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ffd0c7',
+    borderColor: '#FDE68A',
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -2205,7 +2194,7 @@ const styles = StyleSheet.create({
   tableActionBtn: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     paddingVertical: 5,
     paddingHorizontal: 12,
     borderRadius: 15,
@@ -2213,7 +2202,7 @@ const styles = StyleSheet.create({
   tableActionText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   scannerModalOverlay: {
     flex: 1,
@@ -2274,7 +2263,7 @@ const styles = StyleSheet.create({
     width: 190,
     height: 190,
     borderWidth: 2.5,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderRadius: 14,
     backgroundColor: 'transparent',
   },
@@ -2292,12 +2281,12 @@ const styles = StyleSheet.create({
   },
   simulatorFallbackContainer: {
     width: '100%',
-    backgroundColor: '#fdf8f5',
+    backgroundColor: '#FFFDF9',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#ffd5cc',
+    borderColor: '#FDE68A',
   },
   simulatedViewfinder: {
     width: 120,
@@ -2307,9 +2296,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     marginBottom: 12,
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -2318,7 +2307,7 @@ const styles = StyleSheet.create({
   simulatedScanFrame: {
     ...StyleSheet.absoluteFill,
     borderWidth: 1,
-    borderColor: 'rgba(255, 69, 0, 0.3)',
+    borderColor: 'rgba(223, 155, 52, 0.3)',
     borderRadius: 14,
     margin: 6,
   },
@@ -2363,7 +2352,7 @@ const styles = StyleSheet.create({
   },
   enableCameraBtn: {
     marginTop: 12,
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 18,
     paddingVertical: 9,
     borderRadius: 8,
@@ -2397,8 +2386,8 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   mockTableBtnActive: {
-    backgroundColor: '#ff4500',
-    borderColor: '#ff4500',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   mockTableBtnText: {
     fontSize: 12,
@@ -2409,7 +2398,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   verifyBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     borderRadius: 25,
     height: 45,
     justifyContent: 'center',
@@ -2528,7 +2517,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   itemModalAddBtn: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2563,7 +2552,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   modalStepBtnPlus: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     padding: 8,
     borderRadius: 6,
   },
@@ -2583,7 +2572,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6ffe6',
   },
   unavailBadge: {
-    backgroundColor: '#ffe5e0',
+    backgroundColor: '#FFF5E5',
   },
   availDot: {
     width: 10,
@@ -2598,9 +2587,9 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   unavailText: {
-    color: '#ff4500',
+    color: '#DF9B34',
   },
   unavailDot: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
 });

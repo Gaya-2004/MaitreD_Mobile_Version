@@ -46,7 +46,7 @@ export default function BulkCatering() {
           <View style={styles.gridContainer}>
             <View style={styles.gridCard}>
               <View style={[styles.iconCircle, { backgroundColor: '#fff3e0' }]}>
-                <MaterialCommunityIcons name="calendar-month-outline" size={18} color="#ff4500" />
+                <MaterialCommunityIcons name="calendar-month-outline" size={18} color="#DF9B34" />
               </View>
               <Text style={styles.cardTitle}>Advance Booking</Text>
               <Text style={styles.cardDesc}>Secure your preferred slot up to 12 months in advance</Text>
@@ -54,7 +54,7 @@ export default function BulkCatering() {
 
             <View style={styles.gridCard}>
               <View style={[styles.iconCircle, { backgroundColor: '#fff3e0' }]}>
-                <MaterialCommunityIcons name="cog-outline" size={18} color="#ff4500" />
+                <MaterialCommunityIcons name="cog-outline" size={18} color="#DF9B34" />
               </View>
               <Text style={styles.cardTitle}>Customisable Menu</Text>
               <Text style={styles.cardDesc}>Swap dishes, adjust spice levels & add special request notes</Text>
@@ -62,7 +62,7 @@ export default function BulkCatering() {
 
             <View style={styles.gridCard}>
               <View style={[styles.iconCircle, { backgroundColor: '#fff3e0' }]}>
-                <MaterialCommunityIcons name="clock-outline" size={18} color="#ff4500" />
+                <MaterialCommunityIcons name="clock-outline" size={18} color="#DF9B34" />
               </View>
               <Text style={styles.cardTitle}>On-Time Hot Service</Text>
               <Text style={styles.cardDesc}>Guaranteed warm delivery and professional handling</Text>
@@ -70,7 +70,7 @@ export default function BulkCatering() {
 
             <View style={styles.gridCard}>
               <View style={[styles.iconCircle, { backgroundColor: '#fff3e0' }]}>
-                <MaterialCommunityIcons name="shield-check-outline" size={18} color="#ff4500" />
+                <MaterialCommunityIcons name="shield-check-outline" size={18} color="#DF9B34" />
               </View>
               <Text style={styles.cardTitle}>Hygiene First</Text>
               <Text style={styles.cardDesc}>Sanitised packaging and contactless service options</Text>
@@ -91,7 +91,7 @@ export default function BulkCatering() {
 
             <View style={styles.gridCard}>
               <View style={[styles.iconCircle, { backgroundColor: '#ffebee' }]}>
-                <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#ff4500" />
+                <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#DF9B34" />
               </View>
               <Text style={styles.cardTitle}>Grand Feast</Text>
               <Text style={styles.cardDesc}>Premium drinks, starters, sweets & full service</Text>
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   primaryButton: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

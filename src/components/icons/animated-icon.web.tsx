@@ -48,14 +48,14 @@ export function AnimatedSplashOverlay() {
         <View style={styles.overlay}>
           <Animated.View style={{ transform: [{ scale: logoScale }], alignItems: 'center' }}>
             <Image
-              source={require('../../../assets/images/Dataudupi-Title.jpg')}
+              source={require('../../../assets/images/maitred_logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
           </Animated.View>
 
           <Text style={styles.subtitle}>
-            40 YEARS OF EXCELLENCE IN SOUTH INDIAN VEGETARIAN CUISINE
+            FRESH FLAVOURS · VEG & NON VEG
           </Text>
 
           <Animated.View
@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   logo: {
-    width: 260,
-    height: 85,
+    width: 290,
+    height: 72,
     marginBottom: 20,
   },
   subtitle: {

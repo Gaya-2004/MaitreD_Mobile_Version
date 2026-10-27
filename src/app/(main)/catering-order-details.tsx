@@ -48,7 +48,7 @@ export default function CateringOrderDetails() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#ff4500" style={{ marginTop: 50 }} />
+        <ActivityIndicator size="large" color="#DF9B34" style={{ marginTop: 50 }} />
       </SafeAreaView>
     );
   }
@@ -143,7 +143,7 @@ export default function CateringOrderDetails() {
           </View>
           <View style={[styles.priceRow, { borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 10, marginTop: 5 }]}>
             <Text style={[styles.priceLabel, { fontWeight: 'bold', color: '#222' }]}>Balance Remaining</Text>
-            <Text style={[styles.priceVal, { fontWeight: 'bold', color: '#ff4500' }]}>Rs. {order.balance_amount}</Text>
+            <Text style={[styles.priceVal, { fontWeight: 'bold', color: '#DF9B34' }]}>Rs. {order.balance_amount}</Text>
           </View>
           
           {order.balance_amount > 0 && order.full_payment_due_date && (
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   priceVal: { fontSize: 14, color: '#333' },
   dueDateText: { marginTop: 12, fontSize: 13, color: '#888', fontStyle: 'italic', textAlign: 'center' },
   overdueText: { color: '#f44336', fontWeight: 'bold' },
-  payBalanceBtn: { marginTop: 16, backgroundColor: '#ff4500', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+  payBalanceBtn: { marginTop: 16, backgroundColor: '#DF9B34', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
   payBalanceText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   paymentHistRow: { flexDirection: 'row', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   payHistType: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 2 },

@@ -38,7 +38,7 @@ class RootErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={errorStyles.container}>
-          <Text style={errorStyles.title}>Data Udipi</Text>
+          <Text style={errorStyles.title}>MaitreD</Text>
           <Text style={errorStyles.message}>Something went wrong while starting the app.</Text>
           {this.state.error?.message ? (
             <View style={errorStyles.errorBox}>

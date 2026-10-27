@@ -177,7 +177,7 @@ export default function ForYou() {
           <Ionicons
             name={isFavorite(item.menu_item_id) ? 'heart' : 'heart-outline'}
             size={16}
-            color="#ff4500"
+            color="#DF9B34"
           />
         </TouchableOpacity>
       </View>
@@ -196,7 +196,7 @@ export default function ForYou() {
               activeOpacity={0.7}
               onPress={() => decrementQuantity(item.menu_item_id)}
             >
-              <Ionicons name="remove" size={14} color="#ff4500" />
+              <Ionicons name="remove" size={14} color="#DF9B34" />
             </TouchableOpacity>
             <Text style={styles.stepVal}>{cart[item.menu_item_id].quantity}</Text>
             <TouchableOpacity
@@ -245,7 +245,7 @@ export default function ForYou() {
 
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#ff4500" />
+          <ActivityIndicator size="large" color="#DF9B34" />
           <Text style={styles.loadingText}>Curating your recommendations...</Text>
         </View>
       ) : !customerId ? (
@@ -520,10 +520,10 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   sparkleText: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   comboReasonText: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 3,
@@ -599,12 +599,12 @@ const styles = StyleSheet.create({
     color: '#1c1c1e',
   },
   addPillBtn: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 20,
     paddingVertical: 9,
     borderRadius: 20,
     marginLeft: 10,
-    shadowColor: '#ff4500',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderRadius: 16,
     overflow: 'hidden',
     height: 30,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   stepVal: {
     minWidth: 22,

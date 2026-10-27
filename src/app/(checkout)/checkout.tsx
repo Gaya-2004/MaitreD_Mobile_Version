@@ -125,7 +125,7 @@ export default function CheckoutScreen() {
             <Ionicons
               name={confirmModal.type === 'clear_all' ? 'trash-outline' : 'close-circle-outline'}
               size={34}
-              color="#ff3400"
+              color="#DF9B34"
             />
           </View>
           <Text style={styles.modalTitle}>
@@ -311,7 +311,7 @@ export default function CheckoutScreen() {
             onPress={() => setConfirmModal({ visible: true, type: 'clear_all' })}
             activeOpacity={0.7}
           >
-            <Ionicons name="trash-outline" size={15} color="#ff3400" style={{ marginRight: 4 }} />
+            <Ionicons name="trash-outline" size={15} color="#DF9B34" style={{ marginRight: 4 }} />
             <Text style={styles.cancelAllText}>Cancel Cart</Text>
           </TouchableOpacity>
         )}
@@ -320,7 +320,7 @@ export default function CheckoutScreen() {
       {cartItems.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
-            <Ionicons name="cart-outline" size={48} color="#ff3400" />
+            <Ionicons name="cart-outline" size={48} color="#DF9B34" />
           </View>
           <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
           <Text style={styles.emptySubtitle}>Looks like you haven't added anything to your cart yet.</Text>
@@ -359,11 +359,11 @@ export default function CheckoutScreen() {
                   
                   <View style={styles.stepper}>
                     <TouchableOpacity style={styles.stepBtnMinus} onPress={() => handleDecrement(item.id)}>
-                      <Ionicons name="remove" size={16} color="#ff3400" />
+                      <Ionicons name="remove" size={16} color="#DF9B34" />
                     </TouchableOpacity>
                     <Text style={styles.stepVal}>{item.quantity}</Text>
                     <TouchableOpacity style={styles.stepBtnPlus} onPress={() => incrementQuantity(item.id as any)}>
-                      <Ionicons name="add" size={16} color="#ff3400" />
+                      <Ionicons name="add" size={16} color="#DF9B34" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -375,7 +375,7 @@ export default function CheckoutScreen() {
         {orderType !== 'Take Away' && discountAmount > 0 && (
           <View style={styles.discountBanner}>
             <View style={styles.discountLeft}>
-              <Ionicons name="ticket-outline" size={20} color="#ff3400" />
+              <Ionicons name="ticket-outline" size={20} color="#DF9B34" />
               <Text style={styles.discountText}><Text style={styles.discountCode}>{discountCode || 'UDIPIFEAST'}</Text> applied!</Text>
             </View>
             <Text style={styles.discountSaved}>Rs. {discountAmount} SAVED</Text>
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   tableCircle: {
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   cancelAllBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff5f0',
+    backgroundColor: '#FFF5E5',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 14,
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   cancelAllText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   backBtn: {
     padding: 4,
@@ -771,10 +771,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff3400',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
   stepVal: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
     width: 24,
     textAlign: 'center',
   },
@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
   changeBtn: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   addressBottom: {
     flexDirection: 'row',
@@ -1003,7 +1003,7 @@ const styles = StyleSheet.create({
   toPayValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   footer: {
     backgroundColor: '#fff',

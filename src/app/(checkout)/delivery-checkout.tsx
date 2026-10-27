@@ -65,7 +65,7 @@ export default function DeliveryCheckoutScreen() {
         <View style={styles.card}>
           <View style={styles.addressRow}>
             <View style={styles.iconCircle}>
-              <Ionicons name="home-outline" size={20} color="#ff3400" />
+              <Ionicons name="home-outline" size={20} color="#DF9B34" />
             </View>
             <View style={styles.addressInfo}>
               <Text style={styles.addressType}>{selectedDeliveryAddress ? deliveryAddressType : 'Home'}</Text>
@@ -107,7 +107,7 @@ export default function DeliveryCheckoutScreen() {
         <View style={styles.tipSection}>
           <View style={styles.tipHeader}>
             <View style={styles.riderAvatar}>
-               <Ionicons name="bicycle-outline" size={24} color="#ff3400" />
+               <Ionicons name="bicycle-outline" size={24} color="#DF9B34" />
             </View>
             <View style={styles.tipInfo}>
               <Text style={styles.tipTitle}>Tip Your Delivery Partner</Text>
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   changeBtnText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   instructionContainer: {
     flexDirection: 'row',
@@ -446,8 +446,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   tipBtnSelected: {
-    backgroundColor: '#ff3400',
-    borderColor: '#ff3400',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   tipBtnText: {
     fontSize: 14,
@@ -478,12 +478,12 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   viewDetailsBtn: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   proceedBtn: {
     backgroundColor: '#00a01d',
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   billSplitTotalValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
   },
   orderItemRow: {
     flexDirection: 'row',

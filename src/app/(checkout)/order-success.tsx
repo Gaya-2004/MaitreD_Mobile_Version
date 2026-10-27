@@ -309,13 +309,13 @@ export default function OrderSuccessScreen() {
   
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#ff4500" />
+      <StatusBar barStyle="light-content" backgroundColor="#DF9B34" />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         
         {/* Header Block */}
         <View style={[styles.headerBlock, { paddingTop: insets.top + 20 }]}>
           <View style={styles.checkCircle}>
-            <Ionicons name="checkmark" size={40} color="#ff4500" />
+            <Ionicons name="checkmark" size={40} color="#DF9B34" />
           </View>
           <Text style={styles.title}>{titleText}</Text>
           <Text style={styles.orderId}>Order ID: #{params.orderId}</Text>
@@ -400,7 +400,7 @@ export default function OrderSuccessScreen() {
                     title={restaurantLoc.name || "Data Udipi"}
                     description="Restaurant Location"
                   >
-                    <Ionicons name="restaurant" size={30} color="#ff4500" />
+                    <Ionicons name="restaurant" size={30} color="#DF9B34" />
                   </Marker>
                   <Marker 
                     coordinate={userLoc} 
@@ -423,7 +423,7 @@ export default function OrderSuccessScreen() {
                         userLoc,
                         { latitude: restaurantLoc.latitude, longitude: restaurantLoc.longitude }
                       ]}
-                      strokeColor="#ff4500"
+                      strokeColor="#DF9B34"
                       strokeWidth={3}
                       lineDashPattern={[5, 5]}
                     />
@@ -435,7 +435,7 @@ export default function OrderSuccessScreen() {
                     Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${restaurantLoc.latitude},${restaurantLoc.longitude}`);
                   }}
                 >
-                  <Ionicons name="location" size={14} color="#ff4500" />
+                  <Ionicons name="location" size={14} color="#DF9B34" />
                   <Text style={styles.mapPillText} numberOfLines={1}>Directions to {restaurantLoc.name || 'Restaurant'}</Text>
                 </TouchableOpacity>
               </View>
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   headerBlock: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     alignItems: 'center',
     paddingBottom: 24,
     borderBottomLeftRadius: 0,
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   aheadBadge: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
   },
   activeDot: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   progressLine: {
     flex: 1,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeLine: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   etaSubtext: {
     fontSize: 12,

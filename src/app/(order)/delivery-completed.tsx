@@ -139,7 +139,7 @@ export default function DeliveryCompletedScreen() {
 
   const handleShareInvoice = async () => {
     const lines = [
-      `🧾 Order Invoice — Udupi Restaurant`,
+      `🧾 Order Invoice — MaitreD Restaurant`,
       `Order ID: ${orderIdDisplay}`,
       `Date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`,
       `Payment: ${params.paymentMethod || 'UPI'}`,
@@ -218,7 +218,7 @@ export default function DeliveryCompletedScreen() {
             <View style={styles.invoiceHeader}>
               <Text style={styles.invoiceTitle}>Order Invoice</Text>
               <TouchableOpacity style={styles.shareBtn} onPress={handleShareInvoice}>
-                <Ionicons name="share-outline" size={16} color="#ff3400" />
+                <Ionicons name="share-outline" size={16} color="#DF9B34" />
                 <Text style={styles.shareBtnText}>Share</Text>
               </TouchableOpacity>
             </View>
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   invoiceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   invoiceTitle: { fontSize: 17, fontWeight: '800', color: '#000' },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fff5f2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  shareBtnText: { color: '#ff3400', fontSize: 13, fontWeight: '600' },
+  shareBtnText: { color: '#DF9B34', fontSize: 13, fontWeight: '600' },
   invoiceMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
   invoiceMetaLabel: { fontSize: 11, color: '#999', marginBottom: 2 },
   invoiceMetaValue: { fontSize: 13, fontWeight: '700', color: '#333' },
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   breakdownValue: { fontSize: 13, color: '#333' },
   grandTotalRow: { flexDirection: 'row', justifyContent: 'space-between' },
   grandTotalLabel: { fontSize: 16, fontWeight: '800', color: '#000' },
-  grandTotalValue: { fontSize: 16, fontWeight: '800', color: '#ff3400' },
+  grandTotalValue: { fontSize: 16, fontWeight: '800', color: '#DF9B34' },
 
   // Loyalty
   loyaltyPill: {
@@ -440,9 +440,9 @@ const styles = StyleSheet.create({
   tagsTitle: { fontSize: 11, fontWeight: '700', color: '#aaa', textAlign: 'center', marginTop: 14, marginBottom: 12 },
   tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   tagBtn: { borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#fff', paddingVertical: 7, paddingHorizontal: 14, borderRadius: 20 },
-  tagBtnActive: { borderColor: '#ff3400', backgroundColor: '#fff5f2' },
+  tagBtnActive: { borderColor: '#DF9B34', backgroundColor: '#fff5f2' },
   tagText: { fontSize: 12, color: '#888' },
-  tagTextActive: { color: '#ff3400', fontWeight: '600' },
+  tagTextActive: { color: '#DF9B34', fontWeight: '600' },
   submitFeedbackBtn: { marginTop: 16, paddingVertical: 11, alignItems: 'center', backgroundColor: '#e6f7eb', borderRadius: 10 },
   submitFeedbackText: { color: '#00a01d', fontWeight: '700', fontSize: 14 },
 
@@ -453,8 +453,8 @@ const styles = StyleSheet.create({
   // Buttons
   reorderBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#ff3400', paddingVertical: 16, borderRadius: 14, marginBottom: 12,
-    shadowColor: '#ff3400', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
+    backgroundColor: '#DF9B34', paddingVertical: 16, borderRadius: 14, marginBottom: 12,
+    shadowColor: '#DF9B34', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
   },
   reorderBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   homeBtn: { alignItems: 'center', paddingVertical: 14, marginBottom: 30 },

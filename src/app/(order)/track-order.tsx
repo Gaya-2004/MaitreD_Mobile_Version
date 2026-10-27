@@ -610,14 +610,14 @@ export default function TrackOrderScreen() {
       itemStatusLabel = "Pending";
       progressPct = "10%";
       barColor = "#ffb088";
-      textColor = "#ff4500";
+      textColor = "#DF9B34";
       subText = "Waiting for kitchen";
     } else if (rawItemStatus === 'PREPARING' || rawItemStatus === 'COOKING') {
       const val = 60 + (idx % 3) * 10;
       itemStatusLabel = `Cooking (${val}%)`;
       progressPct = `${val}%`;
-      barColor = "#ff4500";
-      textColor = "#ff4500";
+      barColor = "#DF9B34";
+      textColor = "#DF9B34";
       subText = "On the griddle - crisping up";
     } else if (rawItemStatus === 'READY' || rawItemStatus === 'ALMOST_READY') {
       itemStatusLabel = "Ready";
@@ -639,21 +639,21 @@ export default function TrackOrderScreen() {
       itemStatusLabel = "Prep";
       progressPct = "30%";
       barColor = "#ffb088";
-      textColor = "#ff4500";
+      textColor = "#DF9B34";
       subText = "Ingredients ready";
     } else if (statusLevel === 3) {
       // Vary slightly based on index
       const val = 60 + (idx % 3) * 10; 
       itemStatusLabel = `Cooking (${val}%)`;
       progressPct = `${val}%`;
-      barColor = "#ff4500";
-      textColor = "#ff4500";
+      barColor = "#DF9B34";
+      textColor = "#DF9B34";
       subText = "On the griddle - crisping up";
     } else if (statusLevel === 4) {
       itemStatusLabel = `Almost Ready`;
       progressPct = `90%`;
-      barColor = "#ff4500";
-      textColor = "#ff4500";
+      barColor = "#DF9B34";
+      textColor = "#DF9B34";
       subText = "Adding final touches";
     } else if (statusLevel >= 5) {
       itemStatusLabel = `Completed`;
@@ -694,7 +694,7 @@ export default function TrackOrderScreen() {
   };
   const getStepTextColor = (step: number) => {
     if (statusLevel > step) return "#00a01d";
-    if (statusLevel === step) return "#ff4500";
+    if (statusLevel === step) return "#DF9B34";
     return "#888";
   };
   
@@ -760,7 +760,7 @@ export default function TrackOrderScreen() {
             {/* Status Banner Card */}
             <View style={styles.bannerCard}>
               <View style={styles.bannerIconCircle}>
-                <Ionicons name="flame" size={20} color="#ff4500" />
+                <Ionicons name="flame" size={20} color="#DF9B34" />
               </View>
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <Text style={styles.bannerTitle}>{bannerTitle}</Text>
@@ -852,7 +852,7 @@ export default function TrackOrderScreen() {
             <Ionicons name="call-outline" size={18} color="#000" />
             <Text style={styles.callBtnText}>Call Restaurant</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.orderMoreBtn, { backgroundColor: '#ff4500' }]}
+          <TouchableOpacity style={[styles.orderMoreBtn, { backgroundColor: '#DF9B34' }]}
             onPress={() => {
               const dbId = params.dbOrderId || liveDbOrderId;
               if (dbId) {
@@ -1388,7 +1388,7 @@ export default function TrackOrderScreen() {
               {/* Status Banner Card */}
               <View style={styles.bannerCard}>
                  <View style={styles.bannerIconCircle}>
-                    <Ionicons name="flame" size={20} color="#ff4500" />
+                    <Ionicons name="flame" size={20} color="#DF9B34" />
                  </View>
                  <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text style={styles.bannerTitle}>{bannerTitle}</Text>
@@ -1508,7 +1508,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   orderIdText: {
-    color: '#ff4500',
+    color: '#DF9B34',
     fontWeight: 'bold',
     fontSize: 14,
     marginBottom: 4,
@@ -1545,7 +1545,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00a01d',
   },
   stepActive: {
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
   },
   stepPending: {
     backgroundColor: '#eee',
@@ -1559,7 +1559,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ff4500',
+    borderColor: '#DF9B34',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -1722,7 +1722,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff3400',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 12,
     flex: 0.48,
@@ -1790,7 +1790,7 @@ const styles = StyleSheet.create({
   dineInLiveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1822,7 +1822,7 @@ const styles = StyleSheet.create({
   },
   dineInProgressBarFill: {
     height: '100%',
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     borderRadius: 2,
   },
   dineInStepperContainer: {

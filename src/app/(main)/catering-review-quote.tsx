@@ -118,8 +118,8 @@ export default function ReviewQuote() {
             <Text style={styles.totalValue}>Rs. {fmt(totalAmount)}</Text>
           </View>
           <View style={styles.billRow}>
-            <Text style={[styles.totalLabel, { color: '#ff4500' }]}>Advance Required ({advancePct}%)</Text>
-            <Text style={[styles.totalValue, { color: '#ff4500' }]}>Rs. {fmt(advanceAmount)}</Text>
+            <Text style={[styles.totalLabel, { color: '#DF9B34' }]}>Advance Required ({advancePct}%)</Text>
+            <Text style={[styles.totalValue, { color: '#DF9B34' }]}>Rs. {fmt(advanceAmount)}</Text>
           </View>
         </View>
 
@@ -160,11 +160,11 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#fff' },
   backBtn: { marginRight: 15 },
   headerText: { flex: 1 },
-  stepText: { fontSize: 10, fontWeight: '700', color: '#ff4500', letterSpacing: 1 },
+  stepText: { fontSize: 10, fontWeight: '700', color: '#DF9B34', letterSpacing: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginTop: 2 },
   progressBar: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   progressSeg: { flex: 1, height: 4, backgroundColor: '#f0f0f0', borderRadius: 2, marginHorizontal: 2 },
-  progressActive: { backgroundColor: '#ff4500' },
+  progressActive: { backgroundColor: '#DF9B34' },
   card: {
     backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, borderRadius: 12,
     padding: 18, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#222' },
-  editLink: { fontSize: 12, fontWeight: 'bold', color: '#ff4500', letterSpacing: 0.5 },
+  editLink: { fontSize: 12, fontWeight: 'bold', color: '#DF9B34', letterSpacing: 0.5 },
   eventName: { fontSize: 17, fontWeight: 'bold', color: '#222', marginBottom: 6 },
   eventMeta: { fontSize: 13, color: '#666', marginBottom: 3 },
   eventAddress: { fontSize: 13, color: '#666', marginTop: 4, lineHeight: 18 },
@@ -193,6 +193,6 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff',
     padding: 20, borderTopWidth: 1, borderTopColor: '#eee', elevation: 8
   },
-  advanceBtn: { backgroundColor: '#ff4500', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  advanceBtn: { backgroundColor: '#DF9B34', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
   advanceBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });

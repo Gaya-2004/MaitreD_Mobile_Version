@@ -61,7 +61,7 @@ export default function SelectTableModal({
           {/* Icon Badge */}
           <View style={styles.iconContainer}>
             <View style={styles.iconCircle}>
-              <Ionicons name="restaurant-outline" size={32} color="#ff4500" />
+              <Ionicons name="restaurant-outline" size={32} color="#DF9B34" />
             </View>
             <View style={styles.warningBadge}>
               <Ionicons name="alert" size={13} color="#ffffff" />
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#ff4500',
+    backgroundColor: '#DF9B34',
     borderWidth: 2,
     borderColor: '#ffffff',
     alignItems: 'center',

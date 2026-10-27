@@ -140,7 +140,7 @@ export default function InvoiceScreen() {
   const generatePDF = async () => {
     setDownloading(true);
     try {
-      const logoBase64 = await getAssetBase64(require('../../../assets/images/udupi-banner.png'));
+      const logoBase64 = await getAssetBase64(require('../../../assets/images/maitred_logo_dark.png'));
       const qrCodeUrl = paymentMethod.toUpperCase() === 'UPI'
         ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=dataudipi@upi%26pn=DataUdipi%26am=${finalTotal}%26cu=INR`
         : `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=CashPaymentConfirmed`;
@@ -527,7 +527,7 @@ export default function InvoiceScreen() {
         await Print.printAsync({ html: htmlContent });
       } else {
         const { uri } = await Print.printToFileAsync({ html: htmlContent });
-        const safeUri = FileSystem.documentDirectory + `DataUdipi_Bill_${orderId}.pdf`;
+        const safeUri = FileSystem.documentDirectory + `MaitreD_Bill_${orderId}.pdf`;
         await FileSystem.moveAsync({ from: uri, to: safeUri });
         await Sharing.shareAsync(safeUri, { UTI: '.pdf', mimeType: 'application/pdf' });
       }
@@ -547,7 +547,7 @@ export default function InvoiceScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#ff4500" />
+          <ActivityIndicator size="large" color="#DF9B34" />
           <Text style={{ marginTop: 12 }}>Loading invoice...</Text>
         </View>
       </SafeAreaView>
@@ -572,7 +572,7 @@ export default function InvoiceScreen() {
           </View>
 
           <View style={styles.logoContainer}>
-            <Image source={require('../../../assets/images/udupi-banner.png')} style={styles.logoImage} resizeMode="contain" />
+            <Image source={require('../../../assets/images/maitred_logo_dark.png')} style={styles.logoImage} resizeMode="contain" />
           </View>
 
           <View style={styles.brandRow}>
@@ -766,8 +766,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   logoImage: {
-    width: 200,
-    height: 40,
+    width: 220,
+    height: 54,
   },
   brandRow: {
     flexDirection: 'row',
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     flexDirection: 'row',
-    backgroundColor: '#ff5a1f',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 8,
     justifyContent: 'center',

@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  Platform,
-} from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDineInSessionStore } from '../store/useDineInSessionStore';
 import { dineInSessionApi } from '../services/apiService';
+import { useDineInSessionStore } from '../store/useDineInSessionStore';
 
 interface DineInActiveBannerProps {
   bottomOffset?: number;
@@ -168,7 +169,7 @@ export default function DineInActiveBanner({ bottomOffset }: DineInActiveBannerP
               onPress={handleOrderMore}
               activeOpacity={0.8}
             >
-              <Ionicons name="add-circle-outline" size={14} color="#ff3400" />
+              <Ionicons name="add-circle-outline" size={14} color="#DF9B34" />
               <Text style={styles.orderMoreBtnText}>Order More</Text>
             </TouchableOpacity>
 
@@ -256,7 +257,7 @@ export default function DineInActiveBanner({ bottomOffset }: DineInActiveBannerP
                 onPress={handleOrderMore}
                 activeOpacity={0.8}
               >
-                <Ionicons name="fast-food-outline" size={16} color="#ff3400" />
+                <Ionicons name="fast-food-outline" size={16} color="#DF9B34" />
                 <Text style={styles.orderMoreSheetBtnText}>Order More Food</Text>
               </TouchableOpacity>
 
@@ -351,7 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   orderMoreBtnText: {
-    color: '#ff3400',
+    color: '#DF9B34',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
   billItemQty: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#ff3400',
+    color: '#DF9B34',
     width: 24,
   },
   billItemName: {
@@ -512,11 +513,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ff3400',
+    borderColor: '#DF9B34',
     backgroundColor: '#fff',
   },
   orderMoreSheetBtnText: {
-    color: '#ff3400',
+    color: '#DF9B34',
     fontSize: 14,
     fontWeight: 'bold',
   },
