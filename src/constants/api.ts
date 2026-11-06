@@ -1,12 +1,16 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 const getApiUrl = () => {
-  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (envUrl) {
-    return envUrl.replace(/\/+$/, '');
+  // If running on web in a browser, use the current host (localhost or current LAN IP) to avoid IP drift
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) {
+      return `http://${hostname}:8001`;
+    }
   }
 
-  // Auto-detect host IP when running via Metro dev server
+  // Auto-detect host IP when running via Metro dev server (Expo Go / Dev Client on physical device or simulator)
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const host = hostUri.split(':')[0];
@@ -15,7 +19,17 @@ const getApiUrl = () => {
     }
   }
 
-  return 'https://dev-api.dataudipi.com';
+  // If running in Android emulator without hostUri
+  if (Platform.OS === 'android' && !Constants.isDevice) {
+    return 'http://10.0.2.2:8001';
+  }
+
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (envUrl) {
+    return envUrl.replace(/\/+$/, '');
+  }
+
+  return 'http://192.168.1.6:8001';
 };
 
 export const API_BASE_URL = getApiUrl();

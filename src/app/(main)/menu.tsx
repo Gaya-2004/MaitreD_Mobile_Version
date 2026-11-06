@@ -773,7 +773,7 @@ export default function App() {
               {orderType === "Dine In" && (
                 <View style={styles.tableSelector}>
                   <Text style={styles.tableSelectorText}>Table No : {tableNumber.replace('T-', '')}</Text>
-                  <Ionicons name="chevron-down" size={14} color="#00a01d" />
+                  <Ionicons name="chevron-down" size={14} color="#DF9B34" />
                 </View>
               )}
             </View>
@@ -1160,7 +1160,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dfdfdf',
   },
-  regionTabActive: { backgroundColor: '#00a01d', borderColor: '#00a01d' },
+  regionTabActive: { backgroundColor: '#DF9B34', borderColor: '#DF9B34' },
   regionText: { fontSize: 13, color: '#333', fontWeight: '600' },
   regionTextActive: { color: '#fff' },
   
@@ -1305,7 +1305,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tableSelectorText: {
-    color: '#00a01d',
+    color: '#DF9B34',
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -1437,7 +1437,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   placeOrderBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1597,7 +1597,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   filterOptionTextActive: {
-    color: '#00a01d',
+    color: '#DF9B34',
     fontWeight: 'bold',
   },
   filterDivider: {

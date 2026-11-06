@@ -26,11 +26,13 @@ const webSafeStorage = {
   },
 };
 
+const SIGNED_DEV_GUEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIrOTE5ODc2NTQzMjEwIiwidXNlcl9pZCI6IjEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJhY2NvdW50X3R5cGUiOiJDVVNUT01FUiJ9.XeS3lrCNOdG8kVUrk9uTe0Pe_ZrQsM0_O-N2Eu_QY_s';
+
 const DEFAULT_GUEST_USER = {
   customerId: 1,
   customerName: 'Guest User',
   phone: '9876543210',
-  token: 'guest_token',
+  token: SIGNED_DEV_GUEST_TOKEN,
   isAuthenticated: true,
 };
 
@@ -73,7 +75,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage-v4',
       storage: createJSONStorage(() => webSafeStorage),
       onRehydrateStorage: () => (state) => {
-        if (!state?.isAuthenticated || !state?.phone) {
+        if (!state?.isAuthenticated || !state?.phone || state?.token === 'guest_token') {
           useAuthStore.setState({
             customerId: DEFAULT_GUEST_USER.customerId,
             customerName: DEFAULT_GUEST_USER.customerName,

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Alert, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore, useRestaurantStore } from '../../store';
 import { useAuthStore } from '../../store/useAuthStore';
 
-import { orderApi, customerApi, deliveryApi } from '../../services/apiService';
+import { customerApi, deliveryApi, orderApi } from '../../services/apiService';
 import { formatDateOnly } from '../../utils/dateUtils';
 
 export default function DeliveryCompletedScreen() {
@@ -96,7 +96,7 @@ export default function DeliveryCompletedScreen() {
         const parsed = JSON.parse(params.cart);
         return Array.isArray(parsed) ? parsed : [];
       }
-    } catch (e) {}
+    } catch (e) { }
     return [];
   })();
 
@@ -110,7 +110,7 @@ export default function DeliveryCompletedScreen() {
   const discountAmt = Number(orderData?.order?.discount_amount || 0);
   const grandTotal = totalAmt;
   const paymentMethod = orderData?.order?.payment_method || params.paymentMethod || 'UPI';
-  
+
   const deliveredTimelineEvent = trackingData?.timeline?.find((event: any) => event.status === 'DELIVERED');
   const deliveredAt = trackingData?.assignment?.delivered_at || orderData?.order?.delivered_at || deliveredTimelineEvent?.created_at;
   const deliveryDateStr = deliveredAt
@@ -185,7 +185,7 @@ export default function DeliveryCompletedScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: '#00a01d', alignItems: 'center', justifyContent: 'center' }]}> 
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: '#00a01d', alignItems: 'center', justifyContent: 'center' }]}>
         <ActivityIndicator size="large" color="#fff" />
         <Text style={{ color: '#fff', marginTop: 12 }}>Loading your completed order...</Text>
       </SafeAreaView>
@@ -443,8 +443,8 @@ const styles = StyleSheet.create({
   tagBtnActive: { borderColor: '#DF9B34', backgroundColor: '#fff5f2' },
   tagText: { fontSize: 12, color: '#888' },
   tagTextActive: { color: '#DF9B34', fontWeight: '600' },
-  submitFeedbackBtn: { marginTop: 16, paddingVertical: 11, alignItems: 'center', backgroundColor: '#e6f7eb', borderRadius: 10 },
-  submitFeedbackText: { color: '#00a01d', fontWeight: '700', fontSize: 14 },
+  submitFeedbackBtn: { marginTop: 16, paddingVertical: 11, alignItems: 'center', backgroundColor: '#fff7ed', borderRadius: 10 },
+  submitFeedbackText: { color: '#DF9B34', fontWeight: '700', fontSize: 14 },
 
   // Feedback done
   feedbackDoneBox: { alignItems: 'center', paddingVertical: 24, marginBottom: 20 },

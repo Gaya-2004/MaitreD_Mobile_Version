@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 
 interface PaymentState {
-  paymentMethod: 'UPI' | 'Cash' | null;
+  paymentMethod: 'UPI' | 'Cash' | 'Pay at Counter' | 'COD' | null;
   paymentStatus: 'pending' | 'success' | 'failed' | null;
   transactionId: string | null;
   paymentTimestamp: string | null;
 
-  setPaymentMethod: (method: 'UPI' | 'Cash') => void;
+  setPaymentMethod: (method: 'UPI' | 'Cash' | 'Pay at Counter' | 'COD' | any) => void;
   setPaymentSuccess: (transactionId: string) => void;
   setPaymentFailed: () => void;
   clearPayment: () => void;

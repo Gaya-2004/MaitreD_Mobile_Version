@@ -307,11 +307,12 @@ export default function OrderDetailsScreen() {
     }
 
     if (order?.order_type === 'Take Away') {
-      return `${selectedOutlet?.name || 'Data Udipi'} — Takeaway Counter, Mount-Poonamallee Road`;
+      return `${selectedOutlet?.name || 'MaitreD'} — Takeaway Counter, Mount-Poonamallee Road`;
     }
 
     const tableStr = order?.table_number ? `Table ${order.table_number}` : 'Table T-01';
-    return `${tableStr}, ${selectedOutlet?.name || 'Data Udipi — Mugalivakkam'}`;
+    const outletName = (selectedOutlet?.name || 'MaitreD — Mugalivakkam').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD');
+    return `${tableStr}, ${outletName}`;
   }, [order, isDelivery, selectedOutlet]);
 
   const paymentMethodText = useMemo(() => {

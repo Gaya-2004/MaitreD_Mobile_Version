@@ -193,7 +193,7 @@ async function fetchAgentDataNetwork(
     restaurantState.setSelectedOutlet({
       id: 'mugalivakkam',
       restaurant_id: 1,
-      name: 'Data Udipi — Mugalivakkam',
+      name: 'MaitreD — Mugalivakkam',
     });
   }
 
@@ -285,7 +285,7 @@ async function resolveAndAddToCart(fnArgs: any): Promise<{ success: boolean; cod
     restaurantState.setSelectedOutlet({
       id: 'mugalivakkam',
       restaurant_id: 1,
-      name: 'Data Udipi — Mugalivakkam',
+      name: 'MaitreD — Mugalivakkam',
     });
   }
 
@@ -580,7 +580,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
           restaurantState.setSelectedOutlet({
             id: 'mugalivakkam',
             restaurant_id: 1,
-            name: 'Data Udipi — Mugalivakkam',
+            name: 'MaitreD — Mugalivakkam',
           });
         }
 
@@ -1138,16 +1138,16 @@ export const useVapiStore = create<VapiState>((set, get) => ({
     const isLoggedIn = auth.isAuthenticated && auth.phone;
     const hasOutlet = !!restaurant.selectedOutlet;
 
-    let dynamicFirstMessage = "Welcome to Data Udipi! I'm your voice assistant.";
+    let dynamicFirstMessage = "Welcome to MaitreD! I'm your voice assistant.";
     
     if (hasHistory) {
       dynamicFirstMessage = "I'm back. Let's continue.";
     } else if (!isLoggedIn) {
-      dynamicFirstMessage = "Welcome to Data Udipi! I'm your voice assistant. To get started, could you please tell me your phone number?";
+      dynamicFirstMessage = "Welcome to MaitreD! I'm your voice assistant. To get started, could you please tell me your phone number?";
     } else if (!hasOutlet) {
-      dynamicFirstMessage = "Welcome back to Data Udipi! We have exciting delicious menu varieties and category items. Which outlet would you like to order from today?";
+      dynamicFirstMessage = "Welcome back to MaitreD! We have exciting delicious menu varieties and category items. Which outlet would you like to order from today?";
     } else {
-      dynamicFirstMessage = "Welcome back to Data Udipi! We have exciting delicious menu varieties and category items. Which items would you prefer today?";
+      dynamicFirstMessage = "Welcome back to MaitreD! We have exciting delicious menu varieties and category items. Which items would you prefer today?";
     }
 
     const overrides = { 

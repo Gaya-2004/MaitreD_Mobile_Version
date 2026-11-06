@@ -36,7 +36,7 @@ export default function DeliveryUnavailableModal({
   onTryAnotherAddress,
   distanceKm,
   maxRadiusKm = 5,
-  restaurantName = 'Data Udipi',
+  restaurantName = 'MaitreD',
   alternateBranch,
   customMessage,
 }: DeliveryUnavailableModalProps) {
@@ -112,12 +112,12 @@ export default function DeliveryUnavailableModal({
           {alternateBranch && alternateBranch.isEligible && (
             <View style={styles.alternateBox}>
               <View style={styles.alternateHeader}>
-                <Ionicons name="sparkles" size={16} color="#059669" />
+                <Ionicons name="sparkles" size={16} color="#DF9B34" />
                 <Text style={styles.alternateTitle}>Nearest Branch Available!</Text>
               </View>
               <Text style={styles.alternateText}>
                 <Text style={{ fontWeight: '700' }}>{alternateBranch.name}</Text> is only{' '}
-                <Text style={{ fontWeight: '700', color: '#059669' }}>{alternateBranch.distanceKm} km</Text> away and can deliver to your doorstep.
+                <Text style={{ fontWeight: '700', color: '#DF9B34' }}>{alternateBranch.distanceKm} km</Text> away and can deliver to your doorstep.
               </Text>
               <TouchableOpacity style={styles.switchBranchBtn} onPress={handleSwitchBranch}>
                 <Text style={styles.switchBranchBtnText}>Switch to {alternateBranch.name.split('—')[1]?.trim() || 'This Branch'}</Text>
@@ -251,9 +251,9 @@ const styles = StyleSheet.create({
   },
   alternateBox: {
     width: '100%',
-    backgroundColor: '#ecfdf5',
+    backgroundColor: '#fff7ed',
     borderWidth: 1,
-    borderColor: '#a7f3d0',
+    borderColor: '#fed7aa',
     borderRadius: 14,
     padding: 12,
     marginBottom: 18,
@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
   alternateTitle: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: '#065f46',
+    color: '#9a3412',
   },
   alternateText: {
     fontSize: 12,
-    color: '#047857',
+    color: '#c2410c',
     lineHeight: 17,
     marginBottom: 10,
   },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#059669',
+    backgroundColor: '#DF9B34',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,

@@ -454,7 +454,7 @@ export default function Home() {
       let restId = selectedOutlet?.restaurant_id ? Number(selectedOutlet.restaurant_id) : 1;
 
       if (selectedOutlet?.name) {
-        const cleanName = selectedOutlet.name.replace(/^Data Udipi\s*—\s*/i, '');
+        const cleanName = selectedOutlet.name.replace(/^(?:Data Udipi|MaitreD)\s*[-—]\s*/i, '');
         setSelectedBranchName(cleanName);
       }
 
@@ -503,7 +503,7 @@ export default function Home() {
         return c.name;
       };
 
-      const branchSuffix = selectedOutlet?.name ? selectedOutlet.name.replace(/^Data Udipi\s*[-—]\s*/i, '').trim() : '';
+      const branchSuffix = selectedOutlet?.name ? selectedOutlet.name.replace(/^(?:Data Udipi|MaitreD)\s*[-—]\s*/i, '').trim() : '';
 
       const uniqueCatNames = new Set<string>();
 
@@ -1485,7 +1485,7 @@ export default function Home() {
                 <TouchableOpacity
                   style={[
                     styles.alertBtn,
-                    customAlert.type === 'success' && { backgroundColor: '#00cc66' },
+                    customAlert.type === 'success' && { backgroundColor: '#DF9B34' },
                     customAlert.type === 'error' && { backgroundColor: '#DF9B34' },
                     customAlert.type === 'info' && { backgroundColor: '#1e90ff' }
                   ]}
@@ -1524,7 +1524,7 @@ export default function Home() {
               {orderType === "Dine In" && tableNumber ? (
                 <View style={styles.tableSelector}>
                   <Text style={styles.tableSelectorText}>Table No : {tableNumber.replace('T-', '')}</Text>
-                  <Ionicons name="chevron-down" size={14} color="#00a01d" />
+                  <Ionicons name="chevron-down" size={14} color="#DF9B34" />
                 </View>
               ) : null}
             </View>
@@ -1984,7 +1984,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tableSelectorText: {
-    color: '#00a01d',
+    color: '#DF9B34',
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -2122,7 +2122,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   placeOrderBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',

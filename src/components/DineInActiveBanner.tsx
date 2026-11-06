@@ -151,7 +151,7 @@ export default function DineInActiveBanner({ bottomOffset }: DineInActiveBannerP
         <View style={styles.bannerCard}>
           <View style={styles.bannerLeft}>
             <View style={styles.tableBadge}>
-              <Ionicons name="restaurant" size={14} color="#00a01d" />
+              <Ionicons name="restaurant" size={14} color="#DF9B34" />
               <Text style={styles.tableBadgeText}>{tableNumber || 'Table'}</Text>
             </View>
             <View style={styles.infoCol}>
@@ -246,7 +246,7 @@ export default function DineInActiveBanner({ bottomOffset }: DineInActiveBannerP
 
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Grand Total Due</Text>
-              <Text style={[styles.totalValue, displayTotal === 0 && { color: '#00a01d' }]}>
+              <Text style={[styles.totalValue, displayTotal === 0 && { color: '#DF9B34' }]}>
                 Rs. {displayTotal.toFixed(0)}
               </Text>
             </View>
@@ -285,6 +285,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 14,
     right: 14,
+    maxWidth: 452,
+    marginHorizontal: 'auto',
     zIndex: 98,
   },
   bannerCard: {
@@ -312,14 +314,14 @@ const styles = StyleSheet.create({
   tableBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#fff7ed',
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 8,
     gap: 4,
   },
   tableBadgeText: {
-    color: '#00a01d',
+    color: '#DF9B34',
     fontWeight: 'bold',
     fontSize: 12,
   },
@@ -357,7 +359,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   completeBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 14,
@@ -469,7 +471,7 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#00a01d',
+    color: '#DF9B34',
   },
   paymentMethodsRow: {
     flexDirection: 'row',
@@ -490,8 +492,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   paymentOptionActive: {
-    borderColor: '#00a01d',
-    backgroundColor: '#e8f5e9',
+    borderColor: '#DF9B34',
+    backgroundColor: '#fff7ed',
   },
   paymentOptionText: {
     fontSize: 11,
@@ -499,7 +501,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   paymentOptionTextActive: {
-    color: '#00a01d',
+    color: '#DF9B34',
     fontWeight: 'bold',
   },
   sheetActions: {
@@ -526,7 +528,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     borderRadius: 24,
     paddingVertical: 14,
   },

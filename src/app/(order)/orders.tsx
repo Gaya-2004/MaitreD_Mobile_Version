@@ -121,7 +121,7 @@ export default function Orders() {
             return {
               id: `CAT-${String(cOrder.id).padStart(6, '0')}`,
               dbId: cOrder.id,
-              restaurant: 'Data Udipi Catering',
+              restaurant: 'MaitreD Catering',
               date: cOrder.created_at || cOrder.event_date || '2000-01-01T00:00:00Z',
               status: cOrder.order_status || 'Pending',
               payment_status: cOrder.payment_status || 'Pending',
@@ -299,7 +299,7 @@ export default function Orders() {
         const activeOrderCard = {
           id: dineInSession.activeOrderId || (primaryMatch ? primaryMatch.id : 'ORD-ACTIVE'),
           dbId: dineInSession.activeDbOrderId || (primaryMatch ? primaryMatch.dbId : null),
-          restaurant: (primaryMatch ? primaryMatch.restaurant : null) || selectedOutlet?.name || 'Data Udipi',
+          restaurant: (primaryMatch ? primaryMatch.restaurant : null) || selectedOutlet?.name || 'MaitreD',
           restaurant_id: (primaryMatch ? primaryMatch.restaurant_id : null) || selectedOutlet?.restaurant_id || 1,
           bill_no: sessionBillNo,
           dine_in_session_id: dineInSession.sessionDbId,

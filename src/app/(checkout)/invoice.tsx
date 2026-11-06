@@ -52,8 +52,20 @@ export default function InvoiceScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [downloading, setDownloading] = useState(false);
-  const branchName = selectedOutlet?.name || 'Data Udipi — Mugalivakkam';
-  const branchAddress = selectedOutlet?.address || 'Mount-Poonamallee Road, Mugalivakkam, Chennai 600125';
+  const sanitizeBrand = (text: string) => {
+    return (text || '')
+      .replace(/Data\s*Udipi/gi, 'MaitreD')
+      .replace(/Grand\s*Udipi/gi, 'MaitreD')
+      .replace(/Data\s*Udupi/gi, 'MaitreD')
+      .replace(/Grand\s*Udupi/gi, 'MaitreD')
+      .replace(/\bUdipi\b/gi, 'MaitreD')
+      .replace(/\bUdupi\b/gi, 'MaitreD');
+  };
+
+  const rawBranchName = selectedOutlet?.name || (params.restaurantName as string) || 'MaitreD — Mugalivakkam';
+  const branchName = sanitizeBrand(rawBranchName);
+  const rawBranchAddress = selectedOutlet?.address || 'Mount-Poonamallee Road, Mugalivakkam, Chennai 600125';
+  const branchAddress = sanitizeBrand(rawBranchAddress);
   const [orderData, setOrderData] = useState<any>(null);
   const [loadingOrder, setLoadingOrder] = useState(Boolean(params.dbOrderId));
 
@@ -142,7 +154,7 @@ export default function InvoiceScreen() {
     try {
       const logoBase64 = await getAssetBase64(require('../../../assets/images/maitred_logo_dark.png'));
       const qrCodeUrl = paymentMethod.toUpperCase() === 'UPI'
-        ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=dataudipi@upi%26pn=DataUdipi%26am=${finalTotal}%26cu=INR`
+        ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=maitred@upi%26pn=MaitreD%26am=${finalTotal}%26cu=INR`
         : `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=CashPaymentConfirmed`;
 
       let itemsHtml = '';
@@ -163,7 +175,7 @@ export default function InvoiceScreen() {
       });
 
       const invoiceTitle = totalGstValFromOrder > 0 ? 'TAX INVOICE' : 'RETAIL INVOICE';
-      const cleanBranchTitle = (branchName || '').includes(' — ') ? branchName.split(' — ')[0].trim() : (branchName || '').trim();
+      const cleanBranchTitle = sanitizeBrand((branchName || '').includes(' — ') ? branchName.split(' — ')[0].trim() : (branchName || '').trim());
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -427,10 +439,10 @@ export default function InvoiceScreen() {
           <div class="banner-tag">40 YEARS OF EXCELLENCE</div>
           
           <div class="brand-header">
-            ${logoBase64 ? `<img src="${logoBase64}" class="brand-logo-img" alt="Data Udipi" />` : ''}
+            ${logoBase64 ? `<img src="${logoBase64}" class="brand-logo-img" alt="MaitreD" />` : ''}
             <div class="outlet-name">${cleanBranchTitle}</div>
             <div class="outlet-address">${branchAddress}</div>
-            <div class="company-details">Data Udipi Limited • Regd. Office: Chennai</div>
+            <div class="company-details">MaitreD Limited • Regd. Office: Chennai</div>
             <div class="company-gstin">GSTIN: 29AAACT1836J1ZC</div>
           </div>
 
@@ -516,7 +528,7 @@ export default function InvoiceScreen() {
 
           <div class="footer-box">
             <div>No return / exchange on prepared food items.</div>
-            <div class="footer-highlight">Thank you for dining with Data Udipi!</div>
+            <div class="footer-highlight">Thank you for dining with MaitreD!</div>
           </div>
         </div>
         </body>
@@ -540,7 +552,7 @@ export default function InvoiceScreen() {
   };
 
   const qrUrl = paymentMethod.toUpperCase() === 'UPI'
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=dataudipi@upi%26pn=DataUdipi%26am=${finalTotal}%26cu=INR`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=maitred@upi%26pn=MaitreD%26am=${finalTotal}%26cu=INR`
     : `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=CashPaymentConfirmed`;
 
   if (loadingOrder) {
@@ -576,12 +588,12 @@ export default function InvoiceScreen() {
           </View>
 
           <View style={styles.brandRow}>
-            <Text style={styles.brandName}>{(branchName || '').includes(' — ') ? branchName.split(' — ')[0].trim() : (branchName || '').trim()} : {branchAddress}</Text>
+            <Text style={styles.brandName}>{sanitizeBrand((branchName || '').includes(' — ') ? branchName.split(' — ')[0].trim() : (branchName || '').trim())} : {branchAddress}</Text>
           </View>
 
           <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>Data Udipi Limited</Text>
-            <Text style={styles.companyText}>Place Of Supply : {branchName} - {branchAddress}.</Text>
+            <Text style={styles.companyName}>MaitreD Limited</Text>
+            <Text style={styles.companyText}>Place Of Supply : {sanitizeBrand(branchName)} - {branchAddress}.</Text>
             <Text style={styles.companyText}>Regd. Office: Chennai.</Text>
             <Text style={styles.companyText}>GSTIN NO: 29AAACT1836J1ZC</Text>
           </View>
@@ -683,7 +695,7 @@ export default function InvoiceScreen() {
 
           <View style={styles.terms}>
             <Text style={styles.termText}>No return / exchange on prepared food items.</Text>
-            <Text style={styles.termText}>Thank you for dining with Data Udipi!</Text>
+            <Text style={styles.termText}>Thank you for dining with MaitreD!</Text>
           </View>
         </View>
 
@@ -931,7 +943,7 @@ const styles = StyleSheet.create({
   },
   downloadBtn: {
     flexDirection: 'row',
-    backgroundColor: '#16a34a',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 8,
     justifyContent: 'center',

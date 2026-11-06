@@ -262,7 +262,7 @@ export default function ForYou() {
               {/* NEW CUSTOMER VIEW */}
               {data?.popular_items && data.popular_items.length > 0 && (
                 <>
-                  <Text style={styles.sectionTitle}>Popular at Data Udipi</Text>
+                  <Text style={styles.sectionTitle}>Popular at MaitreD</Text>
                   <View style={styles.favouritesGrid}>
                     {data.popular_items.map(renderItemCard)}
                   </View>

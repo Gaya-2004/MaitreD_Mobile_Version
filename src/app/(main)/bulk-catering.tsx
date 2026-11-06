@@ -35,12 +35,12 @@ export default function BulkCatering() {
 
         {/* Content Container */}
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>Data Udipi Bulk Catering</Text>
+          <Text style={styles.title}>MaitreD Bulk Catering</Text>
           <Text style={styles.description}>
-            Experience 40 years of South Indian vegetarian culinary excellence at your special event. From intimate family gatherings to grand feasts.
+            Experience South Indian culinary excellence at your special event. From intimate family gatherings to grand feasts.
           </Text>
 
-          <Text style={styles.sectionTitle}>Why choose Data Udipi?</Text>
+          <Text style={styles.sectionTitle}>Why choose MaitreD?</Text>
 
           {/* Features Grid */}
           <View style={styles.gridContainer}>
@@ -102,7 +102,7 @@ export default function BulkCatering() {
           <View style={styles.termsContainer}>
             <Text style={styles.termsTitle}>Customers Kind Attention</Text>
             <View style={styles.termsList}>
-              <Text style={styles.termsText}>• This Outdoor Catering Order is booked by M/s. Data Udipi Hotel, 51, Anna main Road, M.G.R. Nagar, Chennai - 600 078 for necessary execution by them.</Text>
+              <Text style={styles.termsText}>• This Outdoor Catering Order is booked by M/s. MaitreD Gourmet Bistro, 51, Anna main Road, M.G.R. Nagar, Chennai - 600 078 for necessary execution by them.</Text>
               <Text style={styles.termsText}>• Please Contact 63806 96563 for payment details and other enquiries on this catering order.</Text>
               <Text style={styles.termsText}>• Service time is limited to TWO HOURS only.</Text>
               <Text style={styles.termsText}>• Service will be provided for persons 50 and minimum of charge Rs.1000/-.</Text>

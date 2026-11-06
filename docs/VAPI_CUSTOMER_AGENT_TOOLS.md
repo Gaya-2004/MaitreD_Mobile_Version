@@ -1,6 +1,6 @@
 # VAPI_CUSTOMER_AGENT_TOOLS.md
 
-## Data Udipi Customer Voice Agent — Vapi Dashboard Configuration
+## MaitreD Customer Voice Agent — Vapi Dashboard Configuration
 
 > **Security Note:** This document contains NO private keys, secrets,
 > Razorpay credentials, or database credentials. It is safe to commit.
@@ -9,7 +9,7 @@
 
 ## Overview
 
-The Data Udipi Customer Voice Agent is a **Vapi** assistant embedded in the
+The MaitreD Customer Voice Agent is a **Vapi** assistant embedded in the
 mobile app. It is a **UI Orchestrator + Read-Only Data Assistant**.
 
 ```
@@ -40,12 +40,12 @@ Customer Speech
 
 ### Assistant Name
 ```
-Data Udipi Customer Assistant
+MaitreD Customer Assistant
 ```
 
 ### First Message (Initial Greeting — one of the following, randomly selected)
 ```
-Vanakkam! Welcome to Data Udipi Veg Restaurant. I am your dining assistant. How may I help you today?
+Vanakkam! Welcome to MaitreD Veg Restaurant. I am your dining assistant. How may I help you today?
 ```
 
 > **Important:** The first message handles the greeting. The system prompt
@@ -66,7 +66,7 @@ Fallback: Any natural-sounding female or male voice from the provider.
 
 ### End-of-Call Message
 ```
-Thank you for dining with Data Udipi. Have a wonderful day!
+Thank you for dining with MaitreD. Have a wonderful day!
 ```
 
 ---
@@ -188,7 +188,7 @@ Each tool is a **function** that Vapi calls during conversation.
     },
     "restaurant": {
       "selectedOutletId": 1,
-      "selectedOutletName": "Data Udipi - Main Branch"
+      "selectedOutletName": "MaitreD - Main Branch"
     },
     "cart": {
       "orderType": "Take Away",
@@ -534,7 +534,7 @@ The LLM handles the conversation turn; this tool is used for tracking state.
 ### Step 1 — Create a New Assistant
 1. Go to https://dashboard.vapi.ai
 2. Click **New Assistant**
-3. Name: `Data Udipi Customer Assistant`
+3. Name: `MaitreD Customer Assistant`
 
 ### Step 2 — Configure the Model
 1. Provider: `Anthropic`
@@ -547,7 +547,7 @@ The LLM handles the conversation turn; this tool is used for tracking state.
 
 ### Step 4 — Set First Message
 ```
-Vanakkam! Welcome to Data Udipi Veg Restaurant. I am your dining assistant. How may I help you today?
+Vanakkam! Welcome to MaitreD Veg Restaurant. I am your dining assistant. How may I help you today?
 ```
 
 ### Step 5 — Add Tools

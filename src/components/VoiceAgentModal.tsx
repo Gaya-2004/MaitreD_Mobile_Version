@@ -14,28 +14,28 @@
  *   - Suggestion pills when empty
  */
 
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  View,
-  Modal,
-  Image,
-  ScrollView,
-  Dimensions,
   Animated,
+  Dimensions,
   Easing,
+  Image,
+  Modal,
   PanResponder,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useVapiStore } from '../store/vapiStore';
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import { useVoiceAgentStore } from '../store/useVoiceAgentStore';
 import { useCartStore } from '../store/useCartStore';
 import { useDineInSessionStore } from '../store/useDineInSessionStore';
+import { useVoiceAgentStore } from '../store/useVoiceAgentStore';
+import { useVapiStore } from '../store/vapiStore';
 import { setActiveRouter } from '../utils/mobileAgentActionDispatcher';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -358,7 +358,7 @@ export default function VoiceAgentModal() {
                   <Ionicons
                     name={isConnected ? 'radio' : isForYouScreen ? 'sparkles-outline' : 'mic'}
                     size={11}
-                    color={isConnected ? '#0BA01E' : '#DF9B34'}
+                    color={isConnected ? '#DF9B34' : '#888'}
                   />
                   <Text style={[styles.fabPillSubtitle, isConnected && styles.fabPillSubtitleLive]}>
                     {isConnected ? 'Live' : routeContext.fabSubtitle}
@@ -390,8 +390,8 @@ export default function VoiceAgentModal() {
                   {isConnecting
                     ? 'Connecting to Chef...'
                     : isConnected
-                    ? '● Live Voice Session'
-                    : 'Tap suggestion or start speaking below'}
+                      ? '● Live Voice Session'
+                      : 'Tap suggestion or start speaking below'}
                 </Text>
               </View>
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0BA01E',
+    backgroundColor: '#DF9B34',
     borderWidth: 1.5,
     borderColor: '#ffffff',
   },
@@ -676,14 +676,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   fabPillSubtitleLive: {
-    color: '#0BA01E',
+    color: '#DF9B34',
     fontWeight: '700',
   },
   fabLiveDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0BA01E',
+    backgroundColor: '#DF9B34',
     marginLeft: 4,
   },
   modalOverlay: {
@@ -696,6 +696,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     height: SCREEN_HEIGHT * 0.88,
+    maxHeight: '90%',
+    width: '100%',
+    maxWidth: 480,
+    marginHorizontal: 'auto',
     paddingTop: 18,
     display: 'flex',
     flexDirection: 'column',
@@ -747,7 +751,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   headerSubtitleLive: {
-    color: '#0BA01E',
+    color: '#DF9B34',
     fontWeight: '600',
   },
   closeButton: {
@@ -787,7 +791,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   statusBadgeActive: {
-    backgroundColor: '#0BA01E',
+    backgroundColor: '#DF9B34',
   },
   chatBody: {
     flex: 1,

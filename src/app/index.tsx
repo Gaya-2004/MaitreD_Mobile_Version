@@ -21,9 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '../store/useCartStore';
 import { useVoiceAgentStore } from '../store/useVoiceAgentStore';
 import { useDineInSessionStore } from '../store/useDineInSessionStore';
-
-const { width, height } = Dimensions.get('window');
-const isSmallDevice = height < 750;
+import { useResponsive } from '../hooks/useResponsive';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
@@ -35,6 +33,9 @@ const LANGUAGES = [
 
 export default function FrontLandingPage() {
   const router = useRouter();
+  const { effectiveWidth, isSmallDevice, isLargeDevice } = useResponsive();
+  const styles = React.useMemo(() => getStyles(isSmallDevice, isLargeDevice, effectiveWidth), [isSmallDevice, isLargeDevice, effectiveWidth]);
+
   const setOrderType = useCartStore((s) => s.setOrderType);
   const setTableNumberCart = useCartStore((s) => s.setTableNumber);
   const showVoiceAgent = useVoiceAgentStore((s) => s.showAgent);
@@ -401,7 +402,8 @@ export default function FrontLandingPage() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(isSmallDevice: boolean, isLargeDevice: boolean, width: number) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0c0c0c',
@@ -733,4 +735,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-});
+  });
+}

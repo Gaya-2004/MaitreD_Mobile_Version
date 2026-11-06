@@ -376,7 +376,7 @@ export default function CheckoutScreen() {
           <View style={styles.discountBanner}>
             <View style={styles.discountLeft}>
               <Ionicons name="ticket-outline" size={20} color="#DF9B34" />
-              <Text style={styles.discountText}><Text style={styles.discountCode}>{discountCode || 'UDIPIFEAST'}</Text> applied!</Text>
+              <Text style={styles.discountText}><Text style={styles.discountCode}>{discountCode || 'MAITREDFEAST'}</Text> applied!</Text>
             </View>
             <Text style={styles.discountSaved}>Rs. {discountAmount} SAVED</Text>
           </View>
@@ -424,7 +424,7 @@ export default function CheckoutScreen() {
                   <Ionicons
                     name={dineInPayLater ? 'radio-button-on' : 'radio-button-off'}
                     size={18}
-                    color={dineInPayLater ? '#00a01d' : '#888'}
+                    color={dineInPayLater ? '#DF9B34' : '#888'}
                   />
                   <View style={{ flex: 1, marginLeft: 8 }}>
                     <Text style={[styles.dineInChoiceText, dineInPayLater && styles.dineInChoiceTextActive]}>
@@ -444,7 +444,7 @@ export default function CheckoutScreen() {
                   <Ionicons
                     name={!dineInPayLater ? 'radio-button-on' : 'radio-button-off'}
                     size={18}
-                    color={!dineInPayLater ? '#00a01d' : '#888'}
+                    color={!dineInPayLater ? '#DF9B34' : '#888'}
                   />
                   <View style={{ flex: 1, marginLeft: 8 }}>
                     <Text style={[styles.dineInChoiceText, !dineInPayLater && styles.dineInChoiceTextActive]}>
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
   },
   proceedBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -1059,8 +1059,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   dineInChoiceActive: {
-    borderColor: '#00a01d',
-    backgroundColor: '#f4fbf5',
+    borderColor: '#DF9B34',
+    backgroundColor: '#fff7ed',
   },
   dineInChoiceText: {
     fontSize: 13,
@@ -1068,7 +1068,7 @@ const styles = StyleSheet.create({
     color: '#444',
   },
   dineInChoiceTextActive: {
-    color: '#00a01d',
+    color: '#DF9B34',
   },
   dineInChoiceDesc: {
     fontSize: 11,
@@ -1107,12 +1107,12 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   browseMenuBtn: {
-    backgroundColor: '#00a023',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 24,
     elevation: 3,
-    shadowColor: '#00a023',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 6,

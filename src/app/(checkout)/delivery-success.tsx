@@ -119,7 +119,7 @@ export default function DeliverySuccessScreen() {
       try {
         const restId = selectedOutlet?.restaurant_id ? Number(selectedOutlet.restaurant_id) : null;
         if (!restId) return;
-        const restName = selectedOutlet?.name || 'Data Udipi — Mugalivakkam';
+        const restName = (selectedOutlet?.name || 'MaitreD — Mugalivakkam').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD');
         let storedOrders = null;
         try {
           if (Platform.OS === 'web') {
@@ -313,7 +313,7 @@ export default function DeliverySuccessScreen() {
         {/* Restaurant Pill */}
         <View style={styles.restaurantPill}>
           <Ionicons name="fast-food-outline" size={14} color="#DF9B34" />
-          <Text style={styles.restaurantPillText}>{selectedOutlet?.name || 'Data Udipi'} has accepted your order</Text>
+          <Text style={styles.restaurantPillText}>{selectedOutlet?.name || 'MaitreD'} has accepted your order</Text>
         </View>
 
       </ScrollView>
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   trackBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

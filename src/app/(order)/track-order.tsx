@@ -1244,7 +1244,7 @@ export default function TrackOrderScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.dineInOrderMoreBtn, { flex: 2, backgroundColor: '#00a01d' }]}
+                style={[styles.dineInOrderMoreBtn, { flex: 2, backgroundColor: '#DF9B34' }]}
                 onPress={() => router.replace('/menu')}
                 activeOpacity={0.8}
               >
@@ -1459,7 +1459,7 @@ export default function TrackOrderScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.orderMoreBtn, { flex: 2, backgroundColor: '#00a01d' }]}
+              style={[styles.orderMoreBtn, { flex: 2, backgroundColor: '#DF9B34' }]}
               onPress={() => router.replace('/menu')}
               activeOpacity={0.8}
             >
@@ -1707,7 +1707,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 12,
     flex: 0.48,
@@ -2003,7 +2003,7 @@ const styles = StyleSheet.create({
   dineInOrderMoreBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00a01d', // Green like in the image
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 25,
     flex: 0.33,

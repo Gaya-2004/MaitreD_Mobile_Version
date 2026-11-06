@@ -21,13 +21,13 @@ export interface OutletLocation {
 }
 
 export const KNOWN_OUTLET_LOCATIONS: Record<string | number, OutletLocation> = {
-  1: { name: 'Data Udipi — Mugalivakkam', latitude: 13.0210, longitude: 80.1614, restaurant_id: 1 },
-  2: { name: 'Data Udipi — MGR Nagar', latitude: 13.0350, longitude: 80.1970, restaurant_id: 2 },
-  3: { name: 'Data Udipi - Banglore', latitude: 12.8399, longitude: 77.6770, restaurant_id: 25 },
-  25: { name: 'Data Udipi - Banglore', latitude: 12.8399, longitude: 77.6770, restaurant_id: 25 },
-  mugalivakkam: { name: 'Data Udipi — Mugalivakkam', latitude: 13.0210, longitude: 80.1614, restaurant_id: 1 },
-  mgrnagar: { name: 'Data Udipi — MGR Nagar', latitude: 13.0350, longitude: 80.1970, restaurant_id: 2 },
-  banglore: { name: 'Data Udipi - Banglore', latitude: 12.8399, longitude: 77.6770, restaurant_id: 25 },
+  1: { name: 'MaitreD — Mugalivakkam', latitude: 13.0210, longitude: 80.1614, restaurant_id: 1 },
+  2: { name: 'MaitreD — MGR Nagar', latitude: 13.0350, longitude: 80.1970, restaurant_id: 2 },
+  3: { name: 'MaitreD - Banglore', latitude: 12.8399, longitude: 77.6770, restaurant_id: 25 },
+  25: { name: 'MaitreD - Banglore', latitude: 12.8399, longitude: 77.6770, restaurant_id: 25 },
+  mugalivakkam: { name: 'MaitreD — Mugalivakkam', latitude: 13.0210, longitude: 80.1614, restaurant_id: 1 },
+  mgrnagar: { name: 'MaitreD — MGR Nagar', latitude: 13.0350, longitude: 80.1970, restaurant_id: 2 },
+  banglore: { name: 'MaitreD - Banglore', latitude: 12.8399, longitude: 77.6770, restaurant_id: 25 },
 };
 
 export const ALL_BRANCHES: OutletLocation[] = [
@@ -45,7 +45,7 @@ export function resolveOutletLocation(outlet?: any): OutletLocation {
     const lng = Number(outlet.lng ?? outlet.longitude);
     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
       return {
-        name: outlet.name || 'Data Udipi',
+        name: outlet.name || 'MaitreD',
         latitude: lat,
         longitude: lng,
         restaurant_id: outlet.restaurant_id ? Number(outlet.restaurant_id) : (outlet.id ? Number(outlet.id) : undefined),
@@ -132,7 +132,7 @@ export function checkDeliveryCoverage(
       isEligible: false,
       distanceKm: 0,
       maxRadiusKm,
-      outletName: 'Data Udipi',
+      outletName: 'MaitreD',
       alternateBranch: null,
       title: 'Location Required',
       message: 'Please pin or select your precise delivery address on the map to confirm coverage.',

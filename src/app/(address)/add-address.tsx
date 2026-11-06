@@ -631,7 +631,7 @@ export default function AddAddress() {
         }}
         distanceKm={coverageResult?.distanceKm}
         maxRadiusKm={coverageResult?.maxRadiusKm || 5}
-        restaurantName={coverageResult?.outletName || selectedOutlet?.name || 'Data Udipi'}
+        restaurantName={coverageResult?.outletName || selectedOutlet?.name || 'MaitreD'}
         alternateBranch={coverageResult?.alternateBranch}
         customMessage={coverageResult?.message}
         onTryAnotherAddress={() => {
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
   },
   deliveryModalButton: {
     width: '100%',
-    backgroundColor: '#0BA01E',
+    backgroundColor: '#DF9B34',
     borderRadius: 10,
     paddingVertical: 13,
     alignItems: 'center',

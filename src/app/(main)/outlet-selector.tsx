@@ -9,7 +9,7 @@ const FALLBACK_OUTLETS = [
   {
     id: "1",
     restaurant_id: 1,
-    name: "Data Udipi — Mugalivakkam",
+    name: "MaitreD — Mugalivakkam",
     address: "Mount-Poonamallee Road, Mugalivakkam, Chennai 600125",
     lat: 13.0210,
     lng: 80.1614,
@@ -19,7 +19,7 @@ const FALLBACK_OUTLETS = [
   {
     id: "2",
     restaurant_id: 2,
-    name: "Data Udipi — MGR Nagar",
+    name: "MaitreD — MGR Nagar",
     address: "Anna Main Road, MGR Nagar, Chennai 600078",
     lat: 13.0350,
     lng: 80.1970,
@@ -29,7 +29,7 @@ const FALLBACK_OUTLETS = [
   {
     id: "25",
     restaurant_id: 25,
-    name: "Data Udipi- Banglore",
+    name: "MaitreD- Banglore",
     address: "Ganga block 1st cross, Electronic City, Survey No.33, 12th Cross Rd, Bettadasanapura, Karnataka 560100",
     lat: 12.8399,
     lng: 77.6770,
@@ -131,7 +131,7 @@ export default function OutletSelectorScreen() {
               activeOpacity={0.8}
             >
               <View style={[styles.pin, isSelected && styles.pinSelected]}>
-                <Text style={styles.pinText}>DU</Text>
+                <Text style={styles.pinText}>MD</Text>
               </View>
               <View style={styles.cardBody}>
                 <Text style={styles.outletName}>{o.name}</Text>
@@ -157,7 +157,7 @@ export default function OutletSelectorScreen() {
       >
         <Text style={styles.confirmBtnText}>
           {selectedId 
-            ? `Continue with ${outlets.find(o => o.id === selectedId)?.name.replace('Data Udipi — ', '').replace('Data Udipi- ', '')}` 
+            ? `Continue with ${outlets.find(o => o.id === selectedId)?.name.replace(/^(?:Data Udipi|MaitreD)\s*[-—]\s*/i, '')}` 
             : 'Select a branch to continue'}
         </Text>
       </TouchableOpacity>

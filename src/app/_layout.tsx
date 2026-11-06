@@ -4,8 +4,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import VoiceAgentModal from '../components/VoiceAgentModal';
+import ResponsiveContainer from '../components/layout/ResponsiveContainer';
 
 interface Props {
   children: ReactNode;
@@ -64,8 +65,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <RootErrorBoundary>
-          <Slot />
-          <VoiceAgentModal />
+          <ResponsiveContainer>
+            <Slot />
+            <VoiceAgentModal />
+          </ResponsiveContainer>
         </RootErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -83,7 +86,7 @@ const errorStyles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#f59e0b',
+    color: '#DF9B34',
     marginBottom: 12,
   },
   message: {
@@ -101,18 +104,18 @@ const errorStyles = StyleSheet.create({
   },
   errorBoxText: {
     color: '#ef4444',
-    fontSize: 12,
-    textAlign: 'center',
+    fontSize: 13,
+    fontFamily: Platform?.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   button: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#DF9B34',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#000000',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: '#000',
+    fontWeight: '600',
+    fontSize: 15,
   },
 });

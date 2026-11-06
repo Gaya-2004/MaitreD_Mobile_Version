@@ -23,7 +23,7 @@ import { resolveOutletLocation, getDistanceInKm, calculateDeliveryFee } from '..
 
 WebBrowser.maybeCompleteAuthSession();
 
-type PaymentMethod = 'UPI' | 'Pay at Counter' | 'Cash' | 'Card' | 'Wallet';
+type PaymentMethod = 'UPI' | 'Pay at Counter' | 'Cash' | 'Card' | 'Wallet' | 'COD';
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -61,12 +61,12 @@ export default function PaymentScreen() {
   const { setCurrentOrder, addPastOrder } = useOrderStore();
   const { selectedDeliveryAddress, addresses, selectedAddressId } = useAddressStore();
 
-  // Take Away and Delivery are digital-only (online payment only, no Cash on Delivery)
-  const isDigitalOnly = orderType === 'Take Away' || orderType === 'Delivery';
-  const [selectedMethodRaw, setSelectedMethod] = useState<PaymentMethod>(
-    isDineInSettlement || orderType === 'Dine In' ? 'Pay at Counter' : 'UPI'
-  );
-  const selectedMethod: PaymentMethod = isDigitalOnly ? 'UPI' : selectedMethodRaw;
+  // Payment methods: Default to Pay at Counter for Takeaway & Dine-In, COD for Delivery
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(() => {
+    if (orderType === 'Delivery') return 'COD';
+    if (orderType === 'Take Away') return 'Pay at Counter';
+    return isDineInSettlement || orderType === 'Dine In' ? 'Pay at Counter' : 'Pay at Counter';
+  });
   const [loading, setLoading] = useState(false);
   const [isPollingCash, setIsPollingCash] = useState(false);
   const [paymentFailedReason, setPaymentFailedReason] = useState('');
@@ -259,7 +259,7 @@ export default function PaymentScreen() {
             key: RAZORPAY_KEY,
             amount: amountInPaise,
             currency: 'INR',
-            name: 'Udupi Restaurant',
+            name: 'MaitreD Bistro',
             description: `${orderType || 'Food'} Order Payment`,
             prefill: {
               contact: userPhone || '+919876543210',
@@ -333,8 +333,8 @@ export default function PaymentScreen() {
       return;
     }
 
-    // Pay at Counter / Cash Flow
-    if (selectedMethod === 'Pay at Counter' || selectedMethod === 'Cash') {
+    // Pay at Counter / Cash / COD Flow
+    if (selectedMethod === 'Pay at Counter' || selectedMethod === 'Cash' || selectedMethod === 'COD') {
       try {
         let finalOrderId = settlementOrderId;
         let finalDbId = settlementDbOrderId;
@@ -437,7 +437,7 @@ export default function PaymentScreen() {
             delivery_fee: orderType === 'Delivery' ? deliveryFee : 0,
             packaging_fee: 0,
             tip_amount: tipAmount,
-            payment_method: selectedMethod || 'Cash',
+            payment_method: selectedMethod === 'COD' ? 'Cash on Delivery' : (selectedMethod || 'Cash'),
             phone: userPhone,
             cart: formattedCartItems,
             subtotal: subtotal,
@@ -468,7 +468,7 @@ export default function PaymentScreen() {
           total: Number(finalAmount),
           itemsCount: Array.isArray(finalItems) ? finalItems.length : 1,
           status: isDineIn ? 'SERVED' : 'Preparing',
-          payment_status: isDineIn ? 'Paid' : (orderType === 'Delivery' && selectedMethod === 'Cash' ? 'Pending' : 'Paid'),
+          payment_status: isDineIn ? 'Paid' : ((orderType === 'Delivery' || selectedMethod === 'COD' || selectedMethod === 'Pay at Counter') ? 'Pending' : 'Paid'),
           table_number: isDineIn ? finalTable : (orderType === 'Delivery' ? 'Delivery' : 'Take Away'),
           order_type: orderType || 'Dine In',
           customer_phone: userPhone || '',
@@ -500,7 +500,7 @@ export default function PaymentScreen() {
             orderId: finalOrderId,
             dbOrderId: finalDbId,
             total: finalAmount,
-            paymentMethod: selectedMethod,
+            paymentMethod: selectedMethod === 'COD' ? 'Cash on Delivery' : selectedMethod,
             phone: userPhone,
             itemCount: Array.isArray(finalItems) ? finalItems.length.toString() : '1',
             cart: JSON.stringify(finalItems),
@@ -596,6 +596,24 @@ export default function PaymentScreen() {
           <Text style={styles.delMethodsTitle}>Select Payment Method</Text>
 
           <View style={styles.delMethodsList}>
+            {/* Cash on Delivery (COD) Option for Testing & Live */}
+            <TouchableOpacity
+              style={[styles.delMethodItem, selectedMethod === 'COD' && styles.delMethodItemActive]}
+              onPress={() => setSelectedMethod('COD')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.delMethodIcon}>
+                <Ionicons name="cash-outline" size={24} color="#DF9B34" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.delMethodName}>Cash on Delivery (COD)</Text>
+                <Text style={styles.delMethodDesc}>Pay cash or UPI upon delivery at doorstep</Text>
+              </View>
+              <View style={[styles.radioCircle, selectedMethod === 'COD' ? styles.radioSelected : styles.radioUnselected]}>
+                {selectedMethod === 'COD' && <Ionicons name="checkmark" size={14} color="#fff" />}
+              </View>
+            </TouchableOpacity>
+
             <TouchableOpacity style={[styles.delMethodItem, selectedMethod === 'UPI' && styles.delMethodItemActive]} onPress={() => setSelectedMethod('UPI')} activeOpacity={0.8}>
               <View style={styles.delMethodIcon}>
                 <Ionicons name="phone-portrait-outline" size={24} color="#DF9B34" />
@@ -620,6 +638,8 @@ export default function PaymentScreen() {
             <Text style={styles.delPayBtnText}>
               {loading
                 ? 'Processing Order...'
+                : selectedMethod === 'COD'
+                ? `Place Delivery Order (COD - Rs. ${totalVal.toFixed(0)})`
                 : `Pay Rs. ${totalVal.toFixed(0)} via UPI / Online`}
             </Text>
           </TouchableOpacity>
@@ -661,37 +681,41 @@ export default function PaymentScreen() {
 
           <View style={styles.methodsContainer}>
 
-            {/* Pay at Counter Option - only for Dine In, removed for Take Away */}
-            {orderType !== 'Take Away' && (
-              <View>
-                <TouchableOpacity
-                  style={[styles.methodCard, selectedMethod === 'Pay at Counter' ? styles.methodSelected : styles.methodUnselected]}
-                  onPress={() => setSelectedMethod('Pay at Counter')}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.methodIconWrap, selectedMethod === 'Pay at Counter' ? styles.iconBgOrange : styles.iconBgWhite]}>
-                    <Ionicons name="cash-outline" size={20} color={selectedMethod === 'Pay at Counter' ? '#fff' : '#888'} />
-                  </View>
-                  <View style={styles.methodTextContainer}>
-                    <Text style={styles.methodName}>Pay at Counter</Text>
-                    <Text style={styles.methodDesc}>Pay cash or card at counter (marked as paid)</Text>
-                  </View>
-                  <View style={[styles.radioCircle, selectedMethod === 'Pay at Counter' ? styles.radioSelected : styles.radioUnselected]}>
-                    {selectedMethod === 'Pay at Counter' && <Ionicons name="checkmark" size={14} color="#fff" />}
-                  </View>
-                </TouchableOpacity>
+            {/* Pay at Counter Option (Takeaway & Dine In) */}
+            <View>
+              <TouchableOpacity
+                style={[styles.methodCard, selectedMethod === 'Pay at Counter' ? styles.methodSelected : styles.methodUnselected]}
+                onPress={() => setSelectedMethod('Pay at Counter')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.methodIconWrap, selectedMethod === 'Pay at Counter' ? styles.iconBgOrange : styles.iconBgWhite]}>
+                  <Ionicons name="cash-outline" size={20} color={selectedMethod === 'Pay at Counter' ? '#fff' : '#888'} />
+                </View>
+                <View style={styles.methodTextContainer}>
+                  <Text style={styles.methodName}>Pay at Counter</Text>
+                  <Text style={styles.methodDesc}>
+                    {orderType === 'Take Away'
+                      ? 'Pay cash, UPI or card at the restaurant counter when collecting your order'
+                      : 'Pay cash or card at counter'}
+                  </Text>
+                </View>
+                <View style={[styles.radioCircle, selectedMethod === 'Pay at Counter' ? styles.radioSelected : styles.radioUnselected]}>
+                  {selectedMethod === 'Pay at Counter' && <Ionicons name="checkmark" size={14} color="#fff" />}
+                </View>
+              </TouchableOpacity>
 
-                {/* Info Box for Pay at Counter */}
-                {selectedMethod === 'Pay at Counter' && (
-                  <View style={styles.paymentInfoBox}>
-                    <Ionicons name="checkmark-done-circle-outline" size={20} color="#00a01d" />
-                    <Text style={styles.paymentInfoText}>
-                      Order will be immediately marked as Paid at the counter. You can view and download your invoice on the next screen.
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
+              {/* Info Box for Pay at Counter */}
+              {selectedMethod === 'Pay at Counter' && (
+                <View style={styles.paymentInfoBox}>
+                  <Ionicons name="checkmark-done-circle-outline" size={20} color="#00a01d" />
+                  <Text style={styles.paymentInfoText}>
+                    {orderType === 'Take Away'
+                      ? 'Your takeaway order will be confirmed immediately and sent to the kitchen. You can pay at the counter upon pickup.'
+                      : 'Order will be immediately marked at the counter. You can view and download your invoice on the next screen.'}
+                  </Text>
+                </View>
+              )}
+            </View>
 
             {/* UPI Option */}
             <View>
@@ -1016,13 +1040,13 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   payBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
   },
   btnDisabled: {
-    backgroundColor: '#6bcf80',
+    backgroundColor: '#e9b668',
   },
   payBtnContent: {
     flexDirection: 'row',
@@ -1254,7 +1278,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   delPayBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',

@@ -44,7 +44,7 @@ export interface MenuItem {
 export const DEFAULT_OUTLET = {
   id: "1",
   restaurant_id: 1,
-  name: "Data Udipi — Mugalivakkam",
+  name: "MaitreD — Mugalivakkam",
   address: "Mount-Poonamallee Road, Mugalivakkam, Chennai 600125",
   lat: 13.0210,
   lng: 80.1614,
@@ -69,7 +69,17 @@ export const useRestaurantStore = create<RestaurantState>()(
       categories: [{ id: "all", label: "All Menu" }],
       menuItems: [],
 
-      setSelectedOutlet: (selectedOutlet) => set({ selectedOutlet: selectedOutlet || DEFAULT_OUTLET }),
+      setSelectedOutlet: (selectedOutlet) => {
+        const outlet = selectedOutlet || DEFAULT_OUTLET;
+        const sanitized = outlet?.name
+          ? {
+              ...outlet,
+              name: outlet.name.replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD'),
+              address: (outlet.address || '').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD'),
+            }
+          : outlet;
+        set({ selectedOutlet: sanitized });
+      },
       setCategories: (categories) => set({ categories }),
       setMenuItems: (menuItems) => set({ menuItems }),
     }),
@@ -80,6 +90,13 @@ export const useRestaurantStore = create<RestaurantState>()(
       onRehydrateStorage: () => (state) => {
         if (!state?.selectedOutlet) {
           useRestaurantStore.setState({ selectedOutlet: DEFAULT_OUTLET });
+        } else if (state.selectedOutlet?.name && /Udi?p+i/i.test(state.selectedOutlet.name)) {
+          const sanitized = {
+            ...state.selectedOutlet,
+            name: state.selectedOutlet.name.replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD'),
+            address: (state.selectedOutlet.address || '').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD'),
+          };
+          useRestaurantStore.setState({ selectedOutlet: sanitized });
         }
       },
     }

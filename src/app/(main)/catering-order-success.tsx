@@ -121,14 +121,14 @@ export default function CateringOrderSuccess() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2ecc71" />
+      <StatusBar barStyle="light-content" backgroundColor="#DF9B34" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
-        {/* Green Success Banner */}
+        {/* Brand Theme Success Banner */}
         <View style={styles.banner}>
           <Animated.View style={[styles.checkCircle, { transform: [{ scale: scaleAnim }] }]}>
-            <Ionicons name="checkmark" size={36} color="#2ecc71" />
+            <Ionicons name="checkmark" size={36} color="#DF9B34" />
           </Animated.View>
 
           <Text style={styles.bannerTitle}>{orderType} Booked Successfully!</Text>
@@ -233,7 +233,7 @@ export default function CateringOrderSuccess() {
                 <Ionicons name="mail-outline" size={16} color="#888" style={{ marginRight: 8, marginTop: 1 }} />
                 <Text style={styles.supportText}>
                   Need help or changes? Reach out to support at{' '}
-                  <Text style={styles.supportEmail}>catering@dataudipi.com</Text>
+                  <Text style={styles.supportEmail}>catering@maitred.com</Text>
                 </Text>
               </View>
             </>
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   banner: {
-    backgroundColor: '#27ae60',
+    backgroundColor: '#DF9B34',
     alignItems: 'center',
     paddingTop: 40,
     paddingBottom: 40,
@@ -388,8 +388,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timelineDotDone: {
-    backgroundColor: '#27ae60',
-    borderColor: '#27ae60',
+    backgroundColor: '#DF9B34',
+    borderColor: '#DF9B34',
   },
   timelineDotPending: {
     backgroundColor: '#DF9B34',
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     minHeight: 24,
   },
   timelineLineDone: {
-    backgroundColor: '#27ae60',
+    backgroundColor: '#DF9B34',
   },
   timelineContent: {
     flex: 1,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   timelineLabelDone: {
-    color: '#27ae60',
+    color: '#DF9B34',
     fontWeight: '700',
   },
   timelineLabelPending: {

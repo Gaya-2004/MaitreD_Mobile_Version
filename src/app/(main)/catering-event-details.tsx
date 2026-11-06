@@ -35,7 +35,7 @@ export default function CateringEventDetails() {
     if (outletRestId && (!restaurantId || restaurantId !== Number(outletRestId))) {
       setRestaurant(Number(outletRestId), selectedOutlet?.name || null);
     } else if (!restaurantId) {
-      setRestaurant(1, 'Data Udipi — Mugalivakkam');
+      setRestaurant(1, 'MaitreD — Mugalivakkam');
     }
   }, [selectedOutlet, restaurantId, setRestaurant]);
 
@@ -262,7 +262,7 @@ export default function CateringEventDetails() {
     }
 
     const effectiveRestId = restaurantId || Number(selectedOutlet?.restaurant_id || selectedOutlet?.id || 1);
-    const effectiveRestName = restaurantName || selectedOutlet?.name || 'Data Udipi';
+    const effectiveRestName = restaurantName || selectedOutlet?.name || 'MaitreD';
 
     // Navigate to next step
     router.push({
@@ -442,17 +442,17 @@ export default function CateringEventDetails() {
     <Modal visible={alertConfig.visible} transparent animationType="fade">
       <View style={styles.alertOverlay}>
         <View style={styles.alertBox}>
-          <View style={[styles.alertIconBg, { backgroundColor: alertConfig.title === 'Success' ? '#e6ffe6' : '#FFF5E5' }]}>
+          <View style={[styles.alertIconBg, { backgroundColor: '#FFF5E5' }]}>
             <Ionicons 
               name={alertConfig.title === 'Success' ? 'checkmark-circle' : 'warning'} 
               size={40} 
-              color={alertConfig.title === 'Success' ? '#4CAF50' : '#DF9B34'} 
+              color="#DF9B34" 
             />
           </View>
           <Text style={styles.alertTitle}>{alertConfig.title}</Text>
           <Text style={styles.alertMessage}>{alertConfig.message}</Text>
           <TouchableOpacity 
-            style={[styles.alertBtn, { backgroundColor: alertConfig.title === 'Success' ? '#4CAF50' : '#DF9B34' }]} 
+            style={[styles.alertBtn, { backgroundColor: '#DF9B34' }]} 
             onPress={() => setAlertConfig({ ...alertConfig, visible: false })}
           >
             <Text style={styles.alertBtnText}>Okay</Text>
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   chooseMenuBtn: {
-    backgroundColor: '#00a023', // Green color
+    backgroundColor: '#DF9B34',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  // Alert Modal Styles matching Data Udipi
+  // Alert Modal Styles matching MaitreD
   alertOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',

@@ -98,7 +98,7 @@ export default function CateringRazorpayCheckout() {
 <body>
   <div class="card" id="pay-card">
     <div class="rzp-logo">Razorpay</div>
-    <div class="merchant">Data Udipi Catering</div>
+    <div class="merchant">MaitreD Catering</div>
     <div class="amount">&#8377;${advanceAmount.toLocaleString('en-IN')}</div>
     <div class="desc">
       Advance payment for catering order<br>
@@ -123,7 +123,7 @@ export default function CateringRazorpayCheckout() {
         key: '${RAZORPAY_KEY}',
         amount: ${amountInPaise},
         currency: 'INR',
-        name: 'Data Udipi Catering',
+        name: 'MaitreD Catering',
         description: 'Advance payment · ${packageName}',
         image: '',
         prefill: {

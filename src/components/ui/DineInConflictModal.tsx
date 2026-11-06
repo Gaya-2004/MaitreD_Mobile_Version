@@ -79,7 +79,7 @@ export default function DineInConflictModal({
           {/* Icon Badge */}
           <View style={styles.iconContainer}>
             <View style={styles.iconCircle}>
-              <Ionicons name="restaurant" size={32} color="#00a01d" />
+              <Ionicons name="restaurant" size={32} color="#DF9B34" />
             </View>
             <View style={styles.warningBadge}>
               <Ionicons name="alert" size={13} color="#ffffff" />
@@ -167,9 +167,9 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#e6f7ec',
+    backgroundColor: '#fff7ed',
     borderWidth: 2,
-    borderColor: '#bbf7d0',
+    borderColor: '#fed7aa',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -210,14 +210,14 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     width: '100%',
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     paddingVertical: 14,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
-    shadowColor: '#00a01d',
+    shadowColor: '#DF9B34',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -275,7 +275,7 @@ export default function DeliveryCheckoutScreen() {
         onClose={() => setShowCoverageModal(false)}
         distanceKm={coverageResult?.distanceKm}
         maxRadiusKm={coverageResult?.maxRadiusKm || 5}
-        restaurantName={coverageResult?.outletName || selectedOutlet?.name || 'Data Udipi'}
+        restaurantName={coverageResult?.outletName || selectedOutlet?.name || 'MaitreD'}
         alternateBranch={coverageResult?.alternateBranch}
         customMessage={coverageResult?.message}
         onTryAnotherAddress={() => {
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     color: '#DF9B34',
   },
   proceedBtn: {
-    backgroundColor: '#00a01d',
+    backgroundColor: '#DF9B34',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

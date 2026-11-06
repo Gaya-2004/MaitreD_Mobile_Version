@@ -237,7 +237,7 @@ export default function RazorpayScreen() {
           amount: ${amountInPaise},
           ${razorpayOrderId && !razorpayOrderId.toString().startsWith('test_') ? `order_id: '${razorpayOrderId}',` : ''}
           currency: 'INR',
-          name: 'Udupi Restaurant',
+          name: 'MaitreD Bistro',
           description: '${orderType || 'Food'} Order Payment',
           remember_customer: true,
           prefill: {

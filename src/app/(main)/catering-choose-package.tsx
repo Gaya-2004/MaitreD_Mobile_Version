@@ -225,7 +225,7 @@ export default function ChoosePackage() {
         params: {
           sessionId: sessionId.toString(),
           restaurantId: effectiveRestaurantId.toString(),
-          restaurantName: (params.restaurantName as string) || selectedOutlet?.name || 'Data Udipi',
+          restaurantName: (params.restaurantName as string) || selectedOutlet?.name || 'MaitreD',
           packageCode: selectedPackage,
           guestCount: params.guestCount,
           packagePrice: packages.find(p => p.code === selectedPackage)?.price?.toString() || '0',
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalSelectBtnActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#b8771b',
   },
   modalSelectBtnText: {
     color: '#fff',

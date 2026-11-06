@@ -1,7 +1,6 @@
-import React from 'react';
-import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useCartStore } from '../../store/useCartStore';
 
 export default function ViewCartButton() {
@@ -23,7 +22,7 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0BA01E',
+    backgroundColor: '#DF9B34',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 24,
