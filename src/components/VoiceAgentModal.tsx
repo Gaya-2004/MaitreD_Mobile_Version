@@ -1,17 +1,19 @@
 /**
  * VoiceAgentModal.tsx
  *
- * PHASES 4, 13 — Complete Voice Agent UI
+ * Full AI Voice Agent UI for MaitreD
+ * Powered by Gemini API & Backend Conversational Engine
  *
  * Features:
  *   - Floating "Talk to Chef" pill FAB that opens the modal
- *   - Auto-starts the Vapi call when modal opens
- *   - Real-time partial transcript (zero lag)
- *   - Merged final transcript (no split bubbles)
- *   - Mute/unmute toggle
- *   - Stop agent button
- *   - Animated speaking indicator
- *   - Suggestion pills when empty
+ *   - Automatic greeting & start of voice conversation
+ *   - Continuous voice interaction with real-time speech transcription
+ *   - Live agent states: IDLE, LISTENING, PROCESSING, SPEAKING, EXECUTING_ACTION, WAITING_FOR_CONFIRMATION, ERROR
+ *   - Interruption support ("Stop Speaking" button & instant speech halt)
+ *   - Mute/unmute microphone toggle
+ *   - Multilingual toggle: English / தமிழ் (Tamil)
+ *   - Manual text input bar with Send button for typing food orders/commands
+ *   - Suggested quick prompts
  */
 
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -28,6 +30,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -35,7 +38,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '../store/useCartStore';
 import { useDineInSessionStore } from '../store/useDineInSessionStore';
 import { useVoiceAgentStore } from '../store/useVoiceAgentStore';
-import { useVapiStore } from '../store/vapiStore';
+import { useGeminiVoiceStore } from '../store/useGeminiVoiceStore';
 import { setActiveRouter } from '../utils/mobileAgentActionDispatcher';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -78,34 +81,27 @@ export default function VoiceAgentModal() {
   const isRewardsScreen = pathname?.includes('rewards');
   const hasViewCartBar = (isHomeScreen || isForYouScreen || isMenuScreen) && cartItemCount > 0;
 
-  // Compute adaptive bottom clearance so FAB sits right above ViewCartButton, BottomNav, or sticky footers
+  // Compute adaptive bottom clearance
   const baseBottom = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 16);
   let computedFabBottom = baseBottom + 20;
 
   if (hasViewCartBar && hasBottomNav) {
-    // Both BottomNavBar (~70px) and ViewCartButton (~48px) are present (e.g. on For You or Home)
-    // ViewCartButton sits at baseBottom + 76, height ~48px (top is at baseBottom + 124).
-    // Sits right above ViewCartButton with a 12px margin.
     computedFabBottom = baseBottom + 136;
   } else if (hasViewCartBar) {
-    // Only ViewCartButton without BottomNav (e.g. Menu)
-    // ViewCartButton sits at insets.bottom + 24, height ~48px (top is at baseBottom + 72).
-    // Sits right above ViewCartButton with a 12px margin.
     computedFabBottom = baseBottom + 84;
   } else if (hasBottomNav) {
-    // BottomNav present without ViewCartButton
     computedFabBottom = baseBottom + 84;
   } else if (isCheckoutScreen) {
-    // Checkout screens with sticky footer
     computedFabBottom = baseBottom + 78;
   }
 
   // ── Reflexive Content Mapping ──────────────────────────────────────────────
   const CHATBOT_QUICK_SUGGESTIONS = [
-    'Show me popular items',
-    'Add 2 Masala Dosa to my cart',
-    "What are today's specials?",
-    'Talk to waiter',
+    'Show me the menu',
+    'Add 2 idly to my cart',
+    'Show vegetarian items',
+    "What's my total?",
+    'Proceed to checkout',
   ];
 
   const routeContext = React.useMemo(() => {
@@ -175,36 +171,36 @@ export default function VoiceAgentModal() {
     };
   }, [pathname]);
 
-  // Subscribe with granular selectors
-  const setupListeners = useVapiStore((s) => s.setupListeners);
-  const startCall = useVapiStore((s) => s.startCall);
-  const stopCall = useVapiStore((s) => s.stopCall);
-  const prewarm = useVapiStore((s) => s.prewarm);
-  const clearMessages = useVapiStore((s) => s.clearMessages);
-  const toggleMute = useVapiStore((s) => s.toggleMute);
-  const isConnected = useVapiStore((s) => s.isConnected);
-  const isConnecting = useVapiStore((s) => s.isConnecting);
-  const isMuted = useVapiStore((s) => s.isMuted);
-  const messages = useVapiStore((s) => s.messages);
-  const partialUserTranscript = useVapiStore((s) => s.partialUserTranscript);
-  const partialAgentTranscript = useVapiStore((s) => s.partialAgentTranscript);
-  const sendTextMessage = useVapiStore((s) => s.sendTextMessage);
+  // Unified Gemini Voice Store
+  const startCall = useGeminiVoiceStore((s) => s.startCall);
+  const stopCall = useGeminiVoiceStore((s) => s.stopCall);
+  const clearMessages = useGeminiVoiceStore((s) => s.clearMessages);
+  const toggleMute = useGeminiVoiceStore((s) => s.toggleMute);
+  const isConnected = useGeminiVoiceStore((s) => s.isConnected);
+  const isConnecting = useGeminiVoiceStore((s) => s.isConnecting);
+  const isMuted = useGeminiVoiceStore((s) => s.isMuted);
+  const agentState = useGeminiVoiceStore((s) => s.agentState);
+  const messages = useGeminiVoiceStore((s) => s.messages);
+  const partialUserTranscript = useGeminiVoiceStore((s) => s.partialUserTranscript);
+  const partialAgentTranscript = useGeminiVoiceStore((s) => s.partialAgentTranscript);
+  const sendTextMessage = useGeminiVoiceStore((s) => s.sendTextMessage);
+  const stopSpeaking = useGeminiVoiceStore((s) => s.stopSpeaking);
+  const isTamilMode = useGeminiVoiceStore((s) => s.isTamilMode);
+  const toggleLanguage = useGeminiVoiceStore((s) => s.toggleLanguage);
+  const startListening = useGeminiVoiceStore((s) => s.startListening);
 
   const { isVisible, showAgent, hideAgent } = useVoiceAgentStore();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<any>(null);
+  const [inputText, setInputText] = useState('');
 
-  // Pulse animation for speaking indicator
+  // Pulse animation for speaking/listening
   const [pulseAnim] = useState(() => new Animated.Value(1));
 
-  // Load native voice SDK ahead of the first tap
-  useEffect(() => {
-    prewarm();
-  }, [prewarm]);
+  const isAgentSpeaking = agentState === 'SPEAKING' || (isConnected && !!partialAgentTranscript);
+  const isListening = agentState === 'LISTENING';
 
-  // Start pulse when connected & speaking
-  const isAgentSpeaking = isConnected && !!partialAgentTranscript;
   useEffect(() => {
-    if (isAgentSpeaking) {
+    if (isAgentSpeaking || isListening) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.15, duration: 600, easing: Easing.ease, useNativeDriver: true }),
@@ -215,15 +211,12 @@ export default function VoiceAgentModal() {
       pulseAnim.stopAnimation();
       pulseAnim.setValue(1);
     }
-  }, [isAgentSpeaking, pulseAnim]);
+  }, [isAgentSpeaking, isListening, pulseAnim]);
 
-  // Notify Vapi when route changes
+  // Notify store when route changes
   useEffect(() => {
     if (isConnected && pathname) {
-      const vapiStore = useVapiStore.getState();
-      if (vapiStore.notifyRouteChanged) {
-        vapiStore.notifyRouteChanged(pathname);
-      }
+      useGeminiVoiceStore.getState().notifyRouteChanged(pathname);
     }
   }, [pathname, isConnected]);
 
@@ -236,7 +229,7 @@ export default function VoiceAgentModal() {
     }
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = null;
-      scrollViewRef.current?.scrollToEnd({ animated: false });
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     });
     return () => {
       if (scrollFrameRef.current !== null) {
@@ -253,13 +246,11 @@ export default function VoiceAgentModal() {
   const openModal = () => {
     setActiveRouter(router);
     showAgent();
-    // Auto-start Vapi call when modal opens
     if (!isConnected && !isConnecting) {
-      setupListeners(router);
       startCall();
     }
     if (pathname && isConnected) {
-      useVapiStore.getState().notifyRouteChanged(pathname);
+      useGeminiVoiceStore.getState().notifyRouteChanged(pathname);
     }
   };
 
@@ -276,12 +267,20 @@ export default function VoiceAgentModal() {
   const handleSuggestionPress = (sug: string) => {
     setActiveRouter(router);
     if (!isConnected && !isConnecting) {
-      setupListeners(router);
-      startCall();
+      useGeminiVoiceStore.setState({ isConnected: true, agentState: 'IDLE' });
     }
-    if (sendTextMessage) {
-      sendTextMessage(sug);
+    sendTextMessage(sug);
+  };
+
+  const handleSendText = () => {
+    if (!inputText.trim()) return;
+    const txt = inputText.trim();
+    setInputText('');
+    setActiveRouter(router);
+    if (!isConnected && !isConnecting) {
+      useGeminiVoiceStore.setState({ isConnected: true, agentState: 'IDLE' });
     }
+    sendTextMessage(txt);
   };
 
   const [pan] = useState(() => new Animated.ValueXY());
@@ -313,6 +312,16 @@ export default function VoiceAgentModal() {
   if (isHiddenScreen && !isVisible) {
     return null;
   }
+
+  // Live status subtitle
+  let statusText = 'Tap suggestion, speak, or type below';
+  if (isConnecting) statusText = 'Connecting to Chef...';
+  else if (agentState === 'LISTENING') statusText = '● Listening to you...';
+  else if (agentState === 'PROCESSING') statusText = '● Thinking...';
+  else if (agentState === 'SPEAKING') statusText = '● Speaking... (Tap Stop to interrupt)';
+  else if (agentState === 'WAITING_FOR_CONFIRMATION') statusText = '● Awaiting confirmation (Say Yes/No)';
+  else if (agentState === 'EXECUTING_ACTION') statusText = '● Updating order...';
+  else if (isConnected) statusText = '● Live Voice Session';
 
   return (
     <>
@@ -386,14 +395,17 @@ export default function VoiceAgentModal() {
                     <Text style={styles.contextBadgeText}>{routeContext.badgeLabel}</Text>
                   </View>
                 </View>
-                <Text style={[styles.headerSubtitle, isConnected && styles.headerSubtitleLive]}>
-                  {isConnecting
-                    ? 'Connecting to Chef...'
-                    : isConnected
-                      ? '● Live Voice Session'
-                      : 'Tap suggestion or start speaking below'}
+                <Text style={[styles.headerSubtitle, (isConnected || agentState !== 'IDLE') && styles.headerSubtitleLive]}>
+                  {statusText}
                 </Text>
               </View>
+
+              {/* Language toggle pill */}
+              <TouchableOpacity onPress={toggleLanguage} style={styles.langPill} activeOpacity={0.75}>
+                <Ionicons name="globe-outline" size={13} color="#DF9B34" />
+                <Text style={styles.langPillText}>{isTamilMode ? 'தமிழ்' : 'EN'}</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                 <Ionicons name="close" size={22} color="#333" />
               </TouchableOpacity>
@@ -483,7 +495,7 @@ export default function VoiceAgentModal() {
                     </View>
                   ))}
 
-                  {/* Partial Agent Bubble — shown in real-time, no lag */}
+                  {/* Partial Agent Bubble — shown in real-time, zero lag */}
                   {partialAgentTranscript ? (
                     <View style={[styles.messageWrapper, styles.messageWrapperAgent]}>
                       <View style={styles.smallAvatar}>
@@ -517,6 +529,26 @@ export default function VoiceAgentModal() {
               )}
             </ScrollView>
 
+            {/* Manual Text Input Bar */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder={isTamilMode ? "உணவு அல்லது கட்டளையை தட்டச்சு செய்க..." : "Type dish name or voice command..."}
+                placeholderTextColor="#999"
+                value={inputText}
+                onChangeText={setInputText}
+                onSubmitEditing={handleSendText}
+                returnKeyType="send"
+              />
+              <TouchableOpacity
+                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                onPress={handleSendText}
+                disabled={!inputText.trim()}
+              >
+                <Ionicons name="send" size={16} color={inputText.trim() ? '#ffffff' : '#bbb'} />
+              </TouchableOpacity>
+            </View>
+
             {/* Footer Controls */}
             <View style={styles.footer}>
               {!isConnected ? (
@@ -541,7 +573,7 @@ export default function VoiceAgentModal() {
                   >
                     <Ionicons
                       name={isMuted ? 'mic-off' : 'mic'}
-                      size={22}
+                      size={20}
                       color={isMuted ? 'white' : '#333'}
                     />
                     <Text style={[styles.muteLabel, isMuted && { color: 'white' }]}>
@@ -549,10 +581,49 @@ export default function VoiceAgentModal() {
                     </Text>
                   </TouchableOpacity>
 
-                  {/* Stop Agent */}
+                  {/* Stop Speaking / Interruption button */}
+                  {agentState === 'SPEAKING' ? (
+                    <TouchableOpacity
+                      style={styles.stopSpeakingButton}
+                      onPress={stopSpeaking}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="hand-right" size={18} color="white" style={{ marginRight: 6 }} />
+                      <Text style={styles.stopSpeakingText}>Stop</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.micListenButton, agentState === 'LISTENING' && styles.micListenButtonActive]}
+                      onPress={() => {
+                        if (agentState === 'LISTENING') {
+                          // Tap while listening forces the audio buffer to finalize & send to backend immediately!
+                          if ((useGeminiVoiceStore as any).bridgeForceFinalize) {
+                            (useGeminiVoiceStore as any).bridgeForceFinalize();
+                          } else {
+                            useGeminiVoiceStore.getState().stopListening();
+                          }
+                        } else {
+                          startListening();
+                        }
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons
+                        name={agentState === 'LISTENING' ? 'radio' : 'mic'}
+                        size={18}
+                        color="white"
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={styles.micListenText}>
+                        {agentState === 'LISTENING' ? 'Tap when done' : 'Speak'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* End Session */}
                   <TouchableOpacity style={styles.stopButton} onPress={endCall} activeOpacity={0.85}>
-                    <Ionicons name="stop-circle" size={22} color="white" style={{ marginRight: 8 }} />
-                    <Text style={styles.stopButtonText}>Stop Agent</Text>
+                    <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 6 }} />
+                    <Text style={styles.stopButtonText}>Close</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -618,61 +689,41 @@ const styles = StyleSheet.create({
     borderColor: '#FDE68A',
   },
   fabAvatarBgCompact: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
     marginRight: 0,
   },
   fabChefMascot: {
-    width: '100%',
-    height: '100%',
-    transform: [{ scale: 1.12 }],
+    width: 36,
+    height: 36,
   },
   fabChefMascotCompact: {
-    width: '100%',
-    height: '100%',
-    transform: [{ scale: 1.12 }],
-  },
-  fabCompactLiveDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#DF9B34',
-    borderWidth: 1.5,
-    borderColor: '#ffffff',
+    width: 44,
+    height: 44,
+    transform: [{ scale: 1.15 }],
   },
   fabTextWrapper: {
+    marginRight: 6,
     justifyContent: 'center',
-    paddingRight: 6,
   },
   fabTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   fabPillTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#1c1c1e',
+    color: '#1a1a1a',
   },
   fabAiMiniBadge: {
-    backgroundColor: '#fff3e0',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 6,
-    marginLeft: 4,
+    marginLeft: 3,
   },
   fabPillSubtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    gap: 3,
   },
   fabPillSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#666',
-    marginLeft: 3,
     fontWeight: '500',
   },
   fabPillSubtitleLive: {
@@ -684,190 +735,189 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#DF9B34',
-    marginLeft: 4,
+  },
+  fabCompactLiveDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#22c55e',
+    borderWidth: 1.5,
+    borderColor: '#fff',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fafafa',
+    height: SCREEN_HEIGHT * 0.88,
+    backgroundColor: '#f8f9fa',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    height: SCREEN_HEIGHT * 0.88,
-    maxHeight: '90%',
-    width: '100%',
-    maxWidth: 480,
-    marginHorizontal: 'auto',
-    paddingTop: 18,
-    display: 'flex',
-    flexDirection: 'column',
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingTop: 16,
+    paddingBottom: 14,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#eeeeee',
   },
   headerLeft: {
     flex: 1,
-    marginRight: 10,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 3,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#1c1c1e',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111111',
   },
   contextBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff3e0',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ffe0b2',
     gap: 4,
+    backgroundColor: '#FFF5E5',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ffeedd',
   },
   contextBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#DF9B34',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#8e8e93',
+    color: '#888888',
+    marginTop: 2,
     fontWeight: '500',
   },
   headerSubtitleLive: {
     color: '#DF9B34',
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  langPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF5E5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#DF9B34',
+    marginRight: 10,
+  },
+  langPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#DF9B34',
   },
   closeButton: {
-    padding: 6,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 2,
-    position: 'relative',
+    paddingTop: 16,
+    paddingBottom: 10,
+    backgroundColor: '#ffffff',
   },
   pulseRing: {
     position: 'absolute',
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: 'rgba(223, 155, 52, 0.08)',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#FFF0D4',
   },
   chefAvatar: {
-    width: 125,
-    height: 206,
-    zIndex: 2,
-  },
-  statusBadge: {
-    backgroundColor: '#aaa',
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -12,
-    zIndex: 3,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  statusBadgeActive: {
-    backgroundColor: '#DF9B34',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   chatBody: {
     flex: 1,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   emptyState: {
     alignItems: 'center',
-    marginTop: 6,
+    paddingTop: 10,
   },
   greetingTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1c1c1e',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#222',
     textAlign: 'center',
   },
   greetingSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
+    fontSize: 13,
+    color: '#777',
+    marginTop: 4,
+    marginBottom: 16,
     textAlign: 'center',
   },
   suggestionsContainer: {
     width: '100%',
-    alignItems: 'center',
+    gap: 8,
   },
   suggestionsHeader: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#8e8e93',
+    color: '#999',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
-    marginLeft: '3%',
+    marginBottom: 4,
   },
   suggestionPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
+    borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: 18,
-    marginBottom: 10,
-    width: '96%',
     borderWidth: 1,
-    borderColor: '#f0e8e2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    borderColor: '#eee',
+    elevation: 1,
   },
   suggestionIconBg: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff3e0',
-    justifyContent: 'center',
+    backgroundColor: '#FFF5E5',
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 10,
   },
   suggestionText: {
-    fontSize: 13.5,
-    color: '#1c1c1e',
+    fontSize: 13,
     fontWeight: '600',
-    flex: 1,
+    color: '#333',
   },
   messageList: {
-    paddingTop: 8,
+    gap: 12,
   },
   messageWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    marginBottom: 14,
-    width: '100%',
   },
   messageWrapperUser: {
     justifyContent: 'flex-end',
@@ -907,9 +957,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   messageBubbleUser: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF5E5',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#ffeedd',
     borderBottomRightRadius: 4,
   },
   messageBubbleAgent: {
@@ -922,18 +972,49 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
   },
   messageTextUser: {
-    color: '#222',
+    color: '#1a1a1a',
+    fontWeight: '500',
   },
   messageTextAgent: {
     color: '#111',
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    gap: 8,
+  },
+  textInput: {
+    flex: 1,
+    height: 42,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 21,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    color: '#222',
+  },
+  sendButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#DF9B34',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
   footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#f8f9fa',
     borderTopWidth: 1,
     borderTopColor: '#eeeeee',
@@ -944,7 +1025,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#DF9B34',
     borderRadius: 28,
-    paddingVertical: 15,
+    paddingVertical: 14,
   },
   startButtonConnecting: {
     backgroundColor: '#ccc',
@@ -958,15 +1039,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   muteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 110,
-    height: 52,
-    borderRadius: 26,
+    flex: 1,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: '#e8e8e8',
     gap: 6,
   },
@@ -974,22 +1055,53 @@ const styles = StyleSheet.create({
     backgroundColor: '#555',
   },
   muteLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
   },
-  stopButton: {
-    flex: 1,
-    height: 52,
-    backgroundColor: '#dc143c',
-    borderRadius: 26,
+  micListenButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flex: 1.2,
+    height: 46,
+    backgroundColor: '#DF9B34',
+    borderRadius: 23,
+  },
+  micListenButtonActive: {
+    backgroundColor: '#e67e22',
+  },
+  micListenText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  stopSpeakingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1.2,
+    height: 46,
+    backgroundColor: '#f59e0b',
+    borderRadius: 23,
+  },
+  stopSpeakingText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  stopButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    height: 46,
+    backgroundColor: '#dc2626',
+    borderRadius: 23,
   },
   stopButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '700',
   },
 });

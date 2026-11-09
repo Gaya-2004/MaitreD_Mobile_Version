@@ -10,3 +10,4 @@ export { useDineInSessionStore } from './useDineInSessionStore';
 export { useVoiceAgentStore } from './useVoiceAgentStore';
 export { usePaymentMethodStore } from './usePaymentMethodStore';
 export type { PaymentItem } from './usePaymentMethodStore';
+export { useGeminiVoiceStore } from './useGeminiVoiceStore';

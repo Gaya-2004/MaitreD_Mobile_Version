@@ -2,7 +2,14 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 const getApiUrl = () => {
-  // If running on web in a browser, use the current host (localhost or current LAN IP) to avoid IP drift
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+
+  // If a deployed / remote URL is provided (e.g. https://... or custom domain), always respect it
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl.replace(/\/+$/, '');
+  }
+
+  // If running on web in a browser, use current host
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
     const hostname = window.location.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1' || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) {
@@ -10,11 +17,11 @@ const getApiUrl = () => {
     }
   }
 
-  // Auto-detect host IP when running via Metro dev server (Expo Go / Dev Client on physical device or simulator)
+  // Auto-detect host IP when running via Metro dev server (Expo Go / Dev Client on physical device)
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const host = hostUri.split(':')[0];
-    if (host) {
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
       return `http://${host}:8001`;
     }
   }
@@ -24,12 +31,12 @@ const getApiUrl = () => {
     return 'http://10.0.2.2:8001';
   }
 
-  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  // Fallback to PC Wi-Fi IP
   if (envUrl) {
-    return envUrl.replace(/\/+$/, '');
+    return envUrl.replace('localhost', '10.127.18.176').replace('127.0.0.1', '10.127.18.176').replace(/\/+$/, '');
   }
 
-  return 'http://192.168.1.6:8001';
+  return 'http://10.127.18.176:8001';
 };
 
 export const API_BASE_URL = getApiUrl();

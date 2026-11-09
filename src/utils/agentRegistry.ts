@@ -275,6 +275,14 @@ export const SUPPORTED_ACTIONS = new Set([
 
   // Catering
   'open_catering',
+
+  // Voice AI Extensions
+  'apply_coupon',
+  'filter_menu',
+  'search_menu',
+  'place_order',
+  'close_agent',
+  'hide_agent',
 ]);
 
 // ─── Supported Vapi Tool Names ────────────────────────────────────────────

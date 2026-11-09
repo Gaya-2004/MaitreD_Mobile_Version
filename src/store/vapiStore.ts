@@ -1077,15 +1077,14 @@ export const useVapiStore = create<VapiState>((set, get) => ({
   partialAgentTranscript: '',
 
   startCall: async () => {
-    const assistantId = process.env.EXPO_PUBLIC_VAPI_ASSISTANT_ID;
-    if (!assistantId) {
-      Alert.alert(
-        'Voice Assistant Setup',
-        'Vapi Assistant ID is missing. Please configure EXPO_PUBLIC_VAPI_ASSISTANT_ID in your environment variables.'
-      );
-      set({ isConnecting: false });
-      return;
-    }
+    // Forward to Gemini voice store
+    try {
+      const { useGeminiVoiceStore } = require('./useGeminiVoiceStore');
+      return await useGeminiVoiceStore.getState().startCall();
+    } catch {}
+    const assistantId = process.env.EXPO_PUBLIC_VAPI_ASSISTANT_ID || '';
+    set({ isConnecting: false });
+    return;
 
     // Reflect intent immediately so the UI never looks frozen while we set up.
     set({ isConnecting: true });

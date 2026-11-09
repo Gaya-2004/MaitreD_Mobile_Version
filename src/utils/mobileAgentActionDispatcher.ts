@@ -488,6 +488,38 @@ export async function executeSingleAction(act: UIAction): Promise<ActionResult> 
         return { success: true, action, message: 'Opened Outlet Selector.' };
       }
 
+      // ── Voice AI Extensions ───────────────────────────────────────────────────
+
+      case 'apply_coupon': {
+        const code = (act.payload?.code || (act as any).coupon_code || act.name || '').trim();
+        if (!code) return { success: false, action, message: 'No coupon code provided.' };
+        useCartStore.getState().applyDiscount(code);
+        return { success: true, action, message: `Applied coupon ${code}.`, data: { coupon: code } };
+      }
+
+      case 'filter_menu': {
+        const params = act.payload?.params || {};
+        navigateScreen('/menu', params);
+        return { success: true, action, message: 'Applied menu filter.', data: params };
+      }
+
+      case 'search_menu': {
+        const query = act.payload?.query || act.payload?.params?.search || act.name || '';
+        navigateScreen('/menu', { search: query });
+        return { success: true, action, message: `Searching menu for "${query}".`, data: { search: query } };
+      }
+
+      case 'place_order': {
+        navigateScreen('/(checkout)/checkout', { autoConfirm: 'true' });
+        return { success: true, action, message: 'Proceeding to checkout to complete order.' };
+      }
+
+      case 'close_agent':
+      case 'hide_agent': {
+        useVoiceAgentStore.getState().hideAgent();
+        return { success: true, action, message: 'Closed voice assistant.' };
+      }
+
       // ── Default / Unknown ─────────────────────────────────────────────────────
 
       default:

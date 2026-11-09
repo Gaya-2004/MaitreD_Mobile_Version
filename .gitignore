@@ -48,3 +48,6 @@ playwright/.cache/
 # generated native folders
 /ios
 /android
+
+*.db
+*.db-*
