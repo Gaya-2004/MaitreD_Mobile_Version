@@ -1,15 +1,26 @@
 /**
  * VoiceBridge.tsx
  *
- * Universal Speech-to-Text & Audio Bridge for MaitreD AI Voice Agent.
- * Compatible with Android, iOS, and Web.
+ * Production-Grade Universal Speech-to-Text & Audio Bridge for MaitreD AI Voice Agent.
+ * Compatible with Android (WebView Chromium), iOS, and Web.
  *
- * Capabilities:
- *   1. Dual-Engine Speech Recognition:
- *      - Engine A: Chromium Web Speech Recognition (for instant partial/final transcripts).
- *      - Engine B: HTML5 AudioContext recording (16kHz WAV) with live Voice Activity Detection (VAD).
- *   2. Base64 Audio Playback via HTML5 Audio pipeline (plays backend gTTS MP3).
- *   3. Auto-granted microphone permissions for Android WebView.
+ * Key Architecture:
+ * 1. Audio Recording:
+ *    - Uses native device microphone via getUserMedia({ audio: true }).
+ *    - AudioContext captures PCM audio samples in real-time.
+ *    - Downsamples to 16kHz Mono.
+ *    - Encodes directly into compliant 16-bit PCM WAV format (RIFF/WAVE header).
+ *    - Base64 WAV is delivered to React Native for high-accuracy backend STT.
+ * 2. Voice Activity Detection (VAD):
+ *    - Real-time RMS volume computation.
+ *    - Auto-detects speech start and speech end (1.2s silence after speech).
+ *    - Manual push-to-talk override via forceFinalize() on button tap.
+ * 3. Complementary Web Speech Recognition:
+ *    - Where supported by the WebView engine, delivers zero-latency interim transcripts.
+ * 4. High-Fidelity Audio Playback:
+ *    - Plays backend gTTS audio responses via HTML5 Audio.
+ * 5. Layout Resilience:
+ *    - Uses an active transparent layout when recording so Android Chromium does not throttle.
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -31,54 +42,59 @@ const BRIDGE_HTML = `
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MaitreD Audio Bridge</title>
+  <title>MaitreD Audio Engine</title>
+  <style>
+    body {
+      background: transparent;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
 </head>
-<body style="background:transparent;margin:0;padding:0;overflow:hidden;">
+<body>
 <script>
-  var recognition = null;
-  var currentLang = 'en-IN';
+  'use strict';
+
   var isListening = false;
-  var currentAudio = null;
-  var audioContext = null;
+  var currentLang = 'en-IN';
   var mediaStream = null;
+  var audioContext = null;
   var scriptProcessor = null;
   var pcmChunks = [];
   var isSpeaking = false;
   var silenceFrames = 0;
-  var speechRecognizedText = '';
   var speechDispatched = false;
+  var speechRecognition = null;
+  var speechRecognizedText = '';
+  var currentAudio = null;
 
   function sendToRN(type, payload) {
+    var msg = JSON.stringify(Object.assign({ type: type }, payload || {}));
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-      window.ReactNativeWebView.postMessage(JSON.stringify(Object.assign({ type: type }, payload || {})));
+      window.ReactNativeWebView.postMessage(msg);
     }
   }
 
-  // ── 1. Speech Recognition (Web Speech API) ──────────────────────────────────
-  function getSpeechRecognition() {
-    return window.SpeechRecognition || window.webkitSpeechRecognition;
-  }
-
-  function setupSpeechRecognition() {
-    var SR = getSpeechRecognition();
+  // ── 1. Web Speech API (Complementary Real-Time Engine) ────────────────────────
+  function initSpeechRecognition() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return null;
-
     try {
       var r = new SR();
       r.continuous = true;
       r.interimResults = true;
       r.lang = currentLang;
 
-      r.onresult = function(event) {
+      r.onresult = function(e) {
         var interim = '';
         var final = '';
-        for (var i = event.resultIndex; i < event.results.length; ++i) {
-          var t = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            final += t;
-          } else {
-            interim += t;
-          }
+        for (var i = e.resultIndex; i < e.results.length; ++i) {
+          var t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) final += t;
+          else interim += t;
         }
         var spoken = (final || interim || '').trim();
         if (spoken) {
@@ -87,42 +103,40 @@ const BRIDGE_HTML = `
         }
       };
 
-      r.onerror = function(e) {
-        // Soft error, audio recording engine continues as primary fallback
-      };
-
+      r.onerror = function() {};
       r.onend = function() {
-        if (isListening) {
-          try { r.start(); } catch(err) {}
+        if (isListening && speechRecognition) {
+          try { speechRecognition.start(); } catch(err) {}
         }
       };
-
       return r;
-    } catch(e) {
+    } catch(err) {
       return null;
     }
   }
 
-  // ── 2. 16-bit PCM WAV Encoder ───────────────────────────────────────────────
+  // ── 2. Standard 16-bit PCM WAV Encoder ───────────────────────────────────────
   function encodeWAV(samples, sampleRate) {
     var buffer = new ArrayBuffer(44 + samples.length * 2);
     var view = new DataView(buffer);
+
     function writeString(v, offset, str) {
       for (var i = 0; i < str.length; i++) {
         v.setUint8(offset + i, str.charCodeAt(i));
       }
     }
+
     writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + samples.length * 2, true);
     writeString(view, 8, 'WAVE');
     writeString(view, 12, 'fmt ');
     view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true); // PCM format
-    view.setUint16(22, 1, true); // Mono
+    view.setUint16(20, 1, true); // PCM Format
+    view.setUint16(22, 1, true); // Mono channel
     view.setUint32(24, sampleRate, true);
     view.setUint32(28, sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
+    view.setUint16(32, 2, true); // Block align
+    view.setUint16(34, 16, true); // 16 bits per sample
     writeString(view, 36, 'data');
     view.setUint32(40, samples.length * 2, true);
 
@@ -145,7 +159,34 @@ const BRIDGE_HTML = `
     return btoa(binary);
   }
 
-  // ── 3. Audio Recording & VAD (Microphone) ────────────────────────────────────
+  // ── 3. Downsampling Helper ──────────────────────────────────────────────────
+  function downsampleBuffer(buffer, sampleRate, outSampleRate) {
+    if (outSampleRate === sampleRate) {
+      return buffer;
+    }
+    if (outSampleRate > sampleRate) {
+      return buffer;
+    }
+    var sampleRateRatio = sampleRate / outSampleRate;
+    var newLength = Math.round(buffer.length / sampleRateRatio);
+    var result = new Float32Array(newLength);
+    var offsetResult = 0;
+    var offsetBuffer = 0;
+    while (offsetResult < result.length) {
+      var nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+      var accum = 0, count = 0;
+      for (var i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+        accum += buffer[i];
+        count++;
+      }
+      result[offsetResult] = count > 0 ? (accum / count) : 0;
+      offsetResult++;
+      offsetBuffer = nextOffsetBuffer;
+    }
+    return result;
+  }
+
+  // ── 4. Microphone Audio Stream & VAD ─────────────────────────────────────────
   function startMicrophoneCapture() {
     pcmChunks = [];
     isSpeaking = false;
@@ -154,62 +195,70 @@ const BRIDGE_HTML = `
     speechDispatched = false;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      sendToRN('DEBUG', { message: 'navigator.mediaDevices.getUserMedia is NOT available' });
+      sendToRN('ERROR', { error: 'getUserMedia is not supported in this environment' });
       return;
     }
-    sendToRN('DEBUG', { message: 'Calling getUserMedia...' });
 
-    navigator.mediaDevices.getUserMedia({
-      audio: {
-        channelCount: 1,
-        sampleRate: 16000,
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      }
-    }).then(function(stream) {
-      sendToRN('DEBUG', { message: 'getUserMedia stream acquired successfully!' });
-      mediaStream = stream;
-      var AudioCtx = window.AudioContext || window.webkitAudioContext;
-      audioContext = new AudioCtx({ sampleRate: 16000 });
-      var source = audioContext.createMediaStreamSource(stream);
-      scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+    sendToRN('DEBUG', { message: 'Requesting microphone stream...' });
 
-      scriptProcessor.onaudioprocess = function(e) {
-        if (!isListening) return;
-        var input = e.inputBuffer.getChannelData(0);
-        var chunk = new Float32Array(input.length);
-        chunk.set(input);
-        pcmChunks.push(chunk);
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+        mediaStream = stream;
+        sendToRN('DEBUG', { message: 'Microphone stream acquired successfully!' });
 
-        // Calculate Volume (RMS)
-        var sum = 0;
-        for (var i = 0; i < chunk.length; i++) sum += chunk[i] * chunk[i];
-        var rms = Math.sqrt(sum / chunk.length);
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioCtx();
+        var inputRate = audioContext.sampleRate || 44100;
+        sendToRN('DEBUG', { message: 'AudioContext initialized at ' + inputRate + 'Hz' });
 
-        if (pcmChunks.length % 15 === 0) {
-          sendToRN('AUDIO_LEVEL', { rms: rms, chunks: pcmChunks.length });
-        }
+        var source = audioContext.createMediaStreamSource(stream);
+        // ScriptProcessor captures 4096-sample raw buffers
+        scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
-        // Voice Activity Detection (threshold lowered to 0.015 for mobile mic sensitivity)
-        if (rms > 0.015) {
-          isSpeaking = true;
-          silenceFrames = 0;
-        } else if (isSpeaking) {
-          silenceFrames++;
-          // ~1.2 seconds of silence after user spoke
-          if (silenceFrames > 10) {
-            sendToRN('DEBUG', { message: 'VAD silence detected, finalizing turn...' });
-            finalizeSpokenTurn();
+        scriptProcessor.onaudioprocess = function(e) {
+          if (!isListening) return;
+
+          var inputData = e.inputBuffer.getChannelData(0);
+          var copy = new Float32Array(inputData.length);
+          copy.set(inputData);
+          pcmChunks.push(copy);
+
+          // Calculate Root Mean Square (RMS) volume
+          var sum = 0;
+          for (var i = 0; i < copy.length; i++) {
+            sum += copy[i] * copy[i];
           }
-        }
-      };
+          var rms = Math.sqrt(sum / copy.length);
 
-      source.connect(scriptProcessor);
-      scriptProcessor.connect(audioContext.destination);
-    }).catch(function(err) {
-      sendToRN('ERROR', { error: 'Microphone access: ' + err.name + ' - ' + err.message });
-    });
+          if (pcmChunks.length % 8 === 0) {
+            sendToRN('AUDIO_LEVEL', { rms: rms, frames: pcmChunks.length });
+          }
+
+          // Voice Activity Detection (threshold: 0.012 for mobile mic sensitivity)
+          if (rms > 0.012) {
+            if (!isSpeaking) {
+              isSpeaking = true;
+              sendToRN('DEBUG', { message: 'Voice detected (RMS=' + rms.toFixed(4) + ')' });
+            }
+            silenceFrames = 0;
+          } else if (isSpeaking) {
+            silenceFrames++;
+            // ~1.2 seconds of silence after speaking (each 4096 chunk at 44.1kHz is ~92ms -> 13 chunks ~1.2s)
+            if (silenceFrames > 12) {
+              sendToRN('DEBUG', { message: 'End of speech detected by VAD. Finalizing turn...' });
+              finalizeRecording();
+            }
+          }
+        };
+
+        source.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
+
+        sendToRN('STARTED', {});
+      })
+      .catch(function(err) {
+        sendToRN('ERROR', { error: 'Mic stream error: ' + err.name + ' - ' + err.message });
+      });
   }
 
   function stopMicrophoneCapture() {
@@ -223,80 +272,83 @@ const BRIDGE_HTML = `
     }
     if (mediaStream) {
       try {
-        var tracks = mediaStream.getTracks();
-        for (var i = 0; i < tracks.length; i++) tracks[i].stop();
+        mediaStream.getTracks().forEach(function(t) { t.stop(); });
       } catch(e) {}
       mediaStream = null;
     }
   }
 
-  function finalizeSpokenTurn() {
+  function finalizeRecording() {
     if (speechDispatched) return;
     speechDispatched = true;
+    isListening = false;
 
-    // 1. If Web Speech API already parsed clear text, dispatch text immediately
+    // 1. If Web Speech API already transcribed text with high confidence, use it
     if (speechRecognizedText && speechRecognizedText.trim().length > 1) {
       sendToRN('FINALIZE_TEXT', { text: speechRecognizedText.trim() });
-      isListening = false;
       stopMicrophoneCapture();
+      if (speechRecognition) {
+        try { speechRecognition.stop(); } catch(e) {}
+      }
       return;
     }
 
-    // 2. Otherwise compile recorded PCM chunks into 16kHz WAV and send for backend STT
+    // 2. Otherwise encode collected PCM audio into standard 16kHz WAV
     if (pcmChunks.length > 0) {
-      var totalLen = 0;
-      for (var i = 0; i < pcmChunks.length; i++) totalLen += pcmChunks[i].length;
-      var merged = new Float32Array(totalLen);
+      var totalSamples = 0;
+      for (var i = 0; i < pcmChunks.length; i++) totalSamples += pcmChunks[i].length;
+
+      var merged = new Float32Array(totalSamples);
       var offset = 0;
       for (var j = 0; j < pcmChunks.length; j++) {
         merged.set(pcmChunks[j], offset);
         offset += pcmChunks[j].length;
       }
-      var wavBytes = encodeWAV(merged, 16000);
+
+      var currentRate = (audioContext && audioContext.sampleRate) ? audioContext.sampleRate : 44100;
+      var resampled = downsampleBuffer(merged, currentRate, 16000);
+
+      var wavBytes = encodeWAV(resampled, 16000);
       var b64Wav = uint8ToBase64(wavBytes);
-      sendToRN('FINALIZE_AUDIO', { audioBase64: b64Wav, sampleRate: 16000 });
+
+      sendToRN('DEBUG', { message: 'Encoded 16kHz WAV: ' + wavBytes.byteLength + ' bytes' });
+      sendToRN('FINALIZE_AUDIO', { audioBase64: b64Wav });
+    } else {
+      sendToRN('ERROR', { error: 'No audio captured' });
     }
 
-    isListening = false;
     stopMicrophoneCapture();
+    if (speechRecognition) {
+      try { speechRecognition.stop(); } catch(e) {}
+    }
   }
 
-  // ── 4. Public API for React Native ──────────────────────────────────────────
+  // ── 5. Public Bridge Methods for React Native ─────────────────────────────────
   window.startListening = function(lang) {
+    if (isListening) return;
     if (lang) currentLang = lang;
     isListening = true;
     speechDispatched = false;
-    sendToRN('STARTED', {});
 
-    // Start Web Speech API recognizer if available
-    if (!recognition) {
-      recognition = setupSpeechRecognition();
+    // Start Web Speech recognizer if available
+    if (!speechRecognition) {
+      speechRecognition = initSpeechRecognition();
     }
-    if (recognition) {
-      recognition.lang = currentLang;
-      try { recognition.start(); } catch(e) {}
+    if (speechRecognition) {
+      speechRecognition.lang = currentLang;
+      try { speechRecognition.start(); } catch(e) {}
     }
 
-    // Start Audio recording with VAD
+    // Start raw PCM capture
     startMicrophoneCapture();
   };
 
-  window.stopListening = function(finalize) {
-    if (finalize !== false && (pcmChunks.length > 0 || speechRecognizedText)) {
-      finalizeSpokenTurn();
-    } else {
-      isListening = false;
-      speechDispatched = true;
-      if (recognition) {
-        try { recognition.stop(); } catch(e) {}
-      }
-      stopMicrophoneCapture();
-      sendToRN('STOPPED', {});
-    }
+  window.stopListening = function() {
+    finalizeRecording();
   };
 
   window.forceFinalize = function() {
-    finalizeSpokenTurn();
+    finalizeRecording();
   };
 
   window.playAudioBase64 = function(b64) {
@@ -312,7 +364,7 @@ const BRIDGE_HTML = `
       currentAudio = null;
       sendToRN('AUDIO_ENDED', { error: true });
     };
-    currentAudio.play().catch(function(e) {
+    currentAudio.play().catch(function() {
       sendToRN('AUDIO_ENDED', { error: true });
     });
   };
@@ -338,16 +390,18 @@ export default function VoiceBridge() {
   const isTamilMode = useGeminiVoiceStore((s) => s.isTamilMode);
   const isMuted = useGeminiVoiceStore((s) => s.isMuted);
 
-  // Auto request Android audio permission
+  const isListening = agentState === 'LISTENING';
+
+  // Request Android runtime permissions on mount
   useEffect(() => {
     if (Platform.OS === 'android') {
       PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
         title: 'Microphone Permission',
-        message: 'MaitreD needs microphone access to understand your voice commands.',
+        message: 'MaitreD needs microphone access to take your food orders by voice.',
         buttonPositive: 'Allow',
         buttonNegative: 'Deny',
       }).catch((e) => {
-        console.warn('[VoiceBridge] Android mic request error:', e);
+        console.warn('[VoiceBridge] Android mic request warning:', e);
       });
     }
   }, []);
@@ -362,8 +416,29 @@ export default function VoiceBridge() {
     }
   };
 
+  // Expose global bridge controller hooks to store
+  useEffect(() => {
+    (useGeminiVoiceStore as any).bridgePlayAudio = (base64: string) => {
+      sendCommandToBridge(`window.playAudioBase64 && window.playAudioBase64("${base64}"); true;`);
+    };
+    (useGeminiVoiceStore as any).bridgeStopAudio = () => {
+      sendCommandToBridge('window.stopAudio && window.stopAudio(); true;');
+    };
+    (useGeminiVoiceStore as any).bridgeStartListening = (lang: string) => {
+      sendCommandToBridge(`window.startListening && window.startListening("${lang}"); true;`);
+    };
+    (useGeminiVoiceStore as any).bridgeStopListening = () => {
+      sendCommandToBridge('window.stopListening && window.stopListening(); true;');
+    };
+    (useGeminiVoiceStore as any).bridgeForceFinalize = () => {
+      sendCommandToBridge('window.forceFinalize && window.forceFinalize(); true;');
+    };
+  }, []);
+
   // Sync state machine with WebView bridge
   useEffect(() => {
+    if (!isBridgeReady.current) return;
+
     if (!isConnected || isMuted) {
       sendCommandToBridge('window.stopListening && window.stopListening(); true;');
       return;
@@ -387,11 +462,15 @@ export default function VoiceBridge() {
       switch (data.type) {
         case 'READY':
           isBridgeReady.current = true;
-          console.log('[VoiceBridge] WebView audio bridge initialized successfully.');
+          console.log('[VoiceBridge] ✅ Audio bridge ready');
           if (store.isConnected && store.agentState === 'LISTENING' && !store.isMuted) {
             const lang = store.isTamilMode ? 'ta-IN' : 'en-IN';
             sendCommandToBridge(`window.startListening && window.startListening("${lang}"); true;`);
           }
+          break;
+
+        case 'STARTED':
+          console.log('[VoiceBridge] ✅ Recording active in WebView');
           break;
 
         case 'TRANSCRIPT':
@@ -402,14 +481,14 @@ export default function VoiceBridge() {
 
         case 'FINALIZE_TEXT':
           if (data.text) {
-            console.log('[VoiceBridge] Customer speech recognized (local text):', data.text);
+            console.log('[VoiceBridge] ✅ Text recognized locally:', data.text);
             store.sendTextMessage(data.text);
           }
           break;
 
         case 'FINALIZE_AUDIO':
           if (data.audioBase64) {
-            console.log('[VoiceBridge] Customer speech captured (WAV audio chunk), sending to backend STT...');
+            console.log('[VoiceBridge] ✅ 16kHz WAV captured, sending to backend STT...');
             store.sendVoiceAudio(data.audioBase64);
           }
           break;
@@ -419,59 +498,36 @@ export default function VoiceBridge() {
             agentState: 'IDLE',
             partialAgentTranscript: '',
           });
-          if (store.isConnected && !store.isMuted) {
-            setTimeout(() => {
-              store.startListening();
-            }, 300);
-          }
-          break;
-
-        case 'STARTED':
-          console.log('[VoiceBridge] Audio recording started in WebView.');
           break;
 
         case 'DEBUG':
-          console.log('[VoiceBridge Debug]', data.message);
+          console.log('[VoiceBridge]', data.message);
           break;
 
         case 'AUDIO_LEVEL':
-          // Update visual feedback or log
           break;
 
         case 'ERROR':
-          console.warn('[VoiceBridge] Engine notice:', data.error);
+          console.warn('[VoiceBridge] Notice:', data.error);
           break;
       }
     } catch (e) {
-      console.warn('[VoiceBridge] onMessage error:', e);
+      console.warn('[VoiceBridge] onMessage parse error:', e);
     }
   };
-
-  // Expose global bridge controller hooks to store
-  useEffect(() => {
-    (useGeminiVoiceStore as any).bridgePlayAudio = (base64: string) => {
-      sendCommandToBridge(`window.playAudioBase64 && window.playAudioBase64("${base64}"); true;`);
-    };
-    (useGeminiVoiceStore as any).bridgeStopAudio = () => {
-      sendCommandToBridge('window.stopAudio && window.stopAudio(); true;');
-    };
-    (useGeminiVoiceStore as any).bridgeStartListening = (lang: string) => {
-      sendCommandToBridge(`window.startListening && window.startListening("${lang}"); true;`);
-    };
-    (useGeminiVoiceStore as any).bridgeStopListening = () => {
-      sendCommandToBridge('window.stopListening && window.stopListening(); true;');
-    };
-    (useGeminiVoiceStore as any).bridgeForceFinalize = () => {
-      sendCommandToBridge('window.forceFinalize && window.forceFinalize(); true;');
-    };
-  }, []);
 
   if (Platform.OS === 'web' || !WebView) {
     return null;
   }
 
   return (
-    <View style={styles.activeInvisibleContainer} pointerEvents="none">
+    <View
+      style={[
+        styles.bridgeContainer,
+        isListening ? styles.bridgeContainerVisible : styles.bridgeContainerHidden,
+      ]}
+      pointerEvents="none"
+    >
       <WebView
         ref={webviewRef}
         originWhitelist={['*']}
@@ -482,31 +538,36 @@ export default function VoiceBridge() {
         mediaPlaybackRequiresUserAction={false}
         allowsInlineMediaPlayback={true}
         mediaCapturePermissionGrantType="grant"
-        onPermissionRequest={(request: any) => {
-          try {
-            request.grant(request.resources);
-          } catch (e) {
-            console.warn('[VoiceBridge] Permission grant error:', e);
-          }
-        }}
-        style={styles.activeInvisibleWebView}
+        style={styles.webView}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  activeInvisibleContainer: {
+  bridgeContainer: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 20,
-    height: 20,
-    opacity: 0.05,
-    zIndex: -9999,
+    overflow: 'hidden',
   },
-  activeInvisibleWebView: {
+  bridgeContainerVisible: {
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+    opacity: 0.01,
+  },
+  bridgeContainerHidden: {
+    top: 0,
+    left: 0,
     width: 20,
     height: 20,
+    zIndex: -9999,
+    opacity: 0.01,
+  },
+  webView: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
   },
 });

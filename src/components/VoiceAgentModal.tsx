@@ -188,6 +188,7 @@ export default function VoiceAgentModal() {
   const isTamilMode = useGeminiVoiceStore((s) => s.isTamilMode);
   const toggleLanguage = useGeminiVoiceStore((s) => s.toggleLanguage);
   const startListening = useGeminiVoiceStore((s) => s.startListening);
+  const stopAndSendRecording = useGeminiVoiceStore((s) => s.stopAndSendRecording);
 
   const { isVisible, showAgent, hideAgent } = useVoiceAgentStore();
   const scrollViewRef = useRef<any>(null);
@@ -596,12 +597,7 @@ export default function VoiceAgentModal() {
                       style={[styles.micListenButton, agentState === 'LISTENING' && styles.micListenButtonActive]}
                       onPress={() => {
                         if (agentState === 'LISTENING') {
-                          // Tap while listening forces the audio buffer to finalize & send to backend immediately!
-                          if ((useGeminiVoiceStore as any).bridgeForceFinalize) {
-                            (useGeminiVoiceStore as any).bridgeForceFinalize();
-                          } else {
-                            useGeminiVoiceStore.getState().stopListening();
-                          }
+                          stopAndSendRecording();
                         } else {
                           startListening();
                         }

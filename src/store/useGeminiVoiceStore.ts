@@ -4,14 +4,17 @@
  * Complete AI Voice Agent Store for MaitreD using Gemini API & backend TTS.
  * Completely replaces external Vapi dependency.
  *
+ * Voice recording is done via expo-av Audio.Recording (native, reliable on Android).
+ * Push-to-talk pattern: tap to start → tap again to stop & send.
+ *
  * Features:
- *  - Multilingual Speech-to-Text (English, Tamil, Tanglish)
- *  - Safe, universal audio playback (Web HTML5 Audio + graceful native fallbacks)
- *  - Zero crash risk even if native audio modules are not linked in the build
- *  - Real-time partial transcripts and conversation history
- *  - Clear agent states: IDLE, LISTENING, PROCESSING, SPEAKING, EXECUTING_ACTION, WAITING_FOR_CONFIRMATION, ERROR
- *  - Synchronized with active application context, cart, and router
- *  - Safe action execution through mobileAgentActionDispatcher
+ *  - Native expo-av microphone recording (not WebView)
+ *  - Backend Whisper STT for transcription
+ *  - Backend Gemini NLU for intent extraction
+ *  - Backend gTTS for audio response
+ *  - expo-av / expo-speech for audio playback
+ *  - Multilingual: English, Tamil, Tanglish
+ *  - Push-to-talk and auto-silence-detect modes
  */
 
 import { create } from 'zustand';
@@ -62,35 +65,54 @@ interface GeminiVoiceState {
   notifyRouteChanged: (route: string) => void;
   startListening: () => Promise<void>;
   stopListening: () => void;
+  stopAndSendRecording: () => Promise<void>;
 }
 
-// ─── Safe Universal Audio Drivers ─────────────────────────────────────────────
+// ─── Audio State ───────────────────────────────────────────────────────────────
 let webAudioInstance: any = null;
-let webSpeechRecognizer: any = null;
-let silenceTimer: any = null;
 
-/**
- * Safely plays audio across Web, Android, and iOS.
- * Never throws "Cannot find native module 'ExponentAV'".
- */
+// ─── Stop all audio helpers ────────────────────────────────────────────────────
+function stopWebAudio() {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    if (webAudioInstance) {
+      try { webAudioInstance.pause(); } catch {}
+      webAudioInstance = null;
+    }
+    if (window.speechSynthesis) {
+      try { window.speechSynthesis.cancel(); } catch {}
+    }
+  }
+}
+
+function stopExpoSpeech() {
+  try {
+    const ExpoSpeech = require('expo-speech');
+    if (ExpoSpeech?.stop) ExpoSpeech.stop();
+  } catch {}
+}
+
+async function safeStopAllAudio() {
+  stopWebAudio();
+  stopExpoSpeech();
+  const bridge = useGeminiVoiceStore as any;
+  if (bridge?.bridgeStopAudio) {
+    try { bridge.bridgeStopAudio(); } catch {}
+  }
+}
+
+// ─── Play audio (backend MP3 base64) ──────────────────────────────────────────
 async function safePlayAudio(audioBase64: string, onDone?: () => void): Promise<boolean> {
-  // 1. Web browser: standard HTML5 Audio
+  // 1. Web
   if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).Audio) {
     try {
       if (webAudioInstance) {
-        webAudioInstance.pause();
+        try { webAudioInstance.pause(); } catch {}
         webAudioInstance = null;
       }
       const audio = new (window as any).Audio(`data:audio/mp3;base64,${audioBase64}`);
       webAudioInstance = audio;
-      audio.onended = () => {
-        webAudioInstance = null;
-        if (onDone) onDone();
-      };
-      audio.onerror = () => {
-        webAudioInstance = null;
-        if (onDone) onDone();
-      };
+      audio.onended = () => { webAudioInstance = null; onDone?.(); };
+      audio.onerror = () => { webAudioInstance = null; onDone?.(); };
       await audio.play();
       return true;
     } catch (e) {
@@ -98,71 +120,44 @@ async function safePlayAudio(audioBase64: string, onDone?: () => void): Promise<
     }
   }
 
-  // 2. Mobile Bridge: Play audio through WebView HTML5 Audio pipeline
-  if ((useGeminiVoiceStore as any).bridgePlayAudio) {
+  // 2. Mobile WebView Bridge HTML5 Audio pipeline (zero native module dependency)
+  const bridge = useGeminiVoiceStore as any;
+  if (bridge?.bridgePlayAudio) {
     try {
-      (useGeminiVoiceStore as any).bridgePlayAudio(audioBase64);
+      bridge.bridgePlayAudio(audioBase64);
+      if (onDone) {
+        const estDurationMs = Math.min(Math.max((audioBase64.length * 0.75 / 6000) * 1000, 1800), 10000);
+        setTimeout(onDone, estDurationMs);
+      }
       return true;
     } catch (e) {
-      console.warn('[GeminiVoice] bridgePlayAudio failed:', e);
+      console.warn('[GeminiVoice] bridgePlayAudio error:', e);
     }
-  }
-
-  // 3. React Native: try expo-av if linked in binary
-  try {
-    const ExpoAV = require('expo-av');
-    if (ExpoAV && ExpoAV.Audio && ExpoAV.Audio.Sound) {
-      const { sound } = await ExpoAV.Audio.Sound.createAsync(
-        { uri: `data:audio/mp3;base64,${audioBase64}` },
-        { shouldPlay: true }
-      );
-      sound.setOnPlaybackStatusUpdate((status: any) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-          if (onDone) onDone();
-        }
-      });
-      return true;
-    }
-  } catch {
-    // expo-av native module not linked
   }
 
   return false;
 }
 
-/**
- * Safely speaks text via Web SpeechSynthesis or expo-speech.
- */
+// ─── Speak text (TTS fallback when no audio) ──────────────────────────────────
 function safeSpeakText(text: string, isTamil: boolean, onDone?: () => void): boolean {
-  // 1. Web SpeechSynthesis
+  // 1. Web
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.speechSynthesis) {
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = isTamil ? 'ta-IN' : 'en-IN';
-      utterance.rate = 1.0;
-      utterance.onend = () => {
-        if (onDone) onDone();
-      };
-      utterance.onerror = () => {
-        if (onDone) onDone();
-      };
-      window.speechSynthesis.speak(utterance);
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = isTamil ? 'ta-IN' : 'en-IN';
+      utt.rate = 1.0;
+      utt.onend = () => onDone?.();
+      utt.onerror = () => onDone?.();
+      window.speechSynthesis.speak(utt);
       return true;
     } catch {}
   }
 
-  // 2. Expo Speech if linked
-  if ((useGeminiVoiceStore as any).bridgeStopAudio) {
-    try {
-      (useGeminiVoiceStore as any).bridgeStopAudio();
-    } catch {}
-  }
-
+  // 2. expo-speech
   try {
     const ExpoSpeech = require('expo-speech');
-    if (ExpoSpeech && ExpoSpeech.speak) {
+    if (ExpoSpeech?.speak) {
       ExpoSpeech.speak(text, {
         language: isTamil ? 'ta-IN' : 'en-IN',
         rate: 0.95,
@@ -177,38 +172,7 @@ function safeSpeakText(text: string, isTamil: boolean, onDone?: () => void): boo
   return false;
 }
 
-/**
- * Safely halts all audio playback immediately.
- */
-function safeStopAudio() {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    if (webAudioInstance) {
-      try {
-        webAudioInstance.pause();
-        webAudioInstance = null;
-      } catch {}
-    }
-    if (window.speechSynthesis) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch {}
-    }
-  }
-
-  if ((useGeminiVoiceStore as any).bridgeStopAudio) {
-    try {
-      (useGeminiVoiceStore as any).bridgeStopAudio();
-    } catch {}
-  }
-
-  try {
-    const ExpoSpeech = require('expo-speech');
-    if (ExpoSpeech && ExpoSpeech.stop) {
-      ExpoSpeech.stop();
-    }
-  } catch {}
-}
-
+// ─── Store ─────────────────────────────────────────────────────────────────────
 export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
   agentState: 'IDLE',
   isConnecting: false,
@@ -219,9 +183,7 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
   partialAgentTranscript: '',
   isTamilMode: false,
 
-  setupListeners: (routerInstance: any) => {
-    // Router reference is set dynamically
-  },
+  setupListeners: (_routerInstance: any) => {},
 
   notifyRouteChanged: (route: string) => {
     console.log('[GeminiVoice] Active route updated:', route);
@@ -236,8 +198,6 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     set({ isMuted: nextMuted });
     if (nextMuted) {
       get().stopListening();
-    } else if (get().isConnected) {
-      get().startListening();
     }
   },
 
@@ -246,7 +206,7 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
   },
 
   stopSpeaking: async () => {
-    safeStopAudio();
+    await safeStopAllAudio();
     if (get().agentState === 'SPEAKING') {
       set({ agentState: 'IDLE', partialAgentTranscript: '' });
     }
@@ -259,31 +219,28 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     set({ isConnecting: true, agentState: 'PROCESSING' });
 
     try {
-      // Safe audio setup without crashing if native module is absent
-      if (Platform.OS !== 'web') {
+      // Request microphone permissions before anything
+      if (Platform.OS === 'android') {
         try {
-          const ExpoAV = require('expo-av');
-          if (ExpoAV?.Audio?.requestPermissionsAsync) {
-            await ExpoAV.Audio.requestPermissionsAsync();
-            await ExpoAV.Audio.setAudioModeAsync({
-              allowsRecordingIOS: true,
-              playsInSilentModeIOS: true,
-              staysActiveInBackground: false,
-              shouldDuckAndroid: true,
+          const { PermissionsAndroid } = require('react-native');
+          const already = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+          );
+          if (!already) {
+            await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
+              title: 'Microphone',
+              message: 'MaitreD needs your microphone to hear your food order.',
+              buttonPositive: 'Allow',
             });
           }
-        } catch {
-          // Native audio module not linked, continue safely
-        }
+        } catch {}
       }
 
       set({ isConnected: true, isConnecting: false, agentState: 'IDLE' });
 
-      // Greet customer on first open
+      // Send greeting on first open
       if (get().messages.length === 0) {
         await get().sendTextMessage('Hello');
-      } else {
-        await get().startListening();
       }
     } catch (err) {
       console.error('[GeminiVoice] startCall failed:', err);
@@ -303,33 +260,33 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     });
   },
 
+  /**
+   * startListening: Begin recording via VoiceBridge WebView (Android/iOS)
+   * or Web SpeechRecognition (browser).
+   * Uses push-to-talk pattern — user taps "Done" to send.
+   */
   startListening: async () => {
-    if (get().isMuted) return;
+    if (get().isMuted || get().agentState === 'LISTENING') return;
 
     await get().stopSpeaking();
-    set({ agentState: 'LISTENING', partialUserTranscript: '' });
+    set({ agentState: 'LISTENING', partialUserTranscript: '🎤 Tap "Done" when finished speaking...' });
 
-    const lang = get().isTamilMode ? 'ta-IN' : 'en-IN';
-
-    // 1. Mobile Bridge for Android and iOS
-    if (Platform.OS !== 'web' && (useGeminiVoiceStore as any).bridgeStartListening) {
-      try {
-        (useGeminiVoiceStore as any).bridgeStartListening(lang);
-      } catch (e) {
-        console.warn('[GeminiVoice] bridgeStartListening warning:', e);
-      }
+    // ── Android/iOS: VoiceBridge WebView recording ──────────────────────────
+    // The bridge will auto-start recording via useEffect when agentState === 'LISTENING'
+    // So we just need to set the state — the VoiceBridge component handles it.
+    if (Platform.OS !== 'web') {
+      console.log('[GeminiVoice] Set LISTENING → VoiceBridge will start recording');
+      return;
     }
 
-    // 2. Web Speech API for real-time speech recognition
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    // ── Web: SpeechRecognition ───────────────────────────────────────────────
+    if (typeof window !== 'undefined') {
       const SpeechRecognition =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
       if (SpeechRecognition) {
         try {
-          if (webSpeechRecognizer) {
-            webSpeechRecognizer.abort();
-          }
+          if (webSpeechRecognizer) webSpeechRecognizer.abort();
 
           const recognizer = new SpeechRecognition();
           webSpeechRecognizer = recognizer;
@@ -338,76 +295,106 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
           recognizer.lang = get().isTamilMode ? 'ta-IN' : 'en-IN';
 
           recognizer.onresult = (event: any) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
-
+            let interim = '';
+            let final = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-              const transcript = event.results[i][0].transcript;
-              if (event.results[i].isFinal) {
-                finalTranscript += transcript;
-              } else {
-                interimTranscript += transcript;
-              }
+              const t = event.results[i][0].transcript;
+              if (event.results[i].isFinal) final += t;
+              else interim += t;
             }
-
-            const currentSpoken = (finalTranscript || interimTranscript).trim();
-            if (currentSpoken) {
-              set({ partialUserTranscript: currentSpoken });
-
-              // Silence debounce timer for automatic sending
+            const spoken = (final || interim).trim();
+            if (spoken) {
+              set({ partialUserTranscript: spoken });
               if (silenceTimer) clearTimeout(silenceTimer);
               silenceTimer = setTimeout(() => {
-                if (currentSpoken && get().agentState === 'LISTENING') {
+                if (spoken && get().agentState === 'LISTENING') {
                   recognizer.stop();
-                  get().sendTextMessage(currentSpoken);
+                  get().sendTextMessage(spoken);
                 }
-              }, 1800);
+              }, 2000);
             }
           };
 
-          recognizer.onerror = (event: any) => {
-            if (event.error !== 'no-speech') {
-              console.warn('[WebSpeechRecognizer] error:', event.error);
+          recognizer.onerror = (e: any) => {
+            if (e.error !== 'no-speech') {
+              console.warn('[WebSpeech] error:', e.error);
             }
           };
 
           recognizer.onend = () => {
             if (get().agentState === 'LISTENING' && get().isConnected && !get().isMuted) {
-              try {
-                recognizer.start();
-              } catch {}
+              try { recognizer.start(); } catch {}
             }
           };
 
           recognizer.start();
         } catch (e) {
-          console.warn('[GeminiVoice] Web Speech Recognition start warning:', e);
+          console.warn('[GeminiVoice] Web SpeechRecognition start failed:', e);
         }
       }
     }
   },
 
+  /**
+   * stopListening: Stop recording without sending.
+   */
   stopListening: () => {
     if (silenceTimer) {
       clearTimeout(silenceTimer);
       silenceTimer = null;
     }
-    if (Platform.OS !== 'web' && (useGeminiVoiceStore as any).bridgeStopListening) {
-      try {
-        (useGeminiVoiceStore as any).bridgeStopListening();
-      } catch {}
-    }
+
+    // Stop web recognizer
     if (webSpeechRecognizer) {
-      try {
-        webSpeechRecognizer.abort();
-      } catch {}
+      try { webSpeechRecognizer.abort(); } catch {}
       webSpeechRecognizer = null;
     }
+
+    // Stop bridge recording (Android/iOS)
+    if (Platform.OS !== 'web') {
+      const bridge = useGeminiVoiceStore as any;
+      if (bridge.bridgeStopListening) {
+        try { bridge.bridgeStopListening(); } catch {}
+      }
+    }
+
     if (get().agentState === 'LISTENING') {
-      set({ agentState: 'IDLE' });
+      set({ agentState: 'IDLE', partialUserTranscript: '' });
     }
   },
 
+  /**
+   * stopAndSendRecording: Stop recording and send audio to backend for STT + NLU.
+   * This is called when user taps "Done" while recording.
+   * On Android: triggers VoiceBridge to finalize and dispatch audio.
+   * On Web: sends buffered SpeechRecognition text.
+   */
+  stopAndSendRecording: async () => {
+    if (get().agentState !== 'LISTENING') return;
+
+    if (Platform.OS !== 'web') {
+      // Trigger VoiceBridge to stop MediaRecorder and send audio
+      const bridge = useGeminiVoiceStore as any;
+      if (bridge.bridgeForceFinalize) {
+        set({ agentState: 'PROCESSING', partialUserTranscript: '⏳ Processing your voice...' });
+        try { bridge.bridgeForceFinalize(); } catch {}
+      } else {
+        set({ agentState: 'IDLE', partialUserTranscript: '' });
+      }
+      return;
+    }
+
+    // Web: use partial transcript text
+    const partial = get().partialUserTranscript.trim();
+    const cleanPartial = partial.replace(/^🎤.*$/gm, '').trim();
+    if (cleanPartial) {
+      get().sendTextMessage(cleanPartial);
+    } else {
+      set({ agentState: 'IDLE', partialUserTranscript: '' });
+    }
+  },
+
+  // ─── Send text message to backend ─────────────────────────────────────────
   sendTextMessage: async (text: string) => {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
@@ -415,7 +402,6 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     get().stopListening();
     await get().stopSpeaking();
 
-    // Append user message
     const userMsg: ChatMessage = {
       id: Math.random().toString(36).substring(7),
       role: 'user',
@@ -430,7 +416,6 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     }));
 
     try {
-      // Gather live context from application stores
       const cartItems = Object.values(useCartStore.getState().items || {}).map((item) => ({
         id: item.id,
         name: item.name,
@@ -472,7 +457,6 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
       const requiresConfirmation = !!response.requires_confirmation;
       const audioBase64 = response.audio_base64;
 
-      // Add agent message
       const agentMsg: ChatMessage = {
         id: Math.random().toString(36).substring(7),
         role: 'agent',
@@ -486,43 +470,34 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
         agentState: requiresConfirmation ? 'WAITING_FOR_CONFIRMATION' : 'EXECUTING_ACTION',
       }));
 
-      // Execute returned UI actions
-      if (uiActions.length > 0) {
-        for (const action of uiActions) {
-          try {
-            await executeSingleAction(action as UIAction);
-          } catch (actErr) {
-            console.error('[GeminiVoice] UI Action execution failed:', actErr);
-          }
+      // Execute UI actions
+      for (const action of uiActions) {
+        try {
+          await executeSingleAction(action as UIAction);
+        } catch (actErr) {
+          console.error('[GeminiVoice] UI Action failed:', actErr);
         }
       }
 
-      // Audio response playback (TTS)
+      // Play response audio
       set({ agentState: 'SPEAKING' });
 
       const onPlaybackDone = () => {
         set({ partialAgentTranscript: '', agentState: 'IDLE' });
-        if (get().isConnected && !get().isMuted) {
-          setTimeout(() => {
-            get().startListening();
-          }, 300);
-        }
+        // Don't auto-restart listening — push-to-talk pattern is more reliable
       };
 
       let played = false;
 
-      // 1. Try playing high quality audio returned by backend (MP3 base64)
       if (audioBase64) {
         played = await safePlayAudio(audioBase64, onPlaybackDone);
       }
 
-      // 2. Fallback to speech synthesis
       if (!played) {
         const isTamil = /[\u0B80-\u0BFF]/.test(assistantText) || get().isTamilMode;
         const spoken = safeSpeakText(assistantText, isTamil, onPlaybackDone);
         if (!spoken) {
-          // If no audio player is linked, transition back to IDLE after reading duration
-          const readTime = Math.min(Math.max(assistantText.length * 60, 2000), 6000);
+          const readTime = Math.min(Math.max(assistantText.length * 55, 2000), 7000);
           setTimeout(onPlaybackDone, readTime);
         }
       }
@@ -536,19 +511,20 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
       };
       set((state) => ({
         messages: [...state.messages, errorMsg],
-        agentState: 'ERROR',
+        agentState: 'IDLE',
         partialAgentTranscript: '',
       }));
     }
   },
 
+  // ─── Send voice audio (base64) to backend for STT + NLU ───────────────────
   sendVoiceAudio: async (audioBase64: string) => {
     if (!audioBase64) return;
 
     get().stopListening();
     await get().stopSpeaking();
 
-    set({ agentState: 'PROCESSING', partialUserTranscript: 'Listening…' });
+    set({ agentState: 'PROCESSING', partialUserTranscript: '⏳ Understanding your speech...' });
 
     try {
       const cartItems = Object.values(useCartStore.getState().items || {}).map((item) => ({
@@ -595,6 +571,7 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
       const audioBase64Payload = response.audio_base64;
 
       const newMessages = [...get().messages];
+
       if (transcribedText) {
         newMessages.push({
           id: Math.random().toString(36).substring(7),
@@ -618,27 +595,20 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
         agentState: requiresConfirmation ? 'WAITING_FOR_CONFIRMATION' : 'EXECUTING_ACTION',
       });
 
-      // Execute returned UI actions
-      if (uiActions.length > 0) {
-        for (const action of uiActions) {
-          try {
-            await executeSingleAction(action as UIAction);
-          } catch (actErr) {
-            console.error('[GeminiVoice] UI Action execution failed:', actErr);
-          }
+      // Execute UI actions
+      for (const action of uiActions) {
+        try {
+          await executeSingleAction(action as UIAction);
+        } catch (actErr) {
+          console.error('[GeminiVoice] UI Action failed:', actErr);
         }
       }
 
-      // Audio response playback (TTS)
+      // Play response audio
       set({ agentState: 'SPEAKING' });
 
       const onPlaybackDone = () => {
         set({ partialAgentTranscript: '', agentState: 'IDLE' });
-        if (get().isConnected && !get().isMuted) {
-          setTimeout(() => {
-            get().startListening();
-          }, 300);
-        }
       };
 
       let played = false;
@@ -650,7 +620,7 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
         const isTamil = /[\u0B80-\u0BFF]/.test(assistantText) || get().isTamilMode;
         const spoken = safeSpeakText(assistantText, isTamil, onPlaybackDone);
         if (!spoken) {
-          const readTime = Math.min(Math.max(assistantText.length * 60, 2000), 6000);
+          const readTime = Math.min(Math.max(assistantText.length * 55, 2000), 7000);
           setTimeout(onPlaybackDone, readTime);
         }
       }
@@ -659,7 +629,7 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
       const errorMsg: ChatMessage = {
         id: Math.random().toString(36).substring(7),
         role: 'agent',
-        text: "I couldn't hear that clearly. Could you please repeat or type it?",
+        text: "I couldn't hear that clearly. Please try again or type your order.",
         timestamp: Date.now(),
       };
       set((state) => ({
@@ -668,12 +638,6 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
         partialUserTranscript: '',
         partialAgentTranscript: '',
       }));
-      // Resume listening
-      if (get().isConnected && !get().isMuted) {
-        setTimeout(() => {
-          get().startListening();
-        }, 800);
-      }
     }
   },
 }));

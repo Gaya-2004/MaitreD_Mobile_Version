@@ -1077,57 +1077,15 @@ export const useVapiStore = create<VapiState>((set, get) => ({
   partialAgentTranscript: '',
 
   startCall: async () => {
-    // Forward to Gemini voice store
+    // Seamlessly forward to unified Gemini Voice Store
     try {
       const { useGeminiVoiceStore } = require('./useGeminiVoiceStore');
       return await useGeminiVoiceStore.getState().startCall();
-    } catch {}
-    const assistantId = process.env.EXPO_PUBLIC_VAPI_ASSISTANT_ID || '';
+    } catch (e) {
+      console.warn('[VapiStore] Forwarding to useGeminiVoiceStore error:', e);
+    }
     set({ isConnecting: false });
-    return;
-
-    // Reflect intent immediately so the UI never looks frozen while we set up.
-    set({ isConnecting: true });
-
-    if (Platform.OS === 'android') {
-      try {
-        // check() is a cheap no-UI lookup; only fall back to the (slow) request
-        // dialog when permission has not been granted yet.
-        const alreadyGranted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-        );
-
-        if (!alreadyGranted) {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-            {
-              title: "Microphone Permission",
-              message: "The Voice Assistant needs access to your microphone.",
-              buttonNeutral: "Ask Me Later",
-              buttonNegative: "Cancel",
-              buttonPositive: "OK"
-            }
-          );
-          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            Alert.alert("Permission Denied", "Microphone access is required to use the Voice Assistant.");
-            set({ isConnecting: false });
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-
-    const vapi = getVapi();
-    if (!vapi) {
-      Alert.alert(
-        'Voice Assistant',
-        'Voice calls require custom native WebRTC (Development Build / APK). Other app features work normally in Expo Go.'
-      );
-      set({ isConnecting: false });
-      return;
-    }
+  },
     const { messages } = get();
     const hasHistory = messages.filter((m) => m.isFinal && m.text).length > 0;
 
