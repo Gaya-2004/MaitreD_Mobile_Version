@@ -31,12 +31,12 @@ const getApiUrl = () => {
     return 'http://10.0.2.2:8001';
   }
 
-  // Fallback to PC Wi-Fi IP
+  // Fallback to production/dev API
   if (envUrl) {
-    return envUrl.replace('localhost', '10.127.18.176').replace('127.0.0.1', '10.127.18.176').replace(/\/+$/, '');
+    return envUrl.replace(/\/+$/, '');
   }
 
-  return 'http://10.127.18.176:8001';
+  return 'https://dev-api.maitrepos.com';
 };
 
 export const API_BASE_URL = getApiUrl();
@@ -47,10 +47,7 @@ export const getFullImageUrl = (url: string | null | undefined, dishName?: strin
   const trimmed = typeof url === 'string' ? url.trim() : '';
 
   if (!trimmed || trimmed === '' || trimmed.includes('placeholder')) {
-    if (dishName) {
-      return `https://image.pollinations.ai/prompt/Delicious%20${encodeURIComponent(dishName)}%20food%20plating?width=800&height=600&nologo=true`;
-    }
-    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80';
+    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
   }
 
   // If already a complete cloud/CDN URL (e.g. Unsplash, S3, Cloudinary, HTTPS)
@@ -67,9 +64,9 @@ export const getFullImageUrl = (url: string | null | undefined, dishName?: strin
     return trimmed;
   }
 
-  // If dummy seeded static path that doesn't exist on disk, generate high-quality dish image
-  if (dishName && trimmed.startsWith('/static/images/item_')) {
-    return `https://image.pollinations.ai/prompt/Delicious%20${encodeURIComponent(dishName)}%20food%20plating?width=800&height=600&nologo=true`;
+  // If dummy seeded static path that doesn't exist on disk, fallback to high-quality dish image
+  if (trimmed.startsWith('/static/images/item_')) {
+    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
   }
 
   // If stored as a relative path in the database
