@@ -7,20 +7,21 @@
  * Key Architecture:
  * 1. Audio Recording:
  *    - Uses native device microphone via getUserMedia({ audio: true }).
- *    - AudioContext captures PCM audio samples in real-time.
+ *    - AudioContext captures PCM audio samples in real-time with automatic resume().
  *    - Downsamples to 16kHz Mono.
  *    - Encodes directly into compliant 16-bit PCM WAV format (RIFF/WAVE header).
  *    - Base64 WAV is delivered to React Native for high-accuracy backend STT.
+ *    - Warm stream retention: keeps microphone stream alive between turns to eliminate
+ *      re-initialization lag and audio dropouts.
  * 2. Voice Activity Detection (VAD):
  *    - Real-time RMS volume computation.
- *    - Auto-detects speech start and speech end (1.2s silence after speech).
+ *    - Auto-detects speech start and speech end (1.4s silence after speech).
  *    - Manual push-to-talk override via forceFinalize() on button tap.
- * 3. Complementary Web Speech Recognition:
- *    - Where supported by the WebView engine, delivers zero-latency interim transcripts.
+ * 3. Layout Resilience:
+ *    - Rendered directly inside the focused native Dialog/Modal window so Chromium
+ *      compositor treats media capture as fully active and foregrounded.
  * 4. High-Fidelity Audio Playback:
- *    - Plays backend gTTS audio responses via HTML5 Audio.
- * 5. Layout Resilience:
- *    - Uses an active transparent layout when recording so Android Chromium does not throttle.
+ *    - Plays backend gTTS audio responses via HTML5 Audio pipeline.
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -44,13 +45,13 @@ const BRIDGE_HTML = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MaitreD Audio Engine</title>
   <style>
-    body {
+    html, body {
       background: transparent;
       margin: 0;
       padding: 0;
       overflow: hidden;
-      width: 100vw;
-      height: 100vh;
+      width: 20px;
+      height: 20px;
     }
   </style>
 </head>
@@ -70,6 +71,11 @@ const BRIDGE_HTML = `
   var speechRecognition = null;
   var speechRecognizedText = '';
   var currentAudio = null;
+  var firstChunkLogged = false;
+
+  window.onerror = function(msg, url, line) {
+    sendToRN('DEBUG', { message: 'WebView JS Error: ' + msg + ' (' + line + ')' });
+  };
 
   function sendToRN(type, payload) {
     var msg = JSON.stringify(Object.assign({ type: type }, payload || {}));
@@ -193,23 +199,49 @@ const BRIDGE_HTML = `
     silenceFrames = 0;
     speechRecognizedText = '';
     speechDispatched = false;
+    firstChunkLogged = false;
+
+    // Warm stream reuse: keep existing stream alive across turns
+    if (mediaStream && mediaStream.active && audioContext && audioContext.state !== 'closed') {
+      sendToRN('DEBUG', { message: 'Reusing existing warm microphone stream.' });
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      sendToRN('STARTED', {});
+      return;
+    }
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       sendToRN('ERROR', { error: 'getUserMedia is not supported in this environment' });
       return;
     }
 
-    sendToRN('DEBUG', { message: 'Requesting microphone stream...' });
+    sendToRN('DEBUG', { message: 'Requesting microphone stream (secure=' + window.isSecureContext + ')...' });
 
-    navigator.mediaDevices.getUserMedia({ audio: true })
+    var constraints = {
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .catch(function() {
+        return navigator.mediaDevices.getUserMedia({ audio: true });
+      })
       .then(function(stream) {
         mediaStream = stream;
-        sendToRN('DEBUG', { message: 'Microphone stream acquired successfully!' });
+        sendToRN('DEBUG', { message: 'Microphone stream acquired! Tracks=' + stream.getAudioTracks().length });
 
         var AudioCtx = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioCtx();
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+
         var inputRate = audioContext.sampleRate || 44100;
-        sendToRN('DEBUG', { message: 'AudioContext initialized at ' + inputRate + 'Hz' });
+        sendToRN('DEBUG', { message: 'AudioContext active at ' + inputRate + 'Hz, state=' + audioContext.state });
 
         var source = audioContext.createMediaStreamSource(stream);
         // ScriptProcessor captures 4096-sample raw buffers
@@ -230,22 +262,27 @@ const BRIDGE_HTML = `
           }
           var rms = Math.sqrt(sum / copy.length);
 
-          if (pcmChunks.length % 8 === 0) {
+          if (!firstChunkLogged) {
+            firstChunkLogged = true;
+            sendToRN('DEBUG', { message: 'Audio streaming actively into buffer! Initial RMS=' + rms.toFixed(4) });
+          }
+
+          if (pcmChunks.length % 10 === 0) {
             sendToRN('AUDIO_LEVEL', { rms: rms, frames: pcmChunks.length });
           }
 
-          // Voice Activity Detection (threshold: 0.012 for mobile mic sensitivity)
-          if (rms > 0.012) {
+          // Voice Activity Detection (threshold: 0.008 for sensitive mic capture)
+          if (rms > 0.008) {
             if (!isSpeaking) {
               isSpeaking = true;
-              sendToRN('DEBUG', { message: 'Voice detected (RMS=' + rms.toFixed(4) + ')' });
+              sendToRN('DEBUG', { message: 'User voice detected (RMS=' + rms.toFixed(4) + ')' });
             }
             silenceFrames = 0;
           } else if (isSpeaking) {
             silenceFrames++;
-            // ~1.2 seconds of silence after speaking (each 4096 chunk at 44.1kHz is ~92ms -> 13 chunks ~1.2s)
-            if (silenceFrames > 12) {
-              sendToRN('DEBUG', { message: 'End of speech detected by VAD. Finalizing turn...' });
+            // ~1.4 seconds of silence after speaking (each 4096 chunk at 44.1kHz is ~92ms -> 15 chunks ~1.4s)
+            if (silenceFrames > 15) {
+              sendToRN('DEBUG', { message: 'VAD silence detected. Finalizing voice turn...' });
               finalizeRecording();
             }
           }
@@ -261,7 +298,12 @@ const BRIDGE_HTML = `
       });
   }
 
-  function stopMicrophoneCapture() {
+  function pauseMicrophoneCapture() {
+    isListening = false;
+  }
+
+  function releaseMicrophone() {
+    isListening = false;
     if (scriptProcessor) {
       try { scriptProcessor.disconnect(); } catch(e) {}
       scriptProcessor = null;
@@ -276,6 +318,11 @@ const BRIDGE_HTML = `
       } catch(e) {}
       mediaStream = null;
     }
+    if (speechRecognition) {
+      try { speechRecognition.stop(); } catch(e) {}
+      speechRecognition = null;
+    }
+    sendToRN('DEBUG', { message: 'Microphone hardware released cleanly.' });
   }
 
   function finalizeRecording() {
@@ -286,7 +333,6 @@ const BRIDGE_HTML = `
     // 1. If Web Speech API already transcribed text with high confidence, use it
     if (speechRecognizedText && speechRecognizedText.trim().length > 1) {
       sendToRN('FINALIZE_TEXT', { text: speechRecognizedText.trim() });
-      stopMicrophoneCapture();
       if (speechRecognition) {
         try { speechRecognition.stop(); } catch(e) {}
       }
@@ -314,10 +360,18 @@ const BRIDGE_HTML = `
       sendToRN('DEBUG', { message: 'Encoded 16kHz WAV: ' + wavBytes.byteLength + ' bytes' });
       sendToRN('FINALIZE_AUDIO', { audioBase64: b64Wav });
     } else {
-      sendToRN('ERROR', { error: 'No audio captured' });
+      // If no chunks arrived yet, wait 350ms to give audio buffer time to flush
+      setTimeout(function() {
+        if (pcmChunks.length > 0) {
+          speechDispatched = false;
+          finalizeRecording();
+        } else {
+          sendToRN('ERROR', { error: 'No audio captured. Please speak into your microphone.' });
+        }
+      }, 350);
+      return;
     }
 
-    stopMicrophoneCapture();
     if (speechRecognition) {
       try { speechRecognition.stop(); } catch(e) {}
     }
@@ -349,6 +403,10 @@ const BRIDGE_HTML = `
 
   window.forceFinalize = function() {
     finalizeRecording();
+  };
+
+  window.releaseMicrophone = function() {
+    releaseMicrophone();
   };
 
   window.playAudioBase64 = function(b64) {
@@ -390,9 +448,7 @@ export default function VoiceBridge() {
   const isTamilMode = useGeminiVoiceStore((s) => s.isTamilMode);
   const isMuted = useGeminiVoiceStore((s) => s.isMuted);
 
-  const isListening = agentState === 'LISTENING';
-
-  // Request Android runtime permissions on mount
+  // Auto-request Android runtime permission on mount
   useEffect(() => {
     if (Platform.OS === 'android') {
       PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
@@ -433,6 +489,13 @@ export default function VoiceBridge() {
     (useGeminiVoiceStore as any).bridgeForceFinalize = () => {
       sendCommandToBridge('window.forceFinalize && window.forceFinalize(); true;');
     };
+    (useGeminiVoiceStore as any).bridgeReleaseMicrophone = () => {
+      sendCommandToBridge('window.releaseMicrophone && window.releaseMicrophone(); true;');
+    };
+
+    return () => {
+      sendCommandToBridge('window.releaseMicrophone && window.releaseMicrophone(); true;');
+    };
   }, []);
 
   // Sync state machine with WebView bridge
@@ -462,7 +525,7 @@ export default function VoiceBridge() {
       switch (data.type) {
         case 'READY':
           isBridgeReady.current = true;
-          console.log('[VoiceBridge] ✅ Audio bridge ready');
+          console.log('[VoiceBridge] Audio bridge ready');
           if (store.isConnected && store.agentState === 'LISTENING' && !store.isMuted) {
             const lang = store.isTamilMode ? 'ta-IN' : 'en-IN';
             sendCommandToBridge(`window.startListening && window.startListening("${lang}"); true;`);
@@ -470,7 +533,7 @@ export default function VoiceBridge() {
           break;
 
         case 'STARTED':
-          console.log('[VoiceBridge] ✅ Recording active in WebView');
+          console.log('[VoiceBridge] Recording active in WebView');
           break;
 
         case 'TRANSCRIPT':
@@ -481,14 +544,14 @@ export default function VoiceBridge() {
 
         case 'FINALIZE_TEXT':
           if (data.text) {
-            console.log('[VoiceBridge] ✅ Text recognized locally:', data.text);
+            console.log('[VoiceBridge] Text recognized locally:', data.text);
             store.sendTextMessage(data.text);
           }
           break;
 
         case 'FINALIZE_AUDIO':
           if (data.audioBase64) {
-            console.log('[VoiceBridge] ✅ 16kHz WAV captured, sending to backend STT...');
+            console.log('[VoiceBridge] 16kHz WAV captured, sending to backend STT...');
             store.sendVoiceAudio(data.audioBase64);
           }
           break;
@@ -520,24 +583,21 @@ export default function VoiceBridge() {
     return null;
   }
 
+  // Render a 20x20 transparent WebView with opacity: 0.99 inside the active Modal Dialog
+  // so Chromium compositor keeps audio capture fully active and foregrounded.
   return (
-    <View
-      style={[
-        styles.bridgeContainer,
-        isListening ? styles.bridgeContainerVisible : styles.bridgeContainerHidden,
-      ]}
-      pointerEvents="none"
-    >
+    <View style={styles.bridgeContainer} pointerEvents="box-none">
       <WebView
         ref={webviewRef}
         originWhitelist={['*']}
-        source={{ html: BRIDGE_HTML, baseUrl: 'https://localhost' }}
+        source={{ html: BRIDGE_HTML, baseUrl: 'https://maitred.app' }}
         onMessage={handleMessage}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         mediaPlaybackRequiresUserAction={false}
         allowsInlineMediaPlayback={true}
-        mediaCapturePermissionGrantType="grant"
+        androidHardwareAccelerationDisabled={false}
+        scalesPageToFit={false}
         style={styles.webView}
       />
     </View>
@@ -547,27 +607,17 @@ export default function VoiceBridge() {
 const styles = StyleSheet.create({
   bridgeContainer: {
     position: 'absolute',
-    overflow: 'hidden',
-  },
-  bridgeContainerVisible: {
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-    opacity: 0.01,
-  },
-  bridgeContainerHidden: {
     top: 0,
     left: 0,
     width: 20,
     height: 20,
-    zIndex: -9999,
-    opacity: 0.01,
+    opacity: 0.99,
+    backgroundColor: 'transparent',
+    zIndex: 9999,
   },
   webView: {
-    width: '100%',
-    height: '100%',
+    width: 20,
+    height: 20,
     backgroundColor: 'transparent',
   },
 });

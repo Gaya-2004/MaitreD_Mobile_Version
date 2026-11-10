@@ -6,7 +6,6 @@ import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import VoiceAgentModal from '../components/VoiceAgentModal';
-import VoiceBridge from '../components/VoiceBridge';
 import ResponsiveContainer from '../components/layout/ResponsiveContainer';
 
 interface Props {
@@ -68,7 +67,6 @@ export default function RootLayout() {
         <RootErrorBoundary>
           <ResponsiveContainer>
             <Slot />
-            <VoiceBridge />
             <VoiceAgentModal />
           </ResponsiveContainer>
         </RootErrorBoundary>

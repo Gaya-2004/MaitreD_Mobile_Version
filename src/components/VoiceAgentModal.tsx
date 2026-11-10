@@ -40,6 +40,7 @@ import { useDineInSessionStore } from '../store/useDineInSessionStore';
 import { useVoiceAgentStore } from '../store/useVoiceAgentStore';
 import { useGeminiVoiceStore } from '../store/useGeminiVoiceStore';
 import { setActiveRouter } from '../utils/mobileAgentActionDispatcher';
+import VoiceBridge from './VoiceBridge';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -385,6 +386,7 @@ export default function VoiceAgentModal() {
       {/* Rich UI Modal */}
       <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={closeModal}>
         <View style={styles.modalOverlay}>
+          <VoiceBridge />
           <View style={styles.modalContent}>
             {/* Header */}
             <View style={styles.header}>

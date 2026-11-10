@@ -42,7 +42,7 @@ export default function CheckoutScreen() {
   const cartItems = Object.values(items).filter(item => item && item.quantity > 0);
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
-  const gst = getGst();
+  const gst = 0; // No tax added as per requirements - only food price adds to total
   const discountAmount = getDiscountAmount();
   
   const packagingCharges = 0; // Fixed as per wireframe
@@ -499,10 +499,12 @@ export default function CheckoutScreen() {
             <Text style={styles.billValue}>Rs. {packagingCharges.toFixed(2)}</Text>
           </View>
 
-          <View style={styles.billRow}>
-            <Text style={styles.billLabel}>GST & Restaurant Taxes</Text>
-            <Text style={styles.billValue}>Rs. {gst.toFixed(2)}</Text>
-          </View>
+          {gst > 0 && (
+            <View style={styles.billRow}>
+              <Text style={styles.billLabel}>GST & Restaurant Taxes</Text>
+              <Text style={styles.billValue}>Rs. {gst.toFixed(2)}</Text>
+            </View>
+          )}
 
           {discountAmount > 0 && (
             <View style={styles.billRow}>

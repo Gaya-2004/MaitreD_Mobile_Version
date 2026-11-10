@@ -253,6 +253,12 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
   stopCall: async () => {
     get().stopListening();
     await get().stopSpeaking();
+    if (Platform.OS !== 'web') {
+      const bridge = useGeminiVoiceStore as any;
+      if (bridge.bridgeReleaseMicrophone) {
+        try { bridge.bridgeReleaseMicrophone(); } catch {}
+      }
+    }
     set({
       isConnected: false,
       isConnecting: false,
@@ -271,13 +277,28 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     if (get().isMuted || get().agentState === 'LISTENING') return;
 
     await get().stopSpeaking();
-    set({ agentState: 'LISTENING', partialUserTranscript: '🎤 Tap "Done" when finished speaking...' });
+    set({ agentState: 'LISTENING', partialUserTranscript: '🎤 Listening to you... speak your order!' });
 
     // ── Android/iOS: VoiceBridge WebView recording ──────────────────────────
-    // The bridge will auto-start recording via useEffect when agentState === 'LISTENING'
-    // So we just need to set the state — the VoiceBridge component handles it.
     if (Platform.OS !== 'web') {
-      console.log('[GeminiVoice] Set LISTENING → VoiceBridge will start recording');
+      if (Platform.OS === 'android') {
+        try {
+          const { PermissionsAndroid } = require('react-native');
+          const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+          if (!granted) {
+            await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
+              title: 'Microphone Permission',
+              message: 'MaitreD needs microphone access to take your food orders by voice.',
+              buttonPositive: 'Allow',
+            });
+          }
+        } catch {}
+      }
+      const bridge = useGeminiVoiceStore as any;
+      if (bridge.bridgeStartListening) {
+        const lang = get().isTamilMode ? 'ta-IN' : 'en-IN';
+        bridge.bridgeStartListening(lang);
+      }
       return;
     }
 
