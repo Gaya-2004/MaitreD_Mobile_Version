@@ -67,19 +67,35 @@ export default function Orders() {
 
       let formattedOrders: any[] = [];
 
-      // Fetch online customer orders for this specific phone from backend
-      if (userPhone && rawUserDigits.length >= 10 && !['1234567890', '9876543210'].includes(userLast10)) {
-        const [data1, data2] = await Promise.all([
+      // Fetch online customer orders for this phone from backend
+      if (userPhone && rawUserDigits.length >= 10) {
+        const [dataAll, data1, data2, data25] = await Promise.all([
+          orderApi.getCustomerOrders(userPhone).catch(() => []),
           orderApi.getCustomerOrders(userPhone, 1).catch(() => []),
-          orderApi.getCustomerOrders(userPhone, 2).catch(() => [])
+          orderApi.getCustomerOrders(userPhone, 2).catch(() => []),
+          orderApi.getCustomerOrders(userPhone, 25).catch(() => [])
         ]);
 
         let allData: any[] = [];
-        if (Array.isArray(data1)) allData = [...allData, ...data1];
-        if (Array.isArray(data2)) allData = [...allData, ...data2];
+        if (Array.isArray(dataAll) && dataAll.length > 0) {
+          allData = dataAll;
+        } else {
+          if (Array.isArray(data1)) allData = [...allData, ...data1];
+          if (Array.isArray(data2)) allData = [...allData, ...data2];
+          if (Array.isArray(data25)) allData = [...allData, ...data25];
+        }
 
-        if (allData.length > 0) {
-          formattedOrders = allData.map((entry: any) => {
+        // Deduplicate backend orders by ID
+        const seenIds = new Set<string>();
+        const uniqueData = allData.filter((entry: any) => {
+          const oId = String(entry?.order?.id || entry?.order?.orderId || '');
+          if (!oId || seenIds.has(oId)) return false;
+          seenIds.add(oId);
+          return true;
+        });
+
+        if (uniqueData.length > 0) {
+          formattedOrders = uniqueData.map((entry: any) => {
             const o = entry.order;
             const items = entry.items;
             const finalOrderId = o.orderId || `ORD-${String(o.id).padStart(6, '0')}`;
@@ -89,10 +105,17 @@ export default function Orders() {
             const isCounter = normPayMethod === 'payatcounter' || normPayMethod === 'counter';
             const isPaidStatus = (o.payment_status || '').toUpperCase() === 'PAID';
 
+            let branchName = o.restaurant_name;
+            if (!branchName) {
+              if (o.restaurant_id === 2) branchName = 'MaitreD — MGR Nagar';
+              else if (o.restaurant_id === 25) branchName = 'MaitreD — Bangalore';
+              else branchName = 'MaitreD — Mugalivakkam';
+            }
+
             return {
               id: finalOrderId,
               dbId: o.id,
-              restaurant: o.restaurant_id === 2 ? 'MGR Nagar' : 'Mugalivakkam',
+              restaurant: branchName,
               restaurant_id: o.restaurant_id,
               bill_no: o.bill_no,
               dine_in_session_id: o.dine_in_session_id,
@@ -131,7 +154,7 @@ export default function Orders() {
               total: cOrder.total_amount || 0,
               paid_amount: cOrder.paid_amount || 0,
               balance_amount: cOrder.balance_amount || 0,
-              image: 'https://via.placeholder.com/150', // Replace with catering icon if desired
+              image: 'https://via.placeholder.com/150',
               order_type: 'Catering',
               isCatering: true,
               payments: cOrder.payments || []
@@ -141,40 +164,51 @@ export default function Orders() {
         }
       }
 
-      // Fallback to local pastOrders strictly if offline and matching user phone
-      if (formattedOrders.length === 0 && userPhone && rawUserDigits.length >= 10 && !['1234567890', '9876543210'].includes(userLast10)) {
-        const accountPastOrders = (pastOrders || []).filter((o: any) => {
-          if (o.customer_phone) {
+      // Merge local pastOrders (offline or local orders not yet on backend)
+      if (pastOrders && pastOrders.length > 0) {
+        const existingOrderKeys = new Set(
+          formattedOrders.map((o: any) => String(o.dbId || o.id).replace(/\D/g, ''))
+        );
+
+        const localPastToInclude = (pastOrders || []).filter((o: any) => {
+          const numId = String(o.dbOrderId || o.orderId || o.id || '').replace(/\D/g, '');
+          if (numId && existingOrderKeys.has(numId)) return false;
+          if (o.customer_phone && userPhone && rawUserDigits.length >= 10) {
             const ordPhone = String(o.customer_phone).replace(/\D/g, '');
             return ordPhone.endsWith(userLast10) || ordPhone === rawUserDigits;
           }
-          return false;
+          return true;
         });
 
-        formattedOrders = accountPastOrders.map((o: any) => {
-          const { mappedType, tableNumber } = parseOrderTypeAndTable(o.orderType || o.order_type, o.table_number);
-          const normPayMethod = (o.payment_method || '').toLowerCase().replace(/[\s_-]/g, '');
-          const isCounter = normPayMethod === 'payatcounter' || normPayMethod === 'counter';
-          const isPaidStatus = (o.payment_status || '').toUpperCase() === 'PAID';
+        if (localPastToInclude.length > 0) {
+          const formattedLocal = localPastToInclude.map((o: any) => {
+            const { mappedType, tableNumber } = parseOrderTypeAndTable(o.orderType || o.order_type, o.table_number);
+            const normPayMethod = (o.payment_method || '').toLowerCase().replace(/[\s_-]/g, '');
+            const isCounter = normPayMethod === 'payatcounter' || normPayMethod === 'counter';
+            const isPaidStatus = (o.payment_status || '').toUpperCase() === 'PAID';
 
-          return {
-            id: o.orderId || `ORD-${String(o.dbOrderId || o.id || 0).padStart(6, '0')}`,
-            dbId: o.dbOrderId || o.id,
-            restaurant: o.restaurant_id === 2 ? 'MGR Nagar' : 'Mugalivakkam',
-            restaurant_id: o.restaurant_id || o.restaurantId,
-            bill_no: o.bill_no || o.billNo,
-            dine_in_session_id: o.dine_in_session_id || o.sessionId,
-            date: o.date || o.created_at || '2000-01-01T00:00:00Z',
-            status: o.status || 'Pending',
-            payment_status: isPaidStatus ? 'Paid' : (o.payment_status || (isCounter ? 'Pay at Counter' : 'Pending')),
-            payment_method: o.payment_method,
-            table_number: tableNumber,
-            items: o.items || o.cart || [],
-            total: o.total || 0,
-            image: o.items?.[0]?.image ? getFullImageUrl(o.items[0].image, o.items[0].name) : 'https://via.placeholder.com/150',
-            order_type: mappedType,
-          };
-        });
+            return {
+              id: o.orderId || `ORD-${String(o.dbOrderId || o.id || 0).padStart(6, '0')}`,
+              dbId: o.dbOrderId || o.id,
+              restaurant: o.restaurant_name || (o.restaurant_id === 2 ? 'MaitreD — MGR Nagar' : (o.restaurant_id === 25 ? 'MaitreD — Bangalore' : 'MaitreD — Mugalivakkam')),
+              restaurant_id: o.restaurant_id || o.restaurantId || 1,
+              bill_no: o.bill_no || o.billNo,
+              dine_in_session_id: o.dine_in_session_id || o.sessionId,
+              date: o.date || o.created_at || '2000-01-01T00:00:00Z',
+              status: o.status || 'Pending',
+              payment_status: isPaidStatus ? 'Paid' : (o.payment_status || (isCounter ? 'Pay at Counter' : 'Pending')),
+              payment_method: o.payment_method,
+              table_number: tableNumber,
+              items: o.items || o.cart || [],
+              total: o.total || 0,
+              image: o.items?.[0]?.image ? getFullImageUrl(o.items[0].image, o.items[0].name) : 'https://via.placeholder.com/150',
+              order_type: mappedType,
+              isCatering: false,
+            };
+          });
+
+          formattedOrders = [...formattedOrders, ...formattedLocal];
+        }
       }
 
       // Consolidate Dine In orders belonging to the same bill or dine-in session
@@ -415,9 +449,9 @@ export default function Orders() {
       if (activeTab === 'Delivered' || activeTab === 'Completed') {
         if (isCancelled) return false;
         if (order.order_type === 'Dine In') {
-          return isPaid && ['SERVED', 'COMPLETED'].includes(status);
+          return ['SERVED', 'COMPLETED'].includes(status);
         }
-        return ['SERVED', 'COMPLETED', 'DELIVERED'].includes(status) && isPaid;
+        return ['SERVED', 'COMPLETED', 'DELIVERED'].includes(status);
       }
 
       if (activeTab === 'Cancelled' || activeTab === 'CANCELLED') {

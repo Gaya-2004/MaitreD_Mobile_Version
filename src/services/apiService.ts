@@ -386,10 +386,10 @@ export const orderApi = {
 
 
   /** GET /api/v1/public/customers/orders?phone=...&restaurant_id=... — order history */
-  getCustomerOrders: (phone: string, restaurantId: number) => {
-    if (!restaurantId) throw new Error("restaurantId is required");
+  getCustomerOrders: (phone: string, restaurantId?: number) => {
+    const q = restaurantId ? `&restaurant_id=${restaurantId}` : '';
     return fetchWithTimeout(
-      `${API_BASE_URL}/api/v1/public/customers/orders?phone=${encodeURIComponent(phone)}&restaurant_id=${restaurantId}`,
+      `${API_BASE_URL}/api/v1/public/customers/orders?phone=${encodeURIComponent(phone)}${q}`,
     );
   },
 
