@@ -31,12 +31,12 @@ const getApiUrl = () => {
     return 'http://10.0.2.2:8001';
   }
 
-  // Fallback to production/dev API
+  // Fallback to local / dev API
   if (envUrl) {
     return envUrl.replace(/\/+$/, '');
   }
 
-  return 'https://dev-api.maitrepos.com';
+  return 'http://192.168.1.6:8001';
 };
 
 export const API_BASE_URL = getApiUrl();
