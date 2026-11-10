@@ -1086,39 +1086,6 @@ export const useVapiStore = create<VapiState>((set, get) => ({
     }
     set({ isConnecting: false });
   },
-    const { messages } = get();
-    const hasHistory = messages.filter((m) => m.isFinal && m.text).length > 0;
-
-    // Dynamic first message based on auth and restaurant state
-    const auth = useAuthStore.getState();
-    const restaurant = useRestaurantStore.getState();
-    const isLoggedIn = auth.isAuthenticated && auth.phone;
-    const hasOutlet = !!restaurant.selectedOutlet;
-
-    let dynamicFirstMessage = "Welcome to MaitreD! I'm your voice assistant.";
-    
-    if (hasHistory) {
-      dynamicFirstMessage = "I'm back. Let's continue.";
-    } else if (!isLoggedIn) {
-      dynamicFirstMessage = "Welcome to MaitreD! I'm your voice assistant. To get started, could you please tell me your phone number?";
-    } else if (!hasOutlet) {
-      dynamicFirstMessage = "Welcome back to MaitreD! We have exciting delicious menu varieties and category items. Which outlet would you like to order from today?";
-    } else {
-      dynamicFirstMessage = "Welcome back to MaitreD! We have exciting delicious menu varieties and category items. Which items would you prefer today?";
-    }
-
-    const overrides = { 
-      firstMessage: dynamicFirstMessage, 
-      maxDurationSeconds: 3600, // 1 hour max duration so it doesn't time out easily
-    };
-
-    try {
-      vapi.start(assistantId, overrides);
-    } catch (e) {
-      console.warn('[VapiStore] startCall error:', e);
-      set({ isConnecting: false });
-    }
-  },
 
   stopCall: () => {
     getVapi()?.stop();

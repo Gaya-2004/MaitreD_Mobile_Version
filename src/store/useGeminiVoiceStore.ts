@@ -70,6 +70,8 @@ interface GeminiVoiceState {
 
 // ─── Audio State ───────────────────────────────────────────────────────────────
 let webAudioInstance: any = null;
+let webSpeechRecognizer: any = null;
+let silenceTimer: any = null;
 
 // ─── Stop all audio helpers ────────────────────────────────────────────────────
 function stopWebAudio() {
