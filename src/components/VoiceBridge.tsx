@@ -2,30 +2,32 @@
  * VoiceBridge.tsx
  *
  * Production-Grade Universal Speech-to-Text & Audio Bridge for MaitreD AI Voice Agent.
- * Compatible with Android (WebView Chromium), iOS, and Web.
+ * Compatible with Android (WebView Chromium inside Expo Go / Dev Client), iOS, and Web.
  *
  * Key Architecture:
  * 1. Audio Recording:
  *    - Uses native device microphone via getUserMedia({ audio: true }).
+ *    - Explicit permission gating: never requests getUserMedia before OS permission is verified.
  *    - AudioContext captures PCM audio samples in real-time with automatic resume().
+ *    - Zero-feedback gain pipeline to prevent phone speaker feedback.
  *    - Downsamples to 16kHz Mono.
  *    - Encodes directly into compliant 16-bit PCM WAV format (RIFF/WAVE header).
  *    - Base64 WAV is delivered to React Native for high-accuracy backend STT.
- *    - Warm stream retention: keeps microphone stream alive between turns to eliminate
+ *    - Warm stream retention: keeps microphone stream alive across turns to eliminate
  *      re-initialization lag and audio dropouts.
  * 2. Voice Activity Detection (VAD):
  *    - Real-time RMS volume computation.
- *    - Auto-detects speech start and speech end (1.4s silence after speech).
+ *    - Auto-detects speech start and speech end (1.6s silence after speech).
  *    - Manual push-to-talk override via forceFinalize() on button tap.
- * 3. Layout Resilience:
- *    - Rendered directly inside the focused native Dialog/Modal window so Chromium
- *      compositor treats media capture as fully active and foregrounded.
+ * 3. Diagnostics & Observability:
+ *    - Comprehensive diagnostic logs covering permission state, getUserMedia availability,
+ *      track count, track readyState, enabled status, MediaRecorder support, and buffer chunks.
  * 4. High-Fidelity Audio Playback:
  *    - Plays backend gTTS audio responses via HTML5 Audio pipeline.
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Platform, PermissionsAndroid, View, StyleSheet } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import { useGeminiVoiceStore } from '../store/useGeminiVoiceStore';
 
 let WebView: any = null;
@@ -50,8 +52,8 @@ const BRIDGE_HTML = `
       margin: 0;
       padding: 0;
       overflow: hidden;
-      width: 20px;
-      height: 20px;
+      width: 36px;
+      height: 36px;
     }
   </style>
 </head>
@@ -72,9 +74,10 @@ const BRIDGE_HTML = `
   var speechRecognizedText = '';
   var currentAudio = null;
   var firstChunkLogged = false;
+  var micRequestPending = false;
 
   window.onerror = function(msg, url, line) {
-    sendToRN('DEBUG', { message: 'WebView JS Error: ' + msg + ' (' + line + ')' });
+    sendToRN('DEBUG', { message: 'WebView JS Error: ' + msg + ' (line ' + line + ')' });
   };
 
   function sendToRN(type, payload) {
@@ -109,7 +112,9 @@ const BRIDGE_HTML = `
         }
       };
 
-      r.onerror = function() {};
+      r.onerror = function(e) {
+        sendToRN('DEBUG', { message: 'WebSpeech error: ' + (e.error || 'unknown') });
+      };
       r.onend = function() {
         if (isListening && speechRecognition) {
           try { speechRecognition.start(); } catch(err) {}
@@ -211,29 +216,61 @@ const BRIDGE_HTML = `
       return;
     }
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      sendToRN('ERROR', { error: 'getUserMedia is not supported in this environment' });
+    if (micRequestPending) {
+      sendToRN('DEBUG', { message: 'Microphone request is already in progress, waiting...' });
       return;
     }
 
-    sendToRN('DEBUG', { message: 'Requesting microphone stream (secure=' + window.isSecureContext + ')...' });
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      sendToRN('ERROR', { error: 'navigator.mediaDevices.getUserMedia is not supported in this environment' });
+      return;
+    }
 
-    var constraints = {
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
+    micRequestPending = true;
+    sendToRN('DEBUG', {
+      message: 'Requesting getUserMedia({ audio: true }). secure=' + window.isSecureContext +
+               ', mediaDevices=' + (!!navigator.mediaDevices)
+    });
+
+    var micTimeoutId = setTimeout(function() {
+      if (micRequestPending) {
+        sendToRN('DEBUG', {
+          message: 'getUserMedia pending > 4s. Please verify Android microphone permission in Settings > Apps > Expo Go > Permissions.'
+        });
       }
-    };
+    }, 4000);
 
-    navigator.mediaDevices.getUserMedia(constraints)
-      .catch(function() {
-        return navigator.mediaDevices.getUserMedia({ audio: true });
-      })
+    navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function(stream) {
+        clearTimeout(micTimeoutId);
+        micRequestPending = false;
         mediaStream = stream;
-        sendToRN('DEBUG', { message: 'Microphone stream acquired! Tracks=' + stream.getAudioTracks().length });
 
+        var tracks = stream.getAudioTracks();
+        var t0 = tracks[0];
+        sendToRN('DEBUG', {
+          message: 'Microphone stream acquired! tracks=' + tracks.length +
+                   ', label="' + (t0 ? t0.label : '') + '"' +
+                   ', readyState=' + (t0 ? t0.readyState : 'none') +
+                   ', enabled=' + (t0 ? t0.enabled : 'false') +
+                   ', muted=' + (t0 ? t0.muted : 'false')
+        });
+
+        // Diagnostic: Check MediaRecorder capability
+        var hasMR = typeof window.MediaRecorder !== 'undefined';
+        var mrMime = '';
+        if (hasMR) {
+          var testMimes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav'];
+          for (var i = 0; i < testMimes.length; i++) {
+            if (MediaRecorder.isTypeSupported(testMimes[i])) {
+              mrMime = testMimes[i];
+              break;
+            }
+          }
+        }
+        sendToRN('DEBUG', { message: 'MediaRecorder supported=' + hasMR + ', preferredMime=' + (mrMime || 'none') });
+
+        // Initialize AudioContext
         var AudioCtx = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioCtx();
         if (audioContext.state === 'suspended') {
@@ -244,7 +281,6 @@ const BRIDGE_HTML = `
         sendToRN('DEBUG', { message: 'AudioContext active at ' + inputRate + 'Hz, state=' + audioContext.state });
 
         var source = audioContext.createMediaStreamSource(stream);
-        // ScriptProcessor captures 4096-sample raw buffers
         scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
         scriptProcessor.onaudioprocess = function(e) {
@@ -264,10 +300,12 @@ const BRIDGE_HTML = `
 
           if (!firstChunkLogged) {
             firstChunkLogged = true;
-            sendToRN('DEBUG', { message: 'Audio streaming actively into buffer! Initial RMS=' + rms.toFixed(4) });
+            sendToRN('DEBUG', {
+              message: 'Audio streaming actively into buffer! Initial RMS=' + rms.toFixed(4) + ', buffer=' + copy.length
+            });
           }
 
-          if (pcmChunks.length % 10 === 0) {
+          if (pcmChunks.length % 15 === 0) {
             sendToRN('AUDIO_LEVEL', { rms: rms, frames: pcmChunks.length });
           }
 
@@ -275,25 +313,32 @@ const BRIDGE_HTML = `
           if (rms > 0.008) {
             if (!isSpeaking) {
               isSpeaking = true;
-              sendToRN('DEBUG', { message: 'User voice detected (RMS=' + rms.toFixed(4) + ')' });
+              sendToRN('DEBUG', { message: 'Voice detected: RMS=' + rms.toFixed(4) + ', chunks=' + pcmChunks.length });
             }
             silenceFrames = 0;
           } else if (isSpeaking) {
             silenceFrames++;
-            // ~1.4 seconds of silence after speaking (each 4096 chunk at 44.1kHz is ~92ms -> 15 chunks ~1.4s)
-            if (silenceFrames > 15) {
-              sendToRN('DEBUG', { message: 'VAD silence detected. Finalizing voice turn...' });
+            // ~1.6 seconds of silence after speaking (each 4096 chunk at 44.1kHz is ~92ms -> 18 chunks ~1.6s)
+            if (silenceFrames > 18) {
+              sendToRN('DEBUG', { message: 'VAD silence detected (1.6s). Finalizing voice turn...' });
               finalizeRecording();
             }
           }
         };
 
+        // Connect through a zero-gain node to destination so onaudioprocess fires
+        // without looping acoustic feedback into the phone speaker
+        var zeroGain = audioContext.createGain();
+        zeroGain.gain.value = 0;
         source.connect(scriptProcessor);
-        scriptProcessor.connect(audioContext.destination);
+        scriptProcessor.connect(zeroGain);
+        zeroGain.connect(audioContext.destination);
 
         sendToRN('STARTED', {});
       })
       .catch(function(err) {
+        clearTimeout(micTimeoutId);
+        micRequestPending = false;
         sendToRN('ERROR', { error: 'Mic stream error: ' + err.name + ' - ' + err.message });
       });
   }
@@ -304,6 +349,7 @@ const BRIDGE_HTML = `
 
   function releaseMicrophone() {
     isListening = false;
+    micRequestPending = false;
     if (scriptProcessor) {
       try { scriptProcessor.disconnect(); } catch(e) {}
       scriptProcessor = null;
@@ -332,6 +378,7 @@ const BRIDGE_HTML = `
 
     // 1. If Web Speech API already transcribed text with high confidence, use it
     if (speechRecognizedText && speechRecognizedText.trim().length > 1) {
+      sendToRN('DEBUG', { message: 'Using local WebSpeech transcript: "' + speechRecognizedText.trim() + '"' });
       sendToRN('FINALIZE_TEXT', { text: speechRecognizedText.trim() });
       if (speechRecognition) {
         try { speechRecognition.stop(); } catch(e) {}
@@ -352,12 +399,21 @@ const BRIDGE_HTML = `
       }
 
       var currentRate = (audioContext && audioContext.sampleRate) ? audioContext.sampleRate : 44100;
-      var resampled = downsampleBuffer(merged, currentRate, 16000);
+      var durationSec = (totalSamples / currentRate).toFixed(2);
+      sendToRN('DEBUG', {
+        message: 'Finalizing recording: chunks=' + pcmChunks.length +
+                 ', totalSamples=' + totalSamples +
+                 ', duration=' + durationSec + 's' +
+                 ', sampleRate=' + currentRate + 'Hz'
+      });
 
+      var resampled = downsampleBuffer(merged, currentRate, 16000);
       var wavBytes = encodeWAV(resampled, 16000);
       var b64Wav = uint8ToBase64(wavBytes);
 
-      sendToRN('DEBUG', { message: 'Encoded 16kHz WAV: ' + wavBytes.byteLength + ' bytes' });
+      sendToRN('DEBUG', {
+        message: 'WAV encoded successfully: ' + wavBytes.byteLength + ' bytes, base64 len=' + b64Wav.length
+      });
       sendToRN('FINALIZE_AUDIO', { audioBase64: b64Wav });
     } else {
       // If no chunks arrived yet, wait 350ms to give audio buffer time to flush
@@ -434,10 +490,6 @@ const BRIDGE_HTML = `
   };
 
   sendToRN('READY', {});
-  // Pre-warm microphone capture hardware as soon as bridge is mounted
-  setTimeout(function() {
-    startMicrophoneCapture();
-  }, 100);
 </script>
 </body>
 </html>
@@ -451,20 +503,6 @@ export default function VoiceBridge() {
   const agentState = useGeminiVoiceStore((s) => s.agentState);
   const isTamilMode = useGeminiVoiceStore((s) => s.isTamilMode);
   const isMuted = useGeminiVoiceStore((s) => s.isMuted);
-
-  // Auto-request Android runtime permission on mount
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
-        title: 'Microphone Permission',
-        message: 'MaitreD needs microphone access to take your food orders by voice.',
-        buttonPositive: 'Allow',
-        buttonNegative: 'Deny',
-      }).catch((e) => {
-        console.warn('[VoiceBridge] Android mic request warning:', e);
-      });
-    }
-  }, []);
 
   const sendCommandToBridge = (cmd: string) => {
     if (webviewRef.current) {
@@ -555,7 +593,7 @@ export default function VoiceBridge() {
 
         case 'FINALIZE_AUDIO':
           if (data.audioBase64) {
-            console.log('[VoiceBridge] 16kHz WAV captured, sending to backend STT...');
+            console.log('[VoiceBridge] 16kHz WAV captured, sending to backend STT (base64 length=' + data.audioBase64.length + ')...');
             store.sendVoiceAudio(data.audioBase64);
           }
           break;
@@ -593,8 +631,8 @@ export default function VoiceBridge() {
     return null;
   }
 
-  // Render a 20x20 transparent WebView with opacity: 0.99 inside the active Modal Dialog
-  // so Chromium compositor keeps audio capture fully active and foregrounded.
+  // Render a 36x36 transparent WebView inside the active Modal Dialog
+  // so Chromium compositor treats it as an on-screen, active foreground frame.
   return (
     <View style={styles.bridgeContainer} pointerEvents="box-none">
       <WebView
@@ -632,15 +670,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: 20,
-    height: 20,
-    opacity: 0.99,
+    width: 36,
+    height: 36,
+    opacity: 1,
     backgroundColor: 'transparent',
     zIndex: 9999,
   },
   webView: {
-    width: 20,
-    height: 20,
+    width: 36,
+    height: 36,
     backgroundColor: 'transparent',
   },
 });
