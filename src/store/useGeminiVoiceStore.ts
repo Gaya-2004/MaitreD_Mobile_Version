@@ -179,24 +179,16 @@ export async function ensureMicrophonePermission(): Promise<boolean> {
   if (Platform.OS !== 'android') return true;
 
   try {
-    // 1. Direct Android OS check
-    const { PermissionsAndroid } = require('react-native');
-    const isGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
-    if (isGranted) {
-      console.log('[Permission] Android RECORD_AUDIO already granted.');
-      return true;
-    }
-
-    // 2. Request via expo-camera (Expo Go native delegate)
+    // 1. Check via expo-camera first (standard Expo Go permission delegate)
     try {
       const { getMicrophonePermissionsAsync, requestMicrophonePermissionsAsync } = require('expo-camera');
       if (typeof getMicrophonePermissionsAsync === 'function') {
         const cur = await getMicrophonePermissionsAsync();
         if (cur?.granted) {
-          console.log('[Permission] expo-camera reports granted.');
+          console.log('[Permission] expo-camera reports RECORD_AUDIO already granted.');
           return true;
         }
-        if (typeof requestMicrophonePermissionsAsync === 'function') {
+        if (typeof requestMicrophonePermissionsAsync === 'function' && cur?.canAskAgain !== false) {
           const req = await requestMicrophonePermissionsAsync();
           if (req?.granted) {
             console.log('[Permission] expo-camera request granted!');
@@ -205,18 +197,39 @@ export async function ensureMicrophonePermission(): Promise<boolean> {
         }
       }
     } catch (e) {
-      console.log('[Permission] expo-camera request skipped:', e);
+      console.log('[Permission] expo-camera delegate check skipped:', e);
     }
 
-    // 3. Request via PermissionsAndroid
+    // 2. Direct Android OS check & request via PermissionsAndroid
+    const { PermissionsAndroid } = require('react-native');
+    const isGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+    if (isGranted) {
+      console.log('[Permission] Android RECORD_AUDIO already granted.');
+      return true;
+    }
+
     const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
       title: 'Microphone Permission',
-      message: 'MaitreD needs your microphone to hear your food orders.',
+      message: 'MaitreD needs microphone access to hear and process your food orders.',
       buttonPositive: 'Allow',
       buttonNegative: 'Deny',
     });
     console.log('[Permission] PermissionsAndroid request result:', res);
-    return res === PermissionsAndroid.RESULTS.GRANTED;
+    if (res === PermissionsAndroid.RESULTS.GRANTED) {
+      return true;
+    }
+
+    // 3. If permanently denied or rejected, show actionable settings dialog
+    const { Alert, Linking } = require('react-native');
+    Alert.alert(
+      'Microphone Permission Required',
+      'MaitreD voice assistant requires microphone access. Please enable Microphone permissions in Expo Go settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => Linking.openSettings() }
+      ]
+    );
+    return false;
   } catch (err) {
     console.warn('[Permission] Failed to check/request microphone:', err);
     return false;
@@ -272,7 +285,13 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     try {
       // Pre-flight microphone permission check
       if (Platform.OS === 'android') {
-        await ensureMicrophonePermission();
+        const granted = await ensureMicrophonePermission();
+        if (granted) {
+          const bridge = useGeminiVoiceStore as any;
+          if (bridge?.bridgePreWarmMicrophone) {
+            bridge.bridgePreWarmMicrophone();
+          }
+        }
       }
 
       set({ isConnected: true, isConnecting: false, agentState: 'IDLE' });
@@ -314,9 +333,8 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
     if (get().isMuted || get().agentState === 'LISTENING') return;
 
     await get().stopSpeaking();
-    set({ agentState: 'LISTENING', partialUserTranscript: '🎤 Listening to you... speak your order!' });
 
-    // ── Android/iOS: VoiceBridge WebView recording ──────────────────────────
+    // ── Android/iOS: Check permission FIRST before changing state ──────────
     if (Platform.OS !== 'web') {
       if (Platform.OS === 'android') {
         const granted = await ensureMicrophonePermission();
@@ -328,6 +346,9 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
           return;
         }
       }
+
+      set({ agentState: 'LISTENING', partialUserTranscript: '🎤 Listening to you... speak your order!' });
+
       const bridge = useGeminiVoiceStore as any;
       if (bridge.bridgeStartListening) {
         const lang = get().isTamilMode ? 'ta-IN' : 'en-IN';
@@ -335,6 +356,8 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
       }
       return;
     }
+
+    set({ agentState: 'LISTENING', partialUserTranscript: '🎤 Listening to you... speak your order!' });
 
     // ── Web: SpeechRecognition ───────────────────────────────────────────────
     if (typeof window !== 'undefined') {

@@ -203,10 +203,12 @@ export default function DeliveryCheckoutScreen() {
             <Text style={styles.billSplitLabel}>Packaging Charges</Text>
             <Text style={styles.billSplitValue}>Rs. {packagingCharges.toFixed(2)}</Text>
           </View>
-          <View style={styles.billSplitRow}>
-            <Text style={styles.billSplitLabel}>GST & Restaurant Taxes</Text>
-            <Text style={styles.billSplitValue}>Rs. {gst.toFixed(2)}</Text>
-          </View>
+          {gst > 0 && (
+            <View style={styles.billSplitRow}>
+              <Text style={styles.billSplitLabel}>GST & Restaurant Taxes</Text>
+              <Text style={styles.billSplitValue}>Rs. {gst.toFixed(2)}</Text>
+            </View>
+          )}
           {discountAmount > 0 && (
             <View style={styles.billSplitRow}>
               <Text style={[styles.billSplitLabel, { color: '#00a01d' }]}>Discount</Text>
