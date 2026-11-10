@@ -50,7 +50,11 @@ export const getFullImageUrl = (url: string | null | undefined, dishName?: strin
     return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
   }
 
-  // If already a complete cloud/CDN URL (e.g. Unsplash, S3, Cloudinary, HTTPS)
+  // If already a complete cloud/CDN URL (e.g. Unsplash, S3, Cloudinary, HTTPS) or data URL
+  if (trimmed.startsWith('data:image/') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+
   if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
     // If it points to local localhost from backend seeds, map it to IMAGE_BASE_URL
     if (trimmed.includes('localhost') || trimmed.includes('127.0.0.1') || trimmed.includes('10.0.2.2')) {

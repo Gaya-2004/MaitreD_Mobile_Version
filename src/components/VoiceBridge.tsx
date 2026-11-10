@@ -434,6 +434,10 @@ const BRIDGE_HTML = `
   };
 
   sendToRN('READY', {});
+  // Pre-warm microphone capture hardware as soon as bridge is mounted
+  setTimeout(function() {
+    startMicrophoneCapture();
+  }, 100);
 </script>
 </body>
 </html>
@@ -572,6 +576,12 @@ export default function VoiceBridge() {
 
         case 'ERROR':
           console.warn('[VoiceBridge] Notice:', data.error);
+          if (store.agentState === 'LISTENING' || store.agentState === 'PROCESSING') {
+            useGeminiVoiceStore.setState({
+              agentState: 'IDLE',
+              partialUserTranscript: data.error || 'Please speak clearly into your mic.',
+            });
+          }
           break;
       }
     } catch (e) {
@@ -596,8 +606,21 @@ export default function VoiceBridge() {
         domStorageEnabled={true}
         mediaPlaybackRequiresUserAction={false}
         allowsInlineMediaPlayback={true}
+        mediaCapturePermissionGrantType="grant"
         androidHardwareAccelerationDisabled={false}
         scalesPageToFit={false}
+        onPermissionRequest={(event: any) => {
+          try {
+            const resources = event.resources || event.nativeEvent?.resources || ['android.webkit.resource.AUDIO_CAPTURE'];
+            if (typeof event.grant === 'function') {
+              event.grant(resources);
+            } else if (event.nativeEvent && typeof event.nativeEvent.grant === 'function') {
+              event.nativeEvent.grant(resources);
+            }
+          } catch (e) {
+            console.warn('[VoiceBridge] onPermissionRequest grant error:', e);
+          }
+        }}
         style={styles.webView}
       />
     </View>
