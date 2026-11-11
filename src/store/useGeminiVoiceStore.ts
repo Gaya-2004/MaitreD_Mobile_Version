@@ -464,13 +464,19 @@ export const useGeminiVoiceStore = create<GeminiVoiceState>((set, get) => ({
       return;
     }
 
-    // Web: use partial transcript text
+    // Web: use partial transcript text if WebSpeech provided it
     const partial = get().partialUserTranscript.trim();
     const cleanPartial = partial.replace(/^🎤.*$/gm, '').trim();
     if (cleanPartial) {
       get().sendTextMessage(cleanPartial);
     } else {
-      set({ agentState: 'IDLE', partialUserTranscript: '' });
+      const bridge = useGeminiVoiceStore as any;
+      if (bridge.bridgeForceFinalize) {
+        set({ agentState: 'PROCESSING', partialUserTranscript: '⏳ Processing your voice...' });
+        try { bridge.bridgeForceFinalize(); } catch {}
+      } else {
+        set({ agentState: 'IDLE', partialUserTranscript: '' });
+      }
     }
   },
 
