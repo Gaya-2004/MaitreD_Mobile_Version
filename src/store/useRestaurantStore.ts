@@ -44,8 +44,8 @@ export interface MenuItem {
 export const DEFAULT_OUTLET = {
   id: "1",
   restaurant_id: 1,
-  name: "MaitreD — Mugalivakkam",
-  address: "Mount-Poonamallee Road, Mugalivakkam, Chennai 600125",
+  name: "MaitreD Restaurant",
+  address: "Mount-Poonamallee Road, Chennai 600125",
   lat: 13.0210,
   lng: 80.1614,
   open: true,

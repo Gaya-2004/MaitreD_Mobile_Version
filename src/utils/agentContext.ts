@@ -11,9 +11,9 @@
 
 import { useAuthStore } from '../store/useAuthStore';
 import { useCartStore } from '../store/useCartStore';
-import { useRestaurantStore } from '../store/useRestaurantStore';
-import { useLiveOrderStore } from '../store/useLiveOrderStore';
 import { useDineInSessionStore } from '../store/useDineInSessionStore';
+import { useLiveOrderStore } from '../store/useLiveOrderStore';
+import { useRestaurantStore } from '../store/useRestaurantStore';
 
 export interface MobileAgentContext {
   auth: {
@@ -72,7 +72,12 @@ export function getMobileAgentContext(): MobileAgentContext {
     },
     restaurant: {
       selectedOutletId: restaurant.selectedOutlet?.restaurant_id ?? null,
-      selectedOutletName: restaurant.selectedOutlet?.name ?? null,
+      selectedOutletName: (restaurant.selectedOutlet?.name || 'MaitreD Restaurant')
+        .replace(/Data\s*Udi?p+i/gi, 'MaitreD')
+        .replace(/Grand\s*Udipi/gi, 'MaitreD')
+        .replace(/\s*[—–-]\s*Mugalivakkam/gi, '')
+        .replace(/Mugalivakkam/gi, '')
+        .trim() || 'MaitreD Restaurant',
     },
     cart: {
       orderType: cart.orderType,

@@ -54,7 +54,15 @@ export function navigateScreen(resolvedRoute: string, params?: Record<string, an
 
   setTimeout(() => {
     try {
+      if (resolvedRoute.includes('menu')) {
+        DeviceEventEmitter.emit('menu_filter_header', params || {});
+      }
       if (params && Object.keys(params).length > 0) {
+        try {
+          if (typeof (r as any)?.setParams === 'function') {
+            (r as any).setParams(params);
+          }
+        } catch {}
         r.push({ pathname: resolvedRoute as any, params });
       } else {
         r.push(resolvedRoute as any);
@@ -472,6 +480,22 @@ export async function executeSingleAction(act: UIAction): Promise<ActionResult> 
       case 'open_menu': {
         navigateScreen('/menu', act.payload?.params || {});
         return { success: true, action, message: 'Opened Menu.' };
+      }
+
+      case 'open_category':
+      case 'filter_category':
+      case 'open_variety':
+      case 'filter_menu': {
+        const cat = act.category_name || (act as any).category || (act as any).variety || (act as any).name || '';
+        const region = (act as any).region || '';
+        navigateScreen('/menu', { categoryName: cat, region: region, search: '' });
+        return { success: true, action: 'open_category', message: `Opened ${cat || region || 'Menu'}.` };
+      }
+
+      case 'search_menu': {
+        const query = (act as any).query || (act as any).search || '';
+        navigateScreen('/menu', { search: query });
+        return { success: true, action: 'search_menu', message: `Searched menu for ${query}.` };
       }
 
       // ── Catering ─────────────────────────────────────────────────────────────

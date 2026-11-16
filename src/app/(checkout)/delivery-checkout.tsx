@@ -9,6 +9,7 @@ import { useAuthStore, useRestaurantStore } from '../../store';
 import { getDistanceInKm, checkDeliveryCoverage, DeliveryCoverageResult, resolveOutletLocation, calculateDeliveryFee } from '../../utils/deliveryArea';
 import DeliveryUnavailableModal from '../../components/ui/DeliveryUnavailableModal';
 import { getFullImageUrl } from '../../constants/api';
+import { safeBack } from '../../utils/navigation';
 
 export default function DeliveryCheckoutScreen() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function DeliveryCheckoutScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(main)/home')} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Checkout</Text>
@@ -237,7 +238,7 @@ export default function DeliveryCheckoutScreen() {
             <Text style={styles.totalLabel}>Total Amount</Text>
             <Text style={styles.totalValue}>Rs. {Math.max(finalTotal, 0).toFixed(0)}</Text>
           </View>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => safeBack(router, '/(main)/home')}>
             <Text style={styles.viewDetailsBtn}>View Details</Text>
           </TouchableOpacity>
         </View>
@@ -258,12 +259,14 @@ export default function DeliveryCheckoutScreen() {
               setShowCoverageModal(true);
               return;
             }
+            useCartStore.getState().setOrderType('Delivery');
             router.push({
               pathname: '/payment',
               params: {
                 tipAmount: selectedTip || 0,
                 instructions: instruction,
                 deliveryFee: deliveryFee.toString(),
+                orderType: 'Delivery',
               }
             });
           }}

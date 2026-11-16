@@ -16,15 +16,14 @@ const getApiUrl = () => {
 
   const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
-  // 2. If a deployed / tunnel URL is provided (e.g. https://... or ngrok), always respect it
+  // 2. If a deployed / tunnel URL is provided (e.g. https://... or ngrok or loca.lt), always respect it
   if (envUrl && (envUrl.startsWith('https://') || envUrl.includes('.ngrok') || envUrl.includes('.loca.lt'))) {
     return envUrl.replace(/\/+$/, '');
   }
 
   // 3. Auto-detect host IP when running via Metro dev server (Expo Go / Dev Client on physical device)
-  // hostUri matches the exact IP the phone used to load this bundle!
   const hostUri = Constants.expoConfig?.hostUri;
-  if (hostUri) {
+  if (__DEV__ && hostUri) {
     const host = hostUri.split(':')[0];
     if (host && host !== 'localhost' && host !== '127.0.0.1') {
       return `http://${host}:8001`;
@@ -32,12 +31,17 @@ const getApiUrl = () => {
   }
 
   // 4. If running in Android emulator without hostUri
-  if (Platform.OS === 'android' && !Constants.isDevice) {
+  if (Platform.OS === 'android' && !Constants.isDevice && __DEV__) {
     return 'http://10.0.2.2:8001';
   }
 
-  // 5. Fallback to env URL or active machine IP
-  if (envUrl && !envUrl.includes('10.127.18.176')) {
+  // 5. If a deployed / remote URL is provided (e.g. custom domain), use it for production builds
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl.replace(/\/+$/, '');
+  }
+
+  // Fallback to env URL
+  if (envUrl) {
     return envUrl.replace(/\/+$/, '');
   }
 

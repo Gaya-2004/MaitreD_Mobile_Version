@@ -9,6 +9,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { cateringOrderApi } from '../../services/apiService';
 import { formatDateTime } from '../../utils/dateUtils';
+import { safeBack } from '../../utils/navigation';
 
 export default function CateringOrderDetails() {
   const router = useRouter();
@@ -69,7 +70,7 @@ export default function CateringOrderDetails() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(main)/home')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Order #{order.id}</Text>

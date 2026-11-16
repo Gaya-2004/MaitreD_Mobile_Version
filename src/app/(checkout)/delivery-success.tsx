@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, BackHandler, Platform, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRestaurantStore, useLiveOrderStore } from '../../store';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, BackHandler, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { orderApi } from '../../services/apiService';
-import { parseDate, formatTime } from '../../utils/dateUtils';
+import { useLiveOrderStore, useRestaurantStore } from '../../store';
+import { formatTime, parseDate } from '../../utils/dateUtils';
 
 export default function DeliverySuccessScreen() {
   const router = useRouter();
@@ -67,7 +67,7 @@ export default function DeliverySuccessScreen() {
   useEffect(() => {
     const dbOrderId = params.dbOrderId;
     if (!dbOrderId) return;
-    
+
     let intervalId: ReturnType<typeof setInterval>;
     const fetchOrderDetails = async () => {
       try {
@@ -119,7 +119,7 @@ export default function DeliverySuccessScreen() {
       try {
         const restId = selectedOutlet?.restaurant_id ? Number(selectedOutlet.restaurant_id) : null;
         if (!restId) return;
-        const restName = (selectedOutlet?.name || 'MaitreD — Mugalivakkam').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD');
+        const restName = (selectedOutlet?.name || 'MaitreD Restaurant').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD').replace(/Mugalivakkam/gi, '').replace(/[—–-]\s*$/, '').trim();
         let storedOrders = null;
         try {
           if (Platform.OS === 'web') {
@@ -133,7 +133,7 @@ export default function DeliverySuccessScreen() {
             if (typeof localStorage !== 'undefined') {
               storedOrders = localStorage.getItem('userOrders');
             }
-          } catch (e) {}
+          } catch (e) { }
         }
         if (!storedOrders) {
           storedOrders = (globalThis as any).userOrders || null;
@@ -180,7 +180,7 @@ export default function DeliverySuccessScreen() {
 
         ordersList.unshift(newOrderRecord);
         const listStr = JSON.stringify(ordersList);
-        
+
         let saved = false;
         try {
           await AsyncStorage.setItem('userOrders', listStr);
@@ -192,7 +192,7 @@ export default function DeliverySuccessScreen() {
               localStorage.setItem('userOrders', listStr);
               saved = true;
             }
-          } catch (e) {}
+          } catch (e) { }
         }
         (globalThis as any).userOrders = listStr;
       } catch (err) {
@@ -244,7 +244,7 @@ export default function DeliverySuccessScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+
         {/* Top Banner */}
         <View style={styles.topBanner}>
           <View style={styles.bannerIconBox}>
@@ -275,12 +275,12 @@ export default function DeliverySuccessScreen() {
           </View>
 
           <View style={styles.progressRow}>
-             {/* Kitchen preparing */}
-             <View style={[styles.progressLine, styles.activeLine, { flex: 1.5 }]} />
-             <View style={[styles.progressLine, styles.activeLine, { flex: 1 }]} />
-             <View style={[styles.progressDot, styles.activeDot]} />
-             <View style={[styles.progressLine, isRiderPhase ? styles.activeLine : styles.inactiveLine, { flex: 1.5 }]} />
-             <View style={[styles.progressLine, isRiderPhase ? styles.activeLine : styles.inactiveLine, { flex: 1 }]} />
+            {/* Kitchen preparing */}
+            <View style={[styles.progressLine, styles.activeLine, { flex: 1.5 }]} />
+            <View style={[styles.progressLine, styles.activeLine, { flex: 1 }]} />
+            <View style={[styles.progressDot, styles.activeDot]} />
+            <View style={[styles.progressLine, isRiderPhase ? styles.activeLine : styles.inactiveLine, { flex: 1.5 }]} />
+            <View style={[styles.progressLine, isRiderPhase ? styles.activeLine : styles.inactiveLine, { flex: 1 }]} />
           </View>
 
           <View style={styles.progressLabels}>
@@ -296,18 +296,18 @@ export default function DeliverySuccessScreen() {
 
         {/* Order Details Card */}
         <View style={styles.card}>
-           <View style={styles.detailRow}>
-             <Text style={styles.detailLabel}>Items</Text>
-             <Text style={styles.detailValue}>{itemsName}</Text>
-           </View>
-           <View style={styles.detailRow}>
-             <Text style={styles.detailLabel}>Table / Mode</Text>
-             <Text style={styles.detailValue}>Delivery to Home</Text>
-           </View>
-           <View style={[styles.detailRow, { marginBottom: 0 }]}>
-             <Text style={styles.detailLabel}>Amount Paid</Text>
-             <Text style={styles.detailAmount}>Rs. {displayTotal}</Text>
-           </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Items</Text>
+            <Text style={styles.detailValue}>{itemsName}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Table / Mode</Text>
+            <Text style={styles.detailValue}>Delivery to Home</Text>
+          </View>
+          <View style={[styles.detailRow, { marginBottom: 0 }]}>
+            <Text style={styles.detailLabel}>Amount Paid</Text>
+            <Text style={styles.detailAmount}>Rs. {displayTotal}</Text>
+          </View>
         </View>
 
         {/* Restaurant Pill */}

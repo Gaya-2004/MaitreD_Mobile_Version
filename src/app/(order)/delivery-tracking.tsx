@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, StatusBar, Dimensions, Linking, Alert, Animated, Modal, ActivityIndicator } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Dimensions, Image, Linking, Modal, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GOOGLE_MAPS_API_KEY } from '../../constants/maps';
+import { LIGHT_MAP_STYLE } from '../../constants/mapStyle';
 import { deliveryApi, orderApi } from '../../services/apiService';
-import { useRestaurantStore, useLiveOrderStore } from '../../store';
+import { useLiveOrderStore, useRestaurantStore } from '../../store';
+import { formatTime } from '../../utils/dateUtils';
+import { resolveOutletLocation } from '../../utils/deliveryArea';
 import {
   DELIVERY_STATUS,
   getDeliveryContextText,
   getDeliveryProgressStep,
-  isLiveTrackingStatus,
   isDeliveredStatus,
+  isLiveTrackingStatus,
   isTerminalStatus,
   resolveDeliveryStatus,
 } from '../../utils/deliveryStatusUtils';
-import { formatTime } from '../../utils/dateUtils';
-import { LIGHT_MAP_STYLE } from '../../constants/mapStyle';
-import { resolveOutletLocation } from '../../utils/deliveryArea';
+import { safeBack } from '../../utils/navigation';
 
 const MapView = Platform.OS !== 'web' ? require('react-native-maps').default : null;
 const Marker = Platform.OS !== 'web' ? require('react-native-maps').Marker : null;
@@ -319,7 +321,7 @@ export default function DeliveryTrackingScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => safeBack(router, '/(main)/home')} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{isBeforePickup ? 'Order Tracking' : 'Live Tracking'}</Text>
@@ -372,10 +374,10 @@ export default function DeliveryTrackingScreen() {
                   title={riderInfo?.name || 'Delivery Partner'}
                 >
                   <View style={[styles.restaurantMarker, { backgroundColor: '#333' }]}>
-                    <MaterialIcons 
-                      name={riderInfo?.vehicle_type?.toLowerCase() === 'car' ? 'directions-car' : 'motorcycle'} 
-                      size={18} 
-                      color="#fff" 
+                    <MaterialIcons
+                      name={riderInfo?.vehicle_type?.toLowerCase() === 'car' ? 'directions-car' : 'motorcycle'}
+                      size={18}
+                      color="#fff"
                     />
                   </View>
                 </Marker>
@@ -394,11 +396,11 @@ export default function DeliveryTrackingScreen() {
               )}
 
               {/* Route polyline when we have both rider and customer */}
-              {MapViewDirections && riderLocation && customerLocation?.latitude && process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+              {MapViewDirections && riderLocation && customerLocation?.latitude && GOOGLE_MAPS_API_KEY ? (
                 <MapViewDirections
                   origin={{ latitude: riderLocation.latitude, longitude: riderLocation.longitude }}
                   destination={{ latitude: customerLocation.latitude!, longitude: customerLocation.longitude! }}
-                  apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+                  apikey={GOOGLE_MAPS_API_KEY}
                   strokeWidth={4}
                   strokeColor="#DF9B34"
                 />
@@ -419,7 +421,7 @@ export default function DeliveryTrackingScreen() {
               {!isTerminalStatus(deliveryStatus) && hasCompleteMapData ? (
                 riderLocation || hasCompleteMapData ? (
                   <Image
-                    source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${mapCenterLat},${mapCenterLng}&zoom=14&size=600x400&markers=color:red%7Clabel:R%7C${activeRestaurant.latitude},${activeRestaurant.longitude}&markers=color:green%7Clabel:H%7C${customerLocation?.latitude},${customerLocation?.longitude}${riderLocation ? `&markers=color:blue%7Clabel:D%7C${riderLocation.latitude},${riderLocation.longitude}` : ''}&path=color:0xff3400ff%7Cweight:3%7C${activeRestaurant.latitude},${activeRestaurant.longitude}%7C${customerLocation?.latitude},${customerLocation?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ''}` }}
+                    source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${mapCenterLat},${mapCenterLng}&zoom=14&size=600x400&markers=color:red%7Clabel:R%7C${activeRestaurant.latitude},${activeRestaurant.longitude}&markers=color:green%7Clabel:H%7C${customerLocation?.latitude},${customerLocation?.longitude}${riderLocation ? `&markers=color:blue%7Clabel:D%7C${riderLocation.latitude},${riderLocation.longitude}` : ''}&path=color:0xff3400ff%7Cweight:3%7C${activeRestaurant.latitude},${activeRestaurant.longitude}%7C${customerLocation?.latitude},${customerLocation?.longitude}&key=${GOOGLE_MAPS_API_KEY}` }}
                     style={styles.mapImage}
                     resizeMode="cover"
                   />
@@ -465,41 +467,41 @@ export default function DeliveryTrackingScreen() {
                     ) : null}
                   </>
                 )}
-      </View>
-      {!isSearchingRider && (
-        <View style={styles.riderActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={handleCallRider}>
-            <Ionicons name="call" size={18} color="#DF9B34" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Chat', 'Live chat coming soon!')}>
-            <Ionicons name="chatbubble-ellipses" size={18} color="#DF9B34" />
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+              </View>
+              {!isSearchingRider && (
+                <View style={styles.riderActions}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={handleCallRider}>
+                    <Ionicons name="call" size={18} color="#DF9B34" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Chat', 'Live chat coming soon!')}>
+                    <Ionicons name="chatbubble-ellipses" size={18} color="#DF9B34" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View >
         </View >
 
-    {/* Content below map */ }
-    < View style = { styles.detailsContainer } >
+        {/* Content below map */}
+        < View style={styles.detailsContainer} >
 
-      {/* Order ID + ETA row */}
-      <View style={styles.orderInfoRow}>
-        <View style={{ flex: 1, paddingRight: 8 }}>
-          <Text style={styles.infoLabel}>Order ID</Text>
-          <Text style={styles.orderIdVal} numberOfLines={1} adjustsFontSizeToFit>{orderIdText}</Text>
-        </View>
-        <View style={{ flex: 1, alignItems: 'flex-end', paddingLeft: 8 }}>
-          <Text style={styles.infoLabel}>Delivery Status</Text>
-          <Text style={styles.etaVal} numberOfLines={2} adjustsFontSizeToFit>
-            {deliveryStatus === DELIVERY_STATUS.DELIVERED ? 'Delivered' : getDeliveryContextText(deliveryStatus)}
-          </Text>
-        </View>
-      </View>
+          {/* Order ID + ETA row */}
+          <View style={styles.orderInfoRow}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.infoLabel}>Order ID</Text>
+              <Text style={styles.orderIdVal} numberOfLines={1} adjustsFontSizeToFit>{orderIdText}</Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-end', paddingLeft: 8 }}>
+              <Text style={styles.infoLabel}>Delivery Status</Text>
+              <Text style={styles.etaVal} numberOfLines={2} adjustsFontSizeToFit>
+                {deliveryStatus === DELIVERY_STATUS.DELIVERED ? 'Delivered' : getDeliveryContextText(deliveryStatus)}
+              </Text>
+            </View>
+          </View>
 
-    <View style={styles.divider} />
+          <View style={styles.divider} />
 
-  {/* Order Progress */ }
+          {/* Order Progress */}
           <Text style={styles.sectionTitle}>Order Progress</Text>
           <View style={styles.progressTracker}>
             {progressSteps.map((step, idx) => {
@@ -555,51 +557,51 @@ export default function DeliveryTrackingScreen() {
 
           <View style={styles.divider} />
 
-  {/* Current Status Banner */ }
-  <View style={styles.statusBanner}>
-    <View style={[styles.statusIconCircle, { backgroundColor: isSearchingRider ? '#FFF5E5' : '#e6f7ec' }]}>
-      <Ionicons
-        name={isSearchingRider ? 'search' : isOutForDelivery ? 'bicycle' : 'restaurant'}
-        size={20}
-        color={isSearchingRider ? '#DF9B34' : '#00a01d'}
-      />
-    </View>
-    <View style={{ flex: 1, marginLeft: 12 }}>
-      <Text style={styles.statusBannerTitle}>{statusMsg.title}</Text>
-      <Text style={styles.statusBannerSub}>{statusMsg.sub}</Text>
-    </View>
-  </View>
-
-  { networkError && <Text style={{ color: '#777', fontSize: 12, marginTop: 8 }}>Retrying...</Text> }
-
-  <View style={styles.divider} />
-
-  {/* Order Details Accordion */ }
-  <TouchableOpacity
-    style={styles.accordionHeader}
-    onPress={() => setDetailsExpanded(!detailsExpanded)}
-    activeOpacity={0.7}
-  >
-    <Text style={styles.sectionTitle}>Order Details</Text>
-    <Ionicons name={detailsExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#888" />
-  </TouchableOpacity>
-
-  {
-    detailsExpanded && (
-      <View style={styles.accordionContent}>
-        {items.map((item: any, idx: number) => (
-          <View key={idx} style={styles.itemRow}>
-            <Text style={styles.itemName}>{item.name || item.itemName} x{item.quantity || 1}</Text>
-            <Text style={styles.itemPrice}>Rs. {Number(item.price) * (item.quantity || 1)}</Text>
+          {/* Current Status Banner */}
+          <View style={styles.statusBanner}>
+            <View style={[styles.statusIconCircle, { backgroundColor: isSearchingRider ? '#FFF5E5' : '#e6f7ec' }]}>
+              <Ionicons
+                name={isSearchingRider ? 'search' : isOutForDelivery ? 'bicycle' : 'restaurant'}
+                size={20}
+                color={isSearchingRider ? '#DF9B34' : '#00a01d'}
+              />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.statusBannerTitle}>{statusMsg.title}</Text>
+              <Text style={styles.statusBannerSub}>{statusMsg.sub}</Text>
+            </View>
           </View>
-        ))}
-        <View style={styles.subtotalRow}>
-          <Text style={styles.subtotalLabel}>Total</Text>
-          <Text style={styles.subtotalValue}>Rs. {subtotal || params.totalAmount || '0'}</Text>
-        </View>
-      </View>
-    )
-  }
+
+          {networkError && <Text style={{ color: '#777', fontSize: 12, marginTop: 8 }}>Retrying...</Text>}
+
+          <View style={styles.divider} />
+
+          {/* Order Details Accordion */}
+          <TouchableOpacity
+            style={styles.accordionHeader}
+            onPress={() => setDetailsExpanded(!detailsExpanded)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionTitle}>Order Details</Text>
+            <Ionicons name={detailsExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#888" />
+          </TouchableOpacity>
+
+          {
+            detailsExpanded && (
+              <View style={styles.accordionContent}>
+                {items.map((item: any, idx: number) => (
+                  <View key={idx} style={styles.itemRow}>
+                    <Text style={styles.itemName}>{item.name || item.itemName} x{item.quantity || 1}</Text>
+                    <Text style={styles.itemPrice}>Rs. {Number(item.price) * (item.quantity || 1)}</Text>
+                  </View>
+                ))}
+                <View style={styles.subtotalRow}>
+                  <Text style={styles.subtotalLabel}>Total</Text>
+                  <Text style={styles.subtotalValue}>Rs. {subtotal || params.totalAmount || '0'}</Text>
+                </View>
+              </View>
+            )
+          }
 
           {/* Cancellation Card for Delivery (Before Kitchen Prepares) */}
           {canCancel && (

@@ -247,11 +247,12 @@ export default function FrontLandingPage() {
               activeOpacity={0.86}
               onPress={handleTalkToAgent}
             >
+              <Image
+                source={require('../../assets/images/talk_to_agent_headset.png')}
+                style={styles.primaryAgentHeadsetIcon}
+                resizeMode="contain"
+              />
               <Text style={styles.primaryAgentText}>Talk to Agent</Text>
-              <View style={styles.soundDotsContainer}>
-                <View style={styles.soundDot} />
-                <View style={[styles.soundDot, { height: 9 }]} />
-              </View>
             </TouchableOpacity>
 
             {/* Secondary Actions: Dine In & Take Away */}
@@ -563,22 +564,17 @@ function getStyles(isSmallDevice: boolean, isLargeDevice: boolean, width: number
     shadowRadius: 6,
     elevation: 4,
   },
+  primaryAgentHeadsetIcon: {
+    width: isSmallDevice ? 20 : 22,
+    height: isSmallDevice ? 17 : 19,
+    tintColor: '#1C160B',
+    marginRight: 2,
+  },
   primaryAgentText: {
     color: '#1C160B',
     fontSize: isSmallDevice ? 15 : 16,
     fontWeight: '800',
     letterSpacing: 0.2,
-  },
-  soundDotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  soundDot: {
-    width: 3.5,
-    height: 6,
-    backgroundColor: '#1C160B',
-    borderRadius: 1.5,
   },
   dualButtonsRow: {
     flexDirection: 'row',

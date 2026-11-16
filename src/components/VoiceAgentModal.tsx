@@ -38,9 +38,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '../store/useCartStore';
 import { useDineInSessionStore } from '../store/useDineInSessionStore';
 import { useVoiceAgentStore } from '../store/useVoiceAgentStore';
-import { useGeminiVoiceStore } from '../store/useGeminiVoiceStore';
+import { useVapiStore } from '../store/vapiStore';
 import { setActiveRouter } from '../utils/mobileAgentActionDispatcher';
-import VoiceBridge from './VoiceBridge';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -172,24 +171,22 @@ export default function VoiceAgentModal() {
     };
   }, [pathname]);
 
-  // Unified Gemini Voice Store
-  const startCall = useGeminiVoiceStore((s) => s.startCall);
-  const stopCall = useGeminiVoiceStore((s) => s.stopCall);
-  const clearMessages = useGeminiVoiceStore((s) => s.clearMessages);
-  const toggleMute = useGeminiVoiceStore((s) => s.toggleMute);
-  const isConnected = useGeminiVoiceStore((s) => s.isConnected);
-  const isConnecting = useGeminiVoiceStore((s) => s.isConnecting);
-  const isMuted = useGeminiVoiceStore((s) => s.isMuted);
-  const agentState = useGeminiVoiceStore((s) => s.agentState);
-  const messages = useGeminiVoiceStore((s) => s.messages);
-  const partialUserTranscript = useGeminiVoiceStore((s) => s.partialUserTranscript);
-  const partialAgentTranscript = useGeminiVoiceStore((s) => s.partialAgentTranscript);
-  const sendTextMessage = useGeminiVoiceStore((s) => s.sendTextMessage);
-  const stopSpeaking = useGeminiVoiceStore((s) => s.stopSpeaking);
-  const isTamilMode = useGeminiVoiceStore((s) => s.isTamilMode);
-  const toggleLanguage = useGeminiVoiceStore((s) => s.toggleLanguage);
-  const startListening = useGeminiVoiceStore((s) => s.startListening);
-  const stopAndSendRecording = useGeminiVoiceStore((s) => s.stopAndSendRecording);
+  // Vapi Voice Store
+  const startCall = useVapiStore((s) => s.startCall);
+  const stopCall = useVapiStore((s) => s.stopCall);
+  const clearMessages = useVapiStore((s) => s.clearMessages);
+  const toggleMute = useVapiStore((s) => s.toggleMute);
+  const isConnected = useVapiStore((s) => s.isConnected);
+  const isConnecting = useVapiStore((s) => s.isConnecting);
+  const isMuted = useVapiStore((s) => s.isMuted);
+  const agentState = useVapiStore((s) => s.agentState);
+  const messages = useVapiStore((s) => s.messages);
+  const partialUserTranscript = useVapiStore((s) => s.partialUserTranscript);
+  const partialAgentTranscript = useVapiStore((s) => s.partialAgentTranscript);
+  const sendTextMessage = useVapiStore((s) => s.sendTextMessage);
+  const stopSpeaking = useVapiStore((s) => s.stopSpeaking || (() => {}));
+  const isTamilMode = useVapiStore((s) => s.isTamilMode);
+  const toggleLanguage = useVapiStore((s) => s.toggleLanguage);
 
   const { isVisible, showAgent, hideAgent } = useVoiceAgentStore();
   const scrollViewRef = useRef<any>(null);
@@ -205,8 +202,8 @@ export default function VoiceAgentModal() {
     if (isAgentSpeaking || isListening) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.15, duration: 600, easing: Easing.ease, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1.0, duration: 600, easing: Easing.ease, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.15, duration: 600, easing: Easing.ease, useNativeDriver: Platform.OS !== 'web' }),
+          Animated.timing(pulseAnim, { toValue: 1.0, duration: 600, easing: Easing.ease, useNativeDriver: Platform.OS !== 'web' }),
         ])
       ).start();
     } else {
@@ -218,7 +215,7 @@ export default function VoiceAgentModal() {
   // Notify store when route changes
   useEffect(() => {
     if (isConnected && pathname) {
-      useGeminiVoiceStore.getState().notifyRouteChanged(pathname);
+      useVapiStore.getState().notifyRouteChanged(pathname);
     }
   }, [pathname, isConnected]);
 
@@ -252,7 +249,7 @@ export default function VoiceAgentModal() {
       startCall();
     }
     if (pathname && isConnected) {
-      useGeminiVoiceStore.getState().notifyRouteChanged(pathname);
+      useVapiStore.getState().notifyRouteChanged(pathname);
     }
   };
 
@@ -269,9 +266,12 @@ export default function VoiceAgentModal() {
   const handleSuggestionPress = (sug: string) => {
     setActiveRouter(router);
     if (!isConnected && !isConnecting) {
-      useGeminiVoiceStore.setState({ isConnected: true, agentState: 'IDLE' });
+      startCall().then(() => {
+        setTimeout(() => sendTextMessage(sug), 500);
+      });
+    } else {
+      sendTextMessage(sug);
     }
-    sendTextMessage(sug);
   };
 
   const handleSendText = () => {
@@ -280,9 +280,12 @@ export default function VoiceAgentModal() {
     setInputText('');
     setActiveRouter(router);
     if (!isConnected && !isConnecting) {
-      useGeminiVoiceStore.setState({ isConnected: true, agentState: 'IDLE' });
+      startCall().then(() => {
+        setTimeout(() => sendTextMessage(txt), 500);
+      });
+    } else {
+      sendTextMessage(txt);
     }
-    sendTextMessage(txt);
   };
 
   const [pan] = useState(() => new Animated.ValueXY());
@@ -358,6 +361,13 @@ export default function VoiceAgentModal() {
             {!isDragging && !routeContext.fabCompact && (
               <View style={styles.fabTextWrapper}>
                 <View style={styles.fabTitleRow}>
+                  {routeContext.fabTitle === 'Talk to Agent' && (
+                    <Image
+                      source={require('../../assets/images/talk_to_agent_headset.png')}
+                      style={{ width: 13, height: 12, marginRight: 4, tintColor: '#1A1208' }}
+                      resizeMode="contain"
+                    />
+                  )}
                   <Text style={styles.fabPillTitle}>{routeContext.fabTitle}</Text>
                   {isForYouScreen && (
                     <View style={styles.fabAiMiniBadge}>
@@ -386,7 +396,6 @@ export default function VoiceAgentModal() {
       {/* Rich UI Modal */}
       <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={closeModal}>
         <View style={styles.modalOverlay}>
-          <VoiceBridge />
           <View style={styles.modalContent}>
             {/* Header */}
             <View style={styles.header}>
@@ -596,24 +605,18 @@ export default function VoiceAgentModal() {
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity
-                      style={[styles.micListenButton, agentState === 'LISTENING' && styles.micListenButtonActive]}
-                      onPress={() => {
-                        if (agentState === 'LISTENING') {
-                          stopAndSendRecording();
-                        } else {
-                          startListening();
-                        }
-                      }}
+                      style={[styles.micListenButton, styles.micListenButtonActive]}
+                      onPress={toggleMute}
                       activeOpacity={0.85}
                     >
                       <Ionicons
-                        name={agentState === 'LISTENING' ? 'radio' : 'mic'}
+                        name={isMuted ? 'mic-off' : 'radio'}
                         size={18}
                         color="white"
                         style={{ marginRight: 6 }}
                       />
                       <Text style={styles.micListenText}>
-                        {agentState === 'LISTENING' ? 'Tap when done' : 'Speak'}
+                        {isMuted ? 'Muted (Tap to speak)' : 'Listening • Speak now'}
                       </Text>
                     </TouchableOpacity>
                   )}

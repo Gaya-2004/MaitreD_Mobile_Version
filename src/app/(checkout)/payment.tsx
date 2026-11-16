@@ -20,6 +20,7 @@ import {
   useDineInSessionStore
 } from '../../store';
 import { resolveOutletLocation, getDistanceInKm, calculateDeliveryFee } from '../../utils/deliveryArea';
+import { safeBack } from '../../utils/navigation';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -44,7 +45,8 @@ export default function PaymentScreen() {
     return [];
   }, [params.cartItems]);
 
-  const { items, orderType, tableNumber, getSubtotal, getGst, getServiceCharge, getGrandTotal, clearCart, getItemCount, getDiscountAmount, discountCode } = useCartStore();
+  const { items, orderType: storeOrderType, tableNumber, getSubtotal, getGst, getServiceCharge, getGrandTotal, clearCart, getItemCount, getDiscountAmount, discountCode } = useCartStore();
+  const orderType = (params.orderType as string) || storeOrderType || 'Dine In';
 
   React.useEffect(() => {
     if (isDineInSettlement) return;
@@ -261,6 +263,7 @@ export default function PaymentScreen() {
             currency: 'INR',
             name: 'MaitreD Bistro',
             description: `${orderType || 'Food'} Order Payment`,
+            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=120&auto=format&fit=crop&q=80',
             prefill: {
               contact: userPhone || '+919876543210',
               ...(prefillMethod ? { method: prefillMethod } : {}),
@@ -275,6 +278,10 @@ export default function PaymentScreen() {
                 params: {
                   razorpay_status: 'success',
                   razorpay_payment_id: response.razorpay_payment_id,
+                  orderType: orderType,
+                  instructions: params.instructions,
+                  tipAmount: params.tipAmount,
+                  deliveryFee: params.deliveryFee,
                 }
               });
             },
@@ -554,7 +561,7 @@ export default function PaymentScreen() {
       <SafeAreaView style={[styles.safeArea, { backgroundColor: '#f9f9f9' }]}>
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.delHeader}>
-          <TouchableOpacity onPress={() => router.back()} style={(styles as any).backBtn}>
+          <TouchableOpacity onPress={() => safeBack(router, '/(main)/home')} style={(styles as any).backBtn}>
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.delHeaderTitle}>Payment</Text>

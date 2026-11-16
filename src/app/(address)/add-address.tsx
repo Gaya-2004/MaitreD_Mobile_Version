@@ -10,6 +10,7 @@ import BottomNavBar from '../../components/layout/BottomNavBar';
 import { isWithinDeliveryArea, checkDeliveryCoverage, DeliveryCoverageResult } from '../../utils/deliveryArea';
 import DeliveryUnavailableModal from '../../components/ui/DeliveryUnavailableModal';
 import { LIGHT_MAP_STYLE } from '../../constants/mapStyle';
+import { GOOGLE_MAPS_API_KEY } from '../../constants/maps';
 
 const MapView = Platform.OS !== 'web' ? require('react-native-maps').default : null;
 const { PROVIDER_GOOGLE } = Platform.OS !== 'web' ? require('react-native-maps') : { PROVIDER_GOOGLE: 'google' };
@@ -89,7 +90,7 @@ export default function AddAddress() {
       mapRef.current?.animateToRegion(detectedRegion, 500);
       setHasConfirmedLocation(true);
       
-      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg';
+      const apiKey = GOOGLE_MAPS_API_KEY;
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
       
       const response = await fetch(geocodeUrl);
@@ -160,7 +161,7 @@ export default function AddAddress() {
             setSearchResults([]);
           }
         } else {
-          const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg';
+          const apiKey = GOOGLE_MAPS_API_KEY;
           const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=${apiKey}&components=country:in`;
           const response = await fetch(url);
           const data = await response.json();
@@ -216,7 +217,7 @@ export default function AddAddress() {
         return;
       }
 
-      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg';
+      const apiKey = GOOGLE_MAPS_API_KEY;
       const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry&key=${apiKey}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -407,7 +408,7 @@ export default function AddAddress() {
         <View style={styles.mapContainer}>
           {Platform.OS === 'web' ? (
             <Image 
-              source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${region.latitude},${region.longitude}&zoom=16&size=600x300&markers=color:red%7C${region.latitude},${region.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg'}` }} 
+              source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${region.latitude},${region.longitude}&zoom=16&size=600x300&markers=color:red%7C${region.latitude},${region.longitude}&key=${GOOGLE_MAPS_API_KEY}` }} 
               style={styles.mapImage} 
               resizeMode="cover"
             />
@@ -425,7 +426,7 @@ export default function AddAddress() {
                 if (!isLocating && details?.isGesture) {
                   setHasConfirmedLocation(true);
                   try {
-                    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyA2qxAJag8F89Q_TdtjqU_42W6JAVJ5_qg';
+                    const apiKey = GOOGLE_MAPS_API_KEY;
                     const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${newRegion.latitude},${newRegion.longitude}&key=${apiKey}`;
                     const response = await fetch(geocodeUrl);
                     const data = await response.json();

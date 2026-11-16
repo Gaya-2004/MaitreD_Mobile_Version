@@ -13,8 +13,9 @@ import * as Location from 'expo-location';
 import { formatTime } from '../../utils/dateUtils';
 import { LIGHT_MAP_STYLE } from '../../constants/mapStyle';
 import { resolveOutletLocation } from '../../utils/deliveryArea';
+import { GOOGLE_MAPS_API_KEY } from '../../constants/maps';
 
-const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_MAPS_APIKEY = GOOGLE_MAPS_API_KEY;
 
 export default function OrderSuccessScreen() {
   const { selectedOutlet } = useRestaurantStore();
@@ -107,7 +108,7 @@ export default function OrderSuccessScreen() {
     const saveOrderToHistory = async () => {
       try {
         const restId = selectedOutlet?.restaurant_id ? Number(selectedOutlet.restaurant_id) : 1;
-        const restName = (selectedOutlet?.name || 'MaitreD — Mugalivakkam').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD');
+        const restName = (selectedOutlet?.name || 'MaitreD Restaurant').replace(/Data\s*Udi?p+i/gi, 'MaitreD').replace(/Grand\s*Udipi/gi, 'MaitreD').replace(/Mugalivakkam/gi, '').replace(/[—–-]\s*$/, '').trim();
         let storedOrders = null;
         try {
           if (Platform.OS === 'web') {

@@ -109,7 +109,7 @@ export default function Orders() {
             if (!branchName) {
               if (o.restaurant_id === 2) branchName = 'MaitreD — MGR Nagar';
               else if (o.restaurant_id === 25) branchName = 'MaitreD — Bangalore';
-              else branchName = 'MaitreD — Mugalivakkam';
+              else branchName = 'MaitreD Restaurant';
             }
 
             return {
@@ -190,7 +190,7 @@ export default function Orders() {
             return {
               id: o.orderId || `ORD-${String(o.dbOrderId || o.id || 0).padStart(6, '0')}`,
               dbId: o.dbOrderId || o.id,
-              restaurant: o.restaurant_name || (o.restaurant_id === 2 ? 'MaitreD — MGR Nagar' : (o.restaurant_id === 25 ? 'MaitreD — Bangalore' : 'MaitreD — Mugalivakkam')),
+              restaurant: o.restaurant_name || (o.restaurant_id === 2 ? 'MaitreD — MGR Nagar' : (o.restaurant_id === 25 ? 'MaitreD — Bangalore' : 'MaitreD Restaurant')),
               restaurant_id: o.restaurant_id || o.restaurantId || 1,
               bill_no: o.bill_no || o.billNo,
               dine_in_session_id: o.dine_in_session_id || o.sessionId,

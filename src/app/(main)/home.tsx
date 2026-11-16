@@ -493,14 +493,11 @@ export default function Home() {
         return categoryImageMap[normalized] || { uri: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80' };
       };
       const getCategoryDisplayName = (c: any) => {
-        if (c.description === 'South Indian' || c.description === 'North Indian') {
-          // Strip the (MGR Nagar) or (Mugalivakkam) for a cleaner customer UI
-          return c.name.replace(/\s*\(.*?\)\s*/g, '').trim();
+        let name = (c.name || '').replace(/\s*\([^)]*\)\s*/g, '').trim();
+        if (name.toLowerCase().startsWith('mugalivakkam_') || name.toLowerCase().startsWith('mgrnagar_')) {
+          return c.description ? c.description.replace(/\s*\([^)]*\)\s*/g, '').trim() : name;
         }
-        if (c.name.startsWith('mugalivakkam_') || c.name.startsWith('mgrnagar_')) {
-          return c.description || c.name;
-        }
-        return c.name;
+        return name;
       };
 
       const branchSuffix = selectedOutlet?.name ? selectedOutlet.name.replace(/^(?:Data Udipi|MaitreD)\s*[-—]\s*/i, '').trim() : '';

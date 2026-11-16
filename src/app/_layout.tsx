@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import VoiceAgentModal from '../components/VoiceAgentModal';
 import ResponsiveContainer from '../components/layout/ResponsiveContainer';
+import { GOOGLE_MAPS_API_KEY } from '../constants/maps';
 
 interface Props {
   children: ReactNode;
@@ -59,6 +60,19 @@ class RootErrorBoundary extends Component<Props, State> {
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
+
+    // Inject Google Maps JavaScript SDK on Web if not already present
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const scriptId = 'google-maps-js-sdk';
+      if (!document.getElementById(scriptId) && GOOGLE_MAPS_API_KEY) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+    }
   }, []);
 
   return (

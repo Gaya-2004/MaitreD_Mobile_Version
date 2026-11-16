@@ -20,6 +20,17 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
     const res = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(id);
     if (!res.ok) {
+      if (res.status >= 500 && url.includes('dev-api.maitrepos.com')) {
+        console.warn(`[API Failover] ${url} returned HTTP ${res.status}. Retrying via local backend 8001...`);
+        try {
+          const fallbackUrl = url.replace('https://dev-api.maitrepos.com', 'http://127.0.0.1:8001');
+          const fallbackRes = await fetch(fallbackUrl, { ...options });
+          if (fallbackRes.ok) {
+            clearTimeout(id);
+            return await fallbackRes.json();
+          }
+        } catch { }
+      }
       let message = 'API Request Failed';
       try {
         const errorData = await res.json();

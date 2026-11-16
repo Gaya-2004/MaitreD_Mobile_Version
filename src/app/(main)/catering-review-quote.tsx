@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { safeBack } from '../../utils/navigation';
 
 export default function ReviewQuote() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function ReviewQuote() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(main)/catering-add-extras')} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerText}>
@@ -68,7 +69,7 @@ export default function ReviewQuote() {
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.cardTitle}>Event Summary</Text>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => safeBack(router, '/(main)/catering-add-extras')}>
               <Text style={styles.editLink}>EDIT</Text>
             </TouchableOpacity>
           </View>

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, FlatList, Platform, StatusBar, Image, Modal, BackHandler, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, FlatList, Platform, StatusBar, Image, Modal, BackHandler, Alert, ActivityIndicator, RefreshControl, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -111,7 +111,17 @@ export default function App() {
   const phone = useAuthStore(s => s.phone);
   const dineInSession = useDineInSessionStore();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const params = useLocalSearchParams<{ orderType?: string; tableNumber?: string; categoryId?: string; categoryName?: string; search?: string }>();
+  const params = useLocalSearchParams<{
+    orderType?: string;
+    tableNumber?: string;
+    categoryId?: string;
+    categoryName?: string;
+    category?: string;
+    region?: string;
+    variety?: string;
+    header?: string;
+    search?: string;
+  }>();
   const insets = useSafeAreaInsets();
   
   const cart = useCartStore(s => s.items);
@@ -161,8 +171,193 @@ export default function App() {
   const isValidatingTableRef = useRef(false);
 
   const categoryScrollRef = useRef<ScrollView>(null);
+  const regionScrollRef = useRef<ScrollView>(null);
   const flatListRef = useRef<FlatList>(null);
   const tabPositions = useRef<Record<string, { x: number; width: number }>>({});
+  const regionPositions = useRef<Record<string, { x: number; width: number }>>({});
+  const lastFilterRef = useRef<{ target: string; regionHint?: string }>({ target: '', regionHint: '' });
+
+  const applyHeaderFilter = useCallback((target: string, regionHint?: string) => {
+    if (!target && !regionHint) return;
+    lastFilterRef.current = { target, regionHint };
+
+    const lowerTarget = (target || '').toLowerCase().trim();
+    const lowerRegion = (regionHint || '').toLowerCase().trim();
+
+    console.log(`[Menu] applyHeaderFilter -> target: "${lowerTarget}", regionHint: "${lowerRegion}"`);
+
+    // 1. Direct Region matching
+    if (
+      lowerRegion.includes('south') ||
+      lowerTarget === 'south indian' ||
+      lowerTarget === 'south' ||
+      lowerTarget.includes('south indian')
+    ) {
+      setActiveRegion('South Indian');
+      setActiveCat('all');
+      setSearchQuery('');
+      return;
+    }
+    if (
+      lowerRegion.includes('north') ||
+      lowerTarget === 'north indian' ||
+      lowerTarget === 'north' ||
+      lowerTarget.includes('north indian')
+    ) {
+      setActiveRegion('North Indian');
+      setActiveCat('all');
+      setSearchQuery('');
+      return;
+    }
+    if (
+      lowerRegion.includes('non') ||
+      lowerTarget.includes('non-veg') ||
+      lowerTarget.includes('non veg') ||
+      lowerTarget.includes('nonveg') ||
+      lowerTarget.includes('non vegetarian')
+    ) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('all');
+      setSearchQuery('');
+      return;
+    }
+    if (
+      lowerTarget === 'all' ||
+      lowerTarget === 'all regions' ||
+      lowerTarget === 'all menu' ||
+      lowerTarget === 'everything'
+    ) {
+      setActiveRegion('All Regions');
+      setActiveCat('all');
+      setSearchQuery('');
+      return;
+    }
+
+    // 2. Direct Category matching against loaded categories
+    const norm = lowerTarget.replace(/varities/i, 'varieties').trim();
+    const matchedCategory = allCategories.find((c: any) => {
+      const cLabel = (c.label || c.name || '').toLowerCase().replace(/varities/i, 'varieties').trim();
+      return (
+        cLabel === norm ||
+        cLabel.includes(norm) ||
+        (norm.length >= 4 && norm.includes(cLabel))
+      );
+    });
+
+    if (matchedCategory) {
+      if (matchedCategory.region) {
+        setActiveRegion(matchedCategory.region);
+      } else {
+        setActiveRegion('All Regions');
+      }
+      setActiveCat(matchedCategory.label);
+      setSearchQuery('');
+      return;
+    }
+
+    // 3. Keyword heuristic category mapping
+    if (norm.includes('dosa')) {
+      setActiveRegion('South Indian');
+      setActiveCat('Dosa Varieties');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('snack')) {
+      setActiveCat('Evening Snacks');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('tea') || norm.includes('coffee') || norm.includes('beverage') || norm.includes('drink')) {
+      setActiveCat('Hot Beverages');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('soup')) {
+      setActiveCat('Soups');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('bread') || norm.includes('naan') || norm.includes('roti') || norm.includes('kulcha') || norm.includes('paratha') || norm.includes('tandoori bread')) {
+      setActiveRegion('North Indian');
+      setActiveCat('Tandoori Breads');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('starter') || norm.includes('tandoori starter')) {
+      setActiveRegion('North Indian');
+      setActiveCat('Tandoori Starters');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('biryani') || norm.includes('pulao') || norm.includes('biriyani')) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('Non-Veg Rice & Biryani');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('chicken')) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('Chicken Varieties');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('mutton')) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('Mutton Varieties');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('fish') || norm.includes('meen')) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('Fish Varieties');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('seafood') || norm.includes('prawn') || norm.includes('crab')) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('Seafood Varieties');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('egg')) {
+      setActiveRegion('Non-Veg Varieties');
+      setActiveCat('Egg Varieties');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('breakfast') || norm.includes('idly') || norm.includes('vadai') || norm.includes('tiffin')) {
+      setActiveRegion('South Indian');
+      setActiveCat('Breakfast & Dinner');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('lunch') || norm.includes('meal') || norm.includes('thali')) {
+      setActiveCat('Lunch');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('salad')) {
+      setActiveRegion('North Indian');
+      setActiveCat('Salad');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('raitha')) {
+      setActiveRegion('North Indian');
+      setActiveCat('Raitha');
+      setSearchQuery('');
+      return;
+    }
+    if (norm.includes('noodle')) {
+      setActiveCat('Noodles');
+      setSearchQuery('');
+      return;
+    }
+
+    // 4. Food item search query
+    setSearchQuery(target);
+    setActiveCat('all');
+  }, [allCategories]);
 
   useEffect(() => {
     if (params.orderType) {
@@ -173,17 +368,23 @@ export default function App() {
     if (params.tableNumber) {
       setTableNumber(params.tableNumber as string);
     }
-    if (params.search !== undefined) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSearchQuery(params.search as string);
+
+    const rawTarget = (params.categoryName as string) || (params.categoryId as string) || (params.category as string) || (params.variety as string) || (params.header as string) || (params.search as string) || '';
+    const rawRegion = (params.region as string) || '';
+
+    if (rawTarget || rawRegion) {
+      applyHeaderFilter(rawTarget, rawRegion);
     }
-    if (params.categoryName || params.categoryId) {
-      const newCat = (params.categoryName as string) || (params.categoryId as string);
-      setActiveCat(newCat);
-      setActiveRegion("All Regions");
-    }
-   
-  }, [params.orderType, params.tableNumber, params.search, params.categoryName, params.categoryId, setOrderType, setTableNumber]);
+  }, [params.orderType, params.tableNumber, params.search, params.categoryName, params.categoryId, params.category, params.variety, params.header, params.region, applyHeaderFilter, setOrderType, setTableNumber]);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('menu_filter_header', (data: any) => {
+      if (data) {
+        applyHeaderFilter(data.categoryName || data.category || data.variety || data.header || data.search || '', data.region || '');
+      }
+    });
+    return () => sub.remove();
+  }, [applyHeaderFilter]);
 
   // Check if active dine-in session conflicts with delivery mode
   useEffect(() => {
@@ -237,6 +438,24 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [activeCat, allCategories]);
+
+  // Automatically scroll horizontal region tabs to bring the active region into view
+  useEffect(() => {
+    if (!activeRegion || activeRegion === 'All Regions') {
+      regionScrollRef.current?.scrollTo({ x: 0, animated: true });
+      return;
+    }
+    const pos = regionPositions.current[activeRegion];
+    if (pos) {
+      regionScrollRef.current?.scrollTo({ x: Math.max(0, pos.x - 40), animated: true });
+    } else {
+      const timer = setTimeout(() => {
+        const p = regionPositions.current[activeRegion];
+        if (p) regionScrollRef.current?.scrollTo({ x: Math.max(0, p.x - 40), animated: true });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [activeRegion]);
 
   const [refreshing, setRefreshing] = useState(false);
   
@@ -456,6 +675,13 @@ export default function App() {
             setRegions(["All Regions", ...Array.from(validRegions)]);
             setMenuItems(formattedItems);
 
+            // Re-apply any pending filter once categories and items are loaded
+            if (lastFilterRef.current.target || lastFilterRef.current.regionHint) {
+              setTimeout(() => {
+                applyHeaderFilter(lastFilterRef.current.target, lastFilterRef.current.regionHint);
+              }, 50);
+            }
+
             // Publish to the shared store so the voice agent can resolve spoken
             // dish names against the real menu instead of guessing.
             useRestaurantStore.getState().setMenuItems(formattedItems);
@@ -664,11 +890,20 @@ export default function App() {
 
       {/* Regions Scroll */}
       <View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.regionScroll}>
+        <ScrollView 
+          ref={regionScrollRef}
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.regionScroll}
+        >
           {regions.map(region => (
             <TouchableOpacity 
               key={region} 
               style={[styles.regionTab, activeRegion === region && styles.regionTabActive]}
+              onLayout={(e) => {
+                const { x, width } = e.nativeEvent.layout;
+                regionPositions.current[region] = { x, width };
+              }}
               onPress={() => {
                 setActiveRegion(region);
                 setActiveCat("all");

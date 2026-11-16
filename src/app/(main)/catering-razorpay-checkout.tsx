@@ -9,6 +9,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { API_BASE_URL } from '../../constants/api';
+import { safeBack } from '../../utils/navigation';
 
 /**
  * Razorpay WebView Checkout for Catering Advance Payment.
@@ -125,7 +126,7 @@ export default function CateringRazorpayCheckout() {
         currency: 'INR',
         name: 'MaitreD Catering',
         description: 'Advance payment · ${packageName}',
-        image: '',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=120&auto=format&fit=crop&q=80',
         prefill: {
           name: '${customerName}',
           email: '${customerEmail}',
@@ -179,14 +180,14 @@ export default function CateringRazorpayCheckout() {
       const msg = JSON.parse(event.nativeEvent.data);
 
       if (msg.type === 'PAYMENT_CANCELLED') {
-        router.back();
+        safeBack(router, '/(main)/catering-review-quote');
         return;
       }
 
       if (msg.type === 'PAYMENT_FAILED') {
         Alert.alert('Payment Failed', msg.error || 'Your payment was not completed.', [
           { text: 'Try Again', onPress: () => webViewRef.current?.reload() },
-          { text: 'Cancel', onPress: () => router.back() },
+          { text: 'Cancel', onPress: () => safeBack(router, '/(main)/catering-review-quote') },
         ]);
         return;
       }
@@ -260,7 +261,7 @@ export default function CateringRazorpayCheckout() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(main)/catering-review-quote')} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Secure Payment</Text>

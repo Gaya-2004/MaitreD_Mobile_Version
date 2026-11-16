@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, Platform, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRestaurantStore } from '../../store';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Print from 'expo-print';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { orderApi } from '../../services/apiService';
+import { useRestaurantStore } from '../../store';
 import { formatDateTime } from '../../utils/dateUtils';
 
 const getAssetBase64 = async (assetRequire: any) => {
@@ -62,10 +62,10 @@ export default function InvoiceScreen() {
       .replace(/\bUdupi\b/gi, 'MaitreD');
   };
 
-  const rawBranchName = selectedOutlet?.name || (params.restaurantName as string) || 'MaitreD — Mugalivakkam';
-  const branchName = sanitizeBrand(rawBranchName);
-  const rawBranchAddress = selectedOutlet?.address || 'Mount-Poonamallee Road, Mugalivakkam, Chennai 600125';
-  const branchAddress = sanitizeBrand(rawBranchAddress);
+  const rawBranchName = selectedOutlet?.name || (params.restaurantName as string) || 'MaitreD Restaurant';
+  const branchName = sanitizeBrand(rawBranchName).replace(/Mugalivakkam/gi, '').replace(/[—–-]\s*$/, '').trim() || 'MaitreD Restaurant';
+  const rawBranchAddress = selectedOutlet?.address || 'Mount-Poonamallee Road, Chennai 600125';
+  const branchAddress = sanitizeBrand(rawBranchAddress).replace(/Mugalivakkam,?\s*/gi, '').trim();
   const [orderData, setOrderData] = useState<any>(null);
   const [loadingOrder, setLoadingOrder] = useState(Boolean(params.dbOrderId));
 

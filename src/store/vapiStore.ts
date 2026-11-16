@@ -17,17 +17,18 @@
  *   - No duplicate bubbles
  */
 
-import { Alert, NativeModules, Platform, PermissionsAndroid } from 'react-native';
+import { Alert, DeviceEventEmitter, NativeModules, PermissionsAndroid, Platform } from 'react-native';
 import { create } from 'zustand';
-import { executeSingleAction, setActiveRouter, navigateScreen, UIAction } from '../utils/mobileAgentActionDispatcher';
-import { resolveRoute } from '../utils/agentRegistry';
-import { getMobileAgentContext } from '../utils/agentContext';
-import { buildMenuKeyterms, matchMenuItem, normalizeName } from '../utils/menuMatching';
 import { API_BASE_URL, getFullImageUrl } from '../constants/api';
-import { useAuthStore } from '../store/useAuthStore';
-import { useRestaurantStore } from '../store/useRestaurantStore';
-import { useLiveOrderStore } from '../store/useLiveOrderStore';
+import { orderApi } from '../services/apiService';
 import { useAddressStore } from '../store/useAddressStore';
+import { useAuthStore } from '../store/useAuthStore';
+import { useLiveOrderStore } from '../store/useLiveOrderStore';
+import { useOrderStore } from '../store/useOrderStore';
+import { useRestaurantStore } from '../store/useRestaurantStore';
+import { getMobileAgentContext } from '../utils/agentContext';
+import { resolveRoute } from '../utils/agentRegistry';
+import { executeSingleAction, getActiveRouter, navigateScreen, setActiveRouter, UIAction } from '../utils/mobileAgentActionDispatcher';
 import { useCartStore } from './useCartStore';
 
 // Cache executed toolCallIds to avoid duplicate execution
@@ -87,7 +88,7 @@ let vapiInstance: any = null;
 let listenersSetup = false;
 
 const isWebRTCSupported = () => {
-  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'web') return true;
   return !!(
     NativeModules &&
     (NativeModules.WebRTCModule ||
@@ -97,22 +98,29 @@ const isWebRTCSupported = () => {
 };
 
 const getVapi = () => {
-  if (!isWebRTCSupported()) {
-    return null;
-  }
   if (!vapiInstance) {
     if (!VapiClass) {
       try {
-        const mod = require('@vapi-ai/react-native');
-        VapiClass = mod.default || mod;
+        if (Platform.OS === 'web') {
+          const mod = require('@vapi-ai/web');
+          VapiClass = mod.default || mod;
+        } else {
+          if (!isWebRTCSupported()) {
+            console.warn('[VapiStore] Native WebRTC module is not available in Expo Go. A development build or standalone build is required.');
+            return null;
+          }
+          const mod = require('@vapi-ai/react-native');
+          VapiClass = mod.default || mod;
+        }
       } catch (e) {
-        console.warn('[VapiStore] Native Vapi/WebRTC is not available in Expo Go client:', e);
+        console.warn('[VapiStore] Vapi SDK is not available:', e);
         return null;
       }
     }
     try {
       if (VapiClass) {
-        vapiInstance = new VapiClass(process.env.EXPO_PUBLIC_VAPI_PUBLIC_KEY || '');
+        const pubKey = process.env.EXPO_PUBLIC_VAPI_PUBLIC_KEY || '284fef39-2d93-4de5-881b-a082dacca5b1';
+        vapiInstance = new VapiClass(pubKey);
       }
     } catch (e) {
       console.warn('[VapiStore] Failed to initialize Vapi instance:', e);
@@ -124,22 +132,36 @@ const getVapi = () => {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ChatMessage {
+export type AgentState =
+  | 'IDLE'
+  | 'LISTENING'
+  | 'PROCESSING'
+  | 'SPEAKING'
+  | 'EXECUTING_ACTION'
+  | 'WAITING_FOR_CONFIRMATION'
+  | 'ERROR';
+
+export interface ChatMessage {
+  id?: string;
   role: 'user' | 'agent' | 'assistant';
   text: string;
   isFinal?: boolean;
 }
 
-interface VapiState {
+export interface VapiState {
+  agentState: AgentState;
   isConnecting: boolean;
   isConnected: boolean;
   isMuted: boolean;
   messages: ChatMessage[];
   partialUserTranscript: string;
   partialAgentTranscript: string;
+  isTamilMode: boolean;
   startCall: () => Promise<void>;
   stopCall: () => void;
   toggleMute: () => void;
+  toggleLanguage: () => void;
+  stopSpeaking: () => void;
   clearMessages: () => void;
   setupListeners: (routerRef: any) => void;
   prewarm: () => void;
@@ -186,14 +208,14 @@ async function fetchAgentDataNetwork(
   let restaurantId = restaurantIdArg || restaurantState.selectedOutlet?.restaurant_id
     ? Number(restaurantIdArg || restaurantState.selectedOutlet?.restaurant_id)
     : (restaurantState.selectedOutlet?.id && !isNaN(Number(restaurantState.selectedOutlet.id))
-        ? Number(restaurantState.selectedOutlet.id)
-        : 1);
+      ? Number(restaurantState.selectedOutlet.id)
+      : 1);
 
   if (!restaurantState.selectedOutlet) {
     restaurantState.setSelectedOutlet({
-      id: 'mugalivakkam',
+      id: '1',
       restaurant_id: 1,
-      name: 'MaitreD — Mugalivakkam',
+      name: 'MaitreD Restaurant',
     });
   }
 
@@ -275,17 +297,97 @@ async function fetchAgentData(toolName: string, args: Record<string, any>): Prom
   return promise;
 }
 
+
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5,
+  six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+const KNOWN_NUMBERED_DISHES = new Set(['65', '77', '99']);
+
+export function extractDishesAndQuantities(text: string): { name: string; quantity: number }[] {
+  if (!text || typeof text !== 'string') return [];
+  const results: { name: string; quantity: number }[] = [];
+  let cleaned = text.replace(/[\r\n]+/g, ' ').trim();
+
+  // Strip introductory prefixes
+  cleaned = cleaned.replace(
+    /^(?:here'?s\s+your\s+current\s+cart[^:]*?:\s*|i\s+have\s+added[^:]*?:\s*|i'?ve\s+added[^:]*?:\s*|your\s+current\s+cart[^:]*?:\s*|cart\s+currently\s+includes:?\s*)/i,
+    ''
+  );
+
+  // Convert word numbers (e.g. "one chicken biryani" -> "1 chicken biryani")
+  for (const [word, num] of Object.entries(NUMBER_WORDS)) {
+    const rx = new RegExp(`\\b${word}\\b`, 'gi');
+    cleaned = cleaned.replace(rx, String(num));
+  }
+
+  // Semicolon-delimited list (assistant summary format)
+  if (cleaned.includes(';')) {
+    const parts = cleaned.split(';').map(p => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      let p = part.replace(/^\d+[\)\.]\s*/, '').trim();
+      p = p.replace(/^(?:and\s+)?(?:please\s+add|add|also\s+add)\s+/i, '').trim();
+      p = p.replace(/^and\s+/i, '').trim();
+
+      const m = p.match(/^(.+?)(?:,\s*|\s+)(\d+)$/);
+      if (m && (!KNOWN_NUMBERED_DISHES.has(m[2]) || p.includes(','))) {
+        results.push({ name: m[1].replace(/[.,?!]+$/, '').trim(), quantity: parseInt(m[2], 10) });
+      } else {
+        const m2 = p.match(/^(\d+)\s+(.+)$/);
+        if (m2) {
+          results.push({ name: m2[2].replace(/[.,?!]+$/, '').trim(), quantity: parseInt(m2[1], 10) });
+        } else if (p.length > 2 && !/^your\b/i.test(p)) {
+          results.push({ name: p.replace(/[.,?!]+$/, '').trim(), quantity: 1 });
+        }
+      }
+    }
+    if (results.length > 0) return results;
+  }
+
+  // General split on 'and', comma, period, or sentence boundary
+  const parts = cleaned.split(/\s+and\s+|,\s*|\.\s*/i);
+  for (const part of parts) {
+    let p = part.trim();
+    p = p.replace(/^(?:i\s+have\s+already\s+ordered[^.]*?\.\s*)?(?:to\s+that\s+order\s*,?\s*)?(?:please\s+add|add|also\s+add|can\s+you\s+please\s+add|could\s+you\s+add|i\s+want\s+to\s+add|i\s+want)\s+/i, '').trim();
+    p = p.replace(/^and\s+/i, '').trim();
+    p = p.replace(/\s+(?:to\s+(?:the\s+)?cart|in\s+(?:the\s+)?cart|into\s+(?:the\s+)?cart|has\s+been\s+added\s+to\s+your\s+cart)[.?!]*$/i, '').trim();
+
+    if (!p || p.length <= 2) continue;
+
+    // "qty name" e.g. "1 chicken biryani"
+    const m1 = p.match(/^(\d+)\s+(.+)$/);
+    if (m1) {
+      results.push({ name: m1[2].replace(/[.,?!]+$/, '').trim(), quantity: parseInt(m1[1], 10) });
+      continue;
+    }
+
+    // "name qty" e.g. "chicken chukka 1", ensuring qty is NOT 65
+    const m2 = p.match(/^(.+?)\s+(\d+)$/);
+    if (m2 && !KNOWN_NUMBERED_DISHES.has(m2[2])) {
+      results.push({ name: m2[1].replace(/[.,?!]+$/, '').trim(), quantity: parseInt(m2[2], 10) });
+      continue;
+    }
+
+    const pClean = p.replace(/[.,?!]+$/, '').trim();
+    if (pClean.length > 2 && !/\b(order|change|cart|items|status|dine-in|delivery|takeaway)\b/i.test(pClean)) {
+      results.push({ name: pClean, quantity: 1 });
+    }
+  }
+
+  return results;
+}
+
 // ─── Robust Cart Resolver Helper ─────────────────────────────────────────────
 
-async function resolveAndAddToCart(fnArgs: any): Promise<{ success: boolean; code?: string; message: string; data?: any; [key: string]: any }> {
+async function resolveAndAddToCart(fnArgs: any): Promise<{ success: boolean; code?: string; message: string; data?: any;[key: string]: any }> {
   const restaurantState = useRestaurantStore.getState();
   const selectedOutlet = restaurantState.selectedOutlet;
 
   if (!selectedOutlet) {
     restaurantState.setSelectedOutlet({
-      id: 'mugalivakkam',
+      id: '1',
       restaurant_id: 1,
-      name: 'MaitreD — Mugalivakkam',
+      name: 'MaitreD Restaurant',
     });
   }
 
@@ -302,6 +404,25 @@ async function resolveAndAddToCart(fnArgs: any): Promise<{ success: boolean; cod
   const rawId = fnArgs.item_id || fnArgs.id || (fnArgs.item && typeof fnArgs.item === 'object' ? fnArgs.item.id : null);
 
   console.log(`[VapiStore] resolveAndAddToCart: rawName="${rawName}", rawId="${rawId}", qty=${qty}`);
+
+  // Check if rawName contains multiple compound items
+  const compoundItems = extractDishesAndQuantities(rawName);
+  if (compoundItems.length > 1) {
+    const results: any[] = [];
+    for (const item of compoundItems) {
+      const res = await resolveAndAddToCart({ item_name: item.name, quantity: item.quantity });
+      results.push(res);
+    }
+    const allSucceeded = results.some(r => r.success);
+    const cartCount = useCartStore.getState().getItemCount();
+    const subtotal = useCartStore.getState().getSubtotal();
+    return {
+      success: allSucceeded,
+      code: allSucceeded ? 'ITEMS_ADDED' : 'ITEMS_FAILED',
+      message: `Added items to your cart. Cart now has ${cartCount} item(s) totaling ${subtotal} rupees.`,
+      data: results
+    };
+  }
 
   // If item object was directly passed with price and id
   if (fnArgs.item && typeof fnArgs.item === 'object' && fnArgs.item.id && fnArgs.item.price != null) {
@@ -375,28 +496,48 @@ async function resolveAndAddToCart(fnArgs: any): Promise<{ success: boolean; cod
         if (globalData.menu_items && Array.isArray(globalData.menu_items) && globalData.menu_items.length > 0) {
           candidates = globalData.menu_items;
         }
-      } catch {}
+      } catch { }
     }
   }
 
   if (candidates.length === 0) {
+    console.log(`[VapiStore] Menu search found no match for "${rawName}". Not adding to cart.`);
     return {
       success: false,
-      code: 'MENU_ITEM_NOT_FOUND',
-      message: `I couldn't find "${rawName || rawId}" on this outlet's menu. Would you like me to open the menu for you?`
+      code: 'ITEM_NOT_FOUND',
+      message: `Sorry, "${rawName}" is not available on our menu. Please check the menu for available items.`,
     };
   }
 
-  // Best candidate selection
+  // Best candidate selection: require a genuine match
   const normTarget = rawName.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
   let bestMatch = candidates.find((c: any) => c.name.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim() === normTarget);
 
   if (!bestMatch && normTarget) {
-    bestMatch = candidates.find((c: any) => c.name.toLowerCase().includes(normTarget) || normTarget.includes(c.name.toLowerCase()));
+    bestMatch = candidates.find((c: any) => {
+      const cNorm = c.name.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+      return cNorm.includes(normTarget) || normTarget.includes(cNorm);
+    });
+  }
+
+  // Also check individual significant words (e.g. "biryani" in "Chicken Biryani")
+  if (!bestMatch && normTarget.length >= 4) {
+    const words = normTarget.split(/\s+/).filter(w => w.length >= 4);
+    if (words.length > 0) {
+      bestMatch = candidates.find((c: any) => {
+        const cNorm = c.name.toLowerCase();
+        return words.every(w => cNorm.includes(w));
+      });
+    }
   }
 
   if (!bestMatch) {
-    bestMatch = candidates[0];
+    console.log(`[VapiStore] No accurate menu match found for "${rawName}". Not adding to cart.`);
+    return {
+      success: false,
+      code: 'ITEM_NOT_FOUND',
+      message: `I could not find "${rawName}" on our menu. Would you like to check the menu?`,
+    };
   }
 
   // Add to cart in useCartStore
@@ -525,6 +666,29 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
         return { toolCallId, result: JSON.stringify(result) };
       }
 
+      case 'dine_in_action': {
+        const subAction = String(fnArgs.action || fnArgs.type || fnArgs.mode || '').toLowerCase();
+        if (subAction.includes('later')) {
+          navigateScreen('/(order)/orders');
+          return {
+            toolCallId,
+            result: JSON.stringify({ success: true, message: 'Dine-in order placed with Pay Later.' }),
+          };
+        } else if (subAction.includes('bill') || subAction.includes('pay')) {
+          navigateScreen('/(checkout)/payment');
+          return {
+            toolCallId,
+            result: JSON.stringify({ success: true, message: 'Opened bill payment screen.' }),
+          };
+        } else {
+          navigateScreen('/(main)/menu');
+          return {
+            toolCallId,
+            result: JSON.stringify({ success: true, message: 'Opened menu to order more items.' }),
+          };
+        }
+      }
+
       // ── App Context ───────────────────────────────────────────────────────────
 
       case 'app_get_context': {
@@ -555,8 +719,8 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
           fnArgs.order_type ||
           fnArgs.orderType ||
           (fnName === 'switch_to_takeaway' || fnName === 'takeaway' ? 'Take Away' :
-           fnName === 'switch_to_dine_in' || fnName === 'dine_in' ? 'Dine In' :
-           fnName === 'switch_to_delivery' || fnName === 'delivery' ? 'Delivery' : undefined);
+            fnName === 'switch_to_dine_in' || fnName === 'dine_in' ? 'Dine In' :
+              fnName === 'switch_to_delivery' || fnName === 'delivery' ? 'Delivery' : undefined);
 
         const uiAction: UIAction = {
           action: 'set_order_type',
@@ -568,19 +732,23 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
 
       // ── Menu Search ───────────────────────────────────────────────────────────
 
+      case 'open_category':
+      case 'filter_category':
+      case 'open_variety':
       case 'menu_search':
+      case 'menu_get_data':
       case 'get_menu': {
         const restaurantState = useRestaurantStore.getState();
         const selectedOutlet = restaurantState.selectedOutlet;
-        const restaurantId = selectedOutlet?.restaurant_id 
-          ? Number(selectedOutlet.restaurant_id) 
+        const restaurantId = selectedOutlet?.restaurant_id
+          ? Number(selectedOutlet.restaurant_id)
           : (selectedOutlet?.id && !isNaN(Number(selectedOutlet.id)) ? Number(selectedOutlet.id) : 1);
 
         if (!selectedOutlet) {
           restaurantState.setSelectedOutlet({
-            id: 'mugalivakkam',
+            id: '1',
             restaurant_id: 1,
-            name: 'MaitreD — Mugalivakkam',
+            name: 'MaitreD Restaurant',
           });
         }
 
@@ -590,17 +758,61 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
           return valueTrimmed.length > 0 ? valueTrimmed : undefined;
         };
 
+        const rawCategory = cleanString(fnArgs.category_name) ?? cleanString(fnArgs.category) ?? cleanString(fnArgs.variety) ?? cleanString(fnArgs.header);
+        const rawRegion = cleanString(fnArgs.region);
         const rawQuery = cleanString(fnArgs.query);
-        const rawCategory = cleanString(fnArgs.category_name) ?? cleanString(fnArgs.category);
 
-        const isShowAll = !rawQuery || /^(all|all menus?|menu|everything|items)$/i.test(rawQuery || '');
+        const target = rawCategory || rawQuery || '';
+        const isShowAll = !target || /^(all|all menus?|menu|everything|items)$/i.test(target);
 
-        // Navigate screen to /menu so the user immediately sees the menu on screen!
+        // Check if target is a Region header
+        const lowerTarget = target.toLowerCase();
+        let targetRegion: string | undefined = rawRegion;
+        let targetCategory: string | undefined = rawCategory;
+
+        if (lowerTarget.includes('south') || lowerTarget.includes('dosa') || lowerTarget.includes('idly') || lowerTarget.includes('breakfast') || lowerTarget.includes('vada')) {
+          targetRegion = 'South Indian';
+          if (lowerTarget.includes('south')) targetCategory = 'all';
+        } else if (lowerTarget.includes('north') || lowerTarget.includes('naan') || lowerTarget.includes('roti') || lowerTarget.includes('tandoori') || lowerTarget.includes('kulcha') || lowerTarget.includes('salad') || lowerTarget.includes('raitha')) {
+          targetRegion = 'North Indian';
+          if (lowerTarget.includes('north')) targetCategory = 'all';
+        } else if (
+          lowerTarget.includes('non-veg') ||
+          lowerTarget.includes('non veg') ||
+          lowerTarget.includes('nonveg') ||
+          lowerTarget.includes('chicken') ||
+          lowerTarget.includes('mutton') ||
+          lowerTarget.includes('fish') ||
+          lowerTarget.includes('prawn') ||
+          lowerTarget.includes('seafood') ||
+          lowerTarget.includes('biryani') ||
+          lowerTarget.includes('egg')
+        ) {
+          targetRegion = 'Non-Veg Varieties';
+          if (lowerTarget.includes('non-veg') || lowerTarget.includes('non veg') || lowerTarget.includes('nonveg')) targetCategory = 'all';
+        }
+
+        console.log(`[VapiStore] Navigating menu: target="${target}", category="${targetCategory}", region="${targetRegion}"`);
+
+        // Instant UI update for open menu screen
+        DeviceEventEmitter.emit('menu_filter_header', {
+          category: targetCategory || (isShowAll ? 'all' : target),
+          region: targetRegion || (isShowAll ? 'All Regions' : undefined),
+          search: (!targetCategory && !targetRegion && rawQuery && !isShowAll) ? rawQuery : ''
+        });
+
+        // Navigate screen to /menu
         executeSingleAction({
           action: 'navigate',
           route: '/menu',
-          payload: { params: { search: isShowAll ? '' : (rawQuery || rawCategory || '') } }
-        }).catch(() => {});
+          payload: {
+            params: {
+              categoryName: targetCategory || (isShowAll ? 'all' : target),
+              region: targetRegion || (isShowAll ? 'All Regions' : undefined),
+              search: (!targetCategory && !targetRegion && rawQuery && !isShowAll) ? rawQuery : ''
+            }
+          }
+        }).catch(() => { });
 
         const normalizedArgs: Record<string, any> = {};
         if (rawQuery && !isShowAll) normalizedArgs.query = rawQuery;
@@ -632,14 +844,16 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
         // Add spoken summary for conversational TTS
         if (data.success && data.menu_items && data.menu_items.length > 0) {
           const sample = data.menu_items.slice(0, 5).map((i: any) => `${i.name} at ${i.price} rupees`).join(', ');
-          data.summary = `Found ${data.count || data.menu_items.length} items. Here are some: ${sample}. I have opened the menu on your screen.`;
+          data.summary = `Found ${data.count || data.menu_items.length} items. Here are some: ${sample}. I have opened ${target || 'the menu'} on your screen.`;
+        } else {
+          data.summary = `Opened ${target || 'the menu'} on your screen.`;
         }
 
         if (data.error && data.code) {
           return { toolCallId, result: JSON.stringify({ success: false, code: data.code, message: data.error }) };
         }
 
-        return { toolCallId, result: JSON.stringify({ success: !data.error, ...data }) };
+        return { toolCallId, result: JSON.stringify({ success: true, ...data }) };
       }
 
       // ── Cart ──────────────────────────────────────────────────────────────────
@@ -648,8 +862,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
       case 'show_cart':
       case 'view_cart':
       case 'get_cart':
-      case 'cart_get':
-      case 'app_get_context': {
+      case 'cart_get': {
         await executeSingleAction({ action: 'show_cart' });
         const cartState = useCartStore.getState();
         const rawItems = Object.values(cartState.items);
@@ -818,7 +1031,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
       case 'open_profile':
       case 'profile':
       case 'my_profile': {
-        executeSingleAction({ action: 'navigate', route: '/profile' }).catch(() => {});
+        executeSingleAction({ action: 'navigate', route: '/profile' }).catch(() => { });
         const auth = useAuthStore.getState();
         if (!auth.isAuthenticated || !auth.customerId) {
           return { toolCallId, result: JSON.stringify({ success: true, message: 'Opened profile screen. Please log in to view full profile details.' }) };
@@ -834,7 +1047,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
       case 'rewards':
       case 'loyalty_points':
       case 'my_rewards': {
-        executeSingleAction({ action: 'navigate', route: '/rewards' }).catch(() => {});
+        executeSingleAction({ action: 'navigate', route: '/rewards' }).catch(() => { });
         const auth = useAuthStore.getState();
         if (!auth.isAuthenticated || !auth.customerId) {
           return { toolCallId, result: JSON.stringify({ success: true, message: 'Opened loyalty points and rewards screen.' }) };
@@ -850,7 +1063,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
       case 'get_addresses':
       case 'my_addresses':
       case 'addresses': {
-        executeSingleAction({ action: 'open_addresses' }).catch(() => {});
+        executeSingleAction({ action: 'open_addresses' }).catch(() => { });
         const addresses = useAddressStore.getState().addresses;
         return {
           toolCallId,
@@ -871,9 +1084,9 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
         const addresses = addressStore.addresses;
         let matched = addresses.find(a => String(a.id) === query);
         if (!matched && query) {
-          matched = addresses.find(a => 
-            a.type?.toLowerCase().includes(query) || 
-            a.address?.toLowerCase().includes(query) || 
+          matched = addresses.find(a =>
+            a.type?.toLowerCase().includes(query) ||
+            a.address?.toLowerCase().includes(query) ||
             a.full_address?.toLowerCase().includes(query)
           );
         }
@@ -892,7 +1105,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
             })
           };
         }
-        executeSingleAction({ action: 'open_addresses' }).catch(() => {});
+        executeSingleAction({ action: 'open_addresses' }).catch(() => { });
         return {
           toolCallId,
           result: JSON.stringify({
@@ -908,7 +1121,7 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
       case 'open_orders':
       case 'orders':
       case 'my_orders': {
-        executeSingleAction({ action: 'navigate', route: '/(order)/orders' }).catch(() => {});
+        executeSingleAction({ action: 'navigate', route: '/(order)/orders' }).catch(() => { });
         const auth = useAuthStore.getState();
         const restaurant = useRestaurantStore.getState();
         if (!auth.isAuthenticated || !auth.phone) {
@@ -963,9 +1176,9 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
 
         // Also navigate to tracking screen so the UI shows it
         if (orderId) {
-          executeSingleAction({ action: 'open_tracking', order_id: String(orderId) }).catch(() => {});
+          executeSingleAction({ action: 'open_tracking', order_id: String(orderId) }).catch(() => { });
         } else {
-          executeSingleAction({ action: 'open_tracking' }).catch(() => {});
+          executeSingleAction({ action: 'open_tracking' }).catch(() => { });
         }
 
         if (!auth.isAuthenticated) {
@@ -1012,6 +1225,15 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
         return { toolCallId, result: JSON.stringify({ success: !data.error, ...data }) };
       }
 
+      case 'catering_choose_package': {
+        const pkgName = fnArgs.package_name || fnArgs.name || fnArgs.package || 'Standard Package';
+        navigateScreen('/(main)/catering-event-details', { package: pkgName });
+        return {
+          toolCallId,
+          result: JSON.stringify({ success: true, message: `Selected ${pkgName} catering package.` }),
+        };
+      }
+
       // ── Confirmation & Platform Tools ─────────────────────────────────────────
 
       case 'app_confirm_action': {
@@ -1037,7 +1259,131 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
       }
 
       case 'place_order': {
-        return { toolCallId, result: JSON.stringify({ success: false, message: 'Please use proceed_to_checkout and confirm your order in the app.' }) };
+        const cartState = useCartStore.getState();
+        const rawItems = Object.values(cartState.items || {});
+        if (rawItems.length === 0) {
+          const emptyMsg = 'Your cart is currently empty. Please tell me which dishes you would like to order.';
+          const vapi = getVapi();
+          if (vapi?.say) vapi.say(emptyMsg, false, false, true);
+          return { toolCallId, result: JSON.stringify({ success: false, message: emptyMsg }) };
+        }
+
+        const restaurantState = useRestaurantStore.getState();
+        const authState = useAuthStore.getState();
+        const addressState = useAddressStore.getState();
+        const restId = restaurantState.selectedOutlet?.restaurant_id
+          ? Number(restaurantState.selectedOutlet.restaurant_id)
+          : (restaurantState.selectedOutlet?.id && !isNaN(Number(restaurantState.selectedOutlet.id)) ? Number(restaurantState.selectedOutlet.id) : 1);
+
+        const currentOrderType = cartState.orderType || 'Take Away';
+        let backendOrderType = 'TAKEAWAY';
+        if (currentOrderType === 'Dine In') backendOrderType = 'DINE_IN';
+        else if (currentOrderType === 'Delivery') backendOrderType = 'DELIVERY';
+
+        const subtotal = cartState.getSubtotal();
+        const gst = cartState.getGst();
+        const discountAmount = cartState.getDiscountAmount();
+        const discountCode = cartState.discountCode;
+        const total = cartState.getGrandTotal();
+        const phone = authState.phone || '+919876543210';
+
+        const formattedCart = rawItems.map((item: any) => ({
+          id: Number(item.id || item.menu_item_id),
+          name: item.name,
+          quantity: Number(item.quantity || 1),
+          price: Number(item.price || 0),
+          image: item.image || '',
+        }));
+
+        const selectedAddressObj = addressState.addresses.find(a => a.id == addressState.selectedAddressId) || addressState.addresses[0];
+
+        try {
+          const orderPayload = {
+            restaurant_id: restId,
+            cart: formattedCart,
+            subtotal,
+            gst,
+            delivery_fee: 0,
+            packaging_fee: 0,
+            discount_amount: discountAmount,
+            discount_code: discountCode || null,
+            total_amount: total,
+            order_type: backendOrderType,
+            table_number: currentOrderType === 'Dine In' ? (cartState.tableNumber || 'T-01') : undefined,
+            payment_method: currentOrderType === 'Delivery' ? 'Cash on Delivery' : 'Pay at Counter',
+            phone,
+            delivery_address: currentOrderType === 'Delivery' ? (addressState.selectedDeliveryAddress || selectedAddressObj?.full_address || null) : null,
+          };
+
+          console.log('[VapiStore] Voice place_order -> calling orderApi.createOrder:', orderPayload);
+          const res = await orderApi.createOrder(orderPayload);
+          const placedOrderId = res?.orderId || `ORD-${Date.now()}`;
+          const placedDbId = String(res?.dbOrderId || '');
+
+          useOrderStore.getState().addPastOrder({
+            orderId: placedOrderId,
+            dbOrderId: placedDbId,
+            date: new Date().toISOString(),
+            total,
+            itemsCount: formattedCart.length,
+            status: 'Preparing',
+            payment_status: 'Pending',
+            table_number: orderPayload.table_number,
+            order_type: currentOrderType,
+            customer_phone: phone,
+            items: formattedCart,
+          });
+
+          useLiveOrderStore.getState().setLiveOrder(currentOrderType, placedOrderId, placedDbId, 'Preparing');
+          cartState.clearCart();
+
+          const speechConfirm = `Your order ${placedOrderId} for ${formattedCart.length} item${formattedCart.length > 1 ? 's' : ''} totaling ${total} rupees has been placed successfully!`;
+          const vapi = getVapi();
+          if (vapi?.say) {
+            vapi.say(speechConfirm, false, false, true);
+          }
+
+          if (currentOrderType === 'Dine In') {
+            navigateScreen('/track-order', {
+              orderId: placedOrderId,
+              dbOrderId: placedDbId,
+              tableNumber: orderPayload.table_number,
+              orderType: 'Dine In',
+            });
+          } else {
+            navigateScreen('/(checkout)/order-success', {
+              orderId: placedOrderId,
+              dbOrderId: placedDbId,
+              total: String(total),
+              paymentMethod: orderPayload.payment_method,
+              phone,
+              orderType: currentOrderType,
+              itemCount: String(formattedCart.length),
+            });
+          }
+
+          return {
+            toolCallId,
+            result: JSON.stringify({
+              success: true,
+              orderId: placedOrderId,
+              dbOrderId: placedDbId,
+              total,
+              message: speechConfirm,
+            }),
+          };
+        } catch (placeErr: any) {
+          console.error('[VapiStore] place_order failed:', placeErr);
+          const errMessage = `Failed to place order: ${placeErr?.message || 'Server error'}. Please proceed to checkout on screen.`;
+          navigateScreen('/(checkout)/checkout');
+          return {
+            toolCallId,
+            result: JSON.stringify({
+              success: false,
+              message: errMessage,
+            }),
+          };
+        }
       }
 
       case 'mcp_tool':
@@ -1069,29 +1415,135 @@ async function handleVapiToolCall(tool: any): Promise<{ toolCallId: string; resu
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useVapiStore = create<VapiState>((set, get) => ({
+  agentState: 'IDLE',
   isConnecting: false,
   isConnected: false,
   isMuted: false,
   messages: [],
   partialUserTranscript: '',
   partialAgentTranscript: '',
+  isTamilMode: false,
 
   startCall: async () => {
-    // Seamlessly forward to unified Gemini Voice Store
-    try {
-      const { useGeminiVoiceStore } = require('./useGeminiVoiceStore');
-      return await useGeminiVoiceStore.getState().startCall();
-    } catch (e) {
-      console.warn('[VapiStore] Forwarding to useGeminiVoiceStore error:', e);
+    const assistantId = process.env.EXPO_PUBLIC_VAPI_ASSISTANT_ID || 'ed6d95ac-c202-4b86-a5e1-8647ba87638f';
+    if (!assistantId) {
+      Alert.alert(
+        'Voice Assistant Setup',
+        'Vapi Assistant ID is missing. Please configure EXPO_PUBLIC_VAPI_ASSISTANT_ID in your environment variables.'
+      );
+      set({ isConnecting: false, agentState: 'IDLE' });
+      return;
     }
-    set({ isConnecting: false });
+
+    set({ isConnecting: true, agentState: 'PROCESSING' });
+
+    // Request microphone permission on Android and verify Web permissions
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Microphone Permission',
+            message: 'MaitreD needs access to your microphone for voice ordering and navigation.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'Microphone access is required for the voice assistant.');
+          set({ isConnecting: false, agentState: 'IDLE' });
+          return;
+        }
+      } catch (err) {
+        console.warn('[VapiStore] Microphone permission error:', err);
+      }
+    } else if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+      try {
+        const probeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        probeStream.getTracks().forEach((track) => track.stop());
+      } catch (err: any) {
+        console.warn('[VapiStore] Web microphone permission error:', err);
+        set({ isConnecting: false, agentState: 'IDLE' });
+        Alert.alert(
+          'Microphone Permission Required',
+          'Please allow microphone access in your browser to speak with the MaitreD voice assistant.'
+        );
+        return;
+      }
+    }
+
+    const vapi = getVapi();
+    if (!vapi) {
+      if (Platform.OS !== 'web' && !isWebRTCSupported()) {
+        Alert.alert(
+          'Development Build Required',
+          'Voice calling requires a development build or APK with native WebRTC support. It is not supported in Expo Go. Please test on web or install the preview build APK.'
+        );
+      } else {
+        Alert.alert('Error', 'Voice assistant could not be initialized.');
+      }
+      set({ isConnecting: false, agentState: 'IDLE' });
+      return;
+    }
+
+    get().setupListeners(getActiveRouter());
+
+    const { messages } = get();
+    const hasHistory = messages.filter((m) => m.isFinal && m.text).length > 0;
+    const cart = useCartStore.getState();
+    const cartCount = cart.getItemCount();
+
+    let dynamicFirstMessage = "Hello! Welcome to MaitreD. I'm your personal restaurant assistant. How would you like to enjoy your food today?";
+    if (hasHistory) {
+      dynamicFirstMessage = "Welcome back to MaitreD. Let's continue.";
+    } else if (cartCount > 0) {
+      dynamicFirstMessage = `Welcome to MaitreD! You have ${cartCount} item${cartCount > 1 ? 's' : ''} in your cart. Would you like to view your cart, add more dishes, or place your order?`;
+    }
+
+    const overrides: any = {
+      firstMessage: dynamicFirstMessage,
+      maxDurationSeconds: 3600,
+      clientMessages: [
+        'tool-calls',
+        'transcript',
+        'hang',
+        'function-call',
+        'speech-update',
+        'metadata',
+        'conversation-update',
+      ],
+    };
+
+    try {
+      console.log(`[VapiStore] Starting Vapi call with assistant: ${assistantId}...`);
+      await vapi.start(assistantId, overrides);
+      set({ isConnected: true, isConnecting: false, agentState: 'LISTENING' });
+    } catch (e: any) {
+      console.warn('[VapiStore] startCall error:', e);
+      if (Platform.OS === 'web') {
+        vapiInstance = null;
+        listenersSetup = false;
+      }
+      set({ isConnecting: false, agentState: 'IDLE' });
+      Alert.alert('Voice Assistant', e?.message || 'Could not connect to voice assistant.');
+    }
   },
 
   stopCall: () => {
-    getVapi()?.stop();
+    try {
+      getVapi()?.stop();
+    } catch (e) {
+      console.warn('[VapiStore] stopCall error:', e);
+    }
+    if (Platform.OS === 'web') {
+      vapiInstance = null;
+      listenersSetup = false;
+    }
     set({
       isConnected: false,
       isConnecting: false,
+      agentState: 'IDLE',
       partialUserTranscript: '',
       partialAgentTranscript: '',
     });
@@ -1100,10 +1552,43 @@ export const useVapiStore = create<VapiState>((set, get) => ({
   toggleMute: () => {
     const currentState = get().isMuted;
     const vapi = getVapi();
-    if (vapi?.setMuted) {
-      vapi.setMuted(!currentState);
+    if (vapi?.setMuted && get().isConnected) {
+      try {
+        vapi.setMuted(!currentState);
+      } catch (e) {
+        console.warn('[VapiStore] toggleMute error:', e);
+      }
     }
     set({ isMuted: !currentState });
+  },
+
+  toggleLanguage: () => {
+    const next = !get().isTamilMode;
+    set({ isTamilMode: next });
+    const vapi = getVapi();
+    if (vapi && get().isConnected) {
+      try {
+        (vapi as any).send({
+          type: 'add-message',
+          message: {
+            role: 'system',
+            content: next
+              ? '[Language Preference] The customer switched to Tamil. Please respond in conversational Tamil / Tanglish with warm hospitality.'
+              : '[Language Preference] The customer switched to English. Please respond in English.',
+          },
+        });
+      } catch { }
+    }
+  },
+
+  stopSpeaking: () => {
+    const vapi = getVapi();
+    if (vapi?.send) {
+      try {
+        (vapi as any).send({ type: 'control', control: 'stop-speaking' });
+      } catch { }
+    }
+    set({ agentState: 'LISTENING', partialAgentTranscript: '' });
   },
 
   clearMessages: () => {
@@ -1183,24 +1668,28 @@ export const useVapiStore = create<VapiState>((set, get) => ({
     listenersSetup = true;
 
     vapi.on('call-start', () => {
-      set({ isConnected: true, isConnecting: false });
+      set({ isConnected: true, isConnecting: false, agentState: 'LISTENING' });
 
       // Warm the menu cache in the background so the first food request does
       // not stall on a cold network fetch.
       const outletId = useRestaurantStore.getState().selectedOutlet?.restaurant_id;
       const hasLocalMenu = (useRestaurantStore.getState().menuItems || []).length > 0;
       if (outletId && !hasLocalMenu) {
-        fetchAgentData('menu_search', {}).catch(() => {});
+        fetchAgentData('menu_search', {}).catch(() => { });
       }
 
       // Inject current app context on call start
       try {
         const initialContext = getMobileAgentContext();
+        const cleanOutletName = (initialContext.restaurant.selectedOutletName || 'MaitreD Restaurant')
+          .replace(/Mugalivakkam/gi, '')
+          .replace(/[—–-]\s*$/, '')
+          .trim() || 'MaitreD Restaurant';
         (vapi as any).send({
           type: 'add-message',
           message: {
             role: 'system',
-            content: `[Current App Context] Order Type: ${initialContext.cart.orderType}. Outlet: ${initialContext.restaurant.selectedOutletName || 'None'}. Cart Items: ${initialContext.cart.itemCount}. If customer asks to switch to takeaway, dine in, or delivery, you can use set_order_type ("Take Away", "Dine In", "Delivery").`
+            content: `[Current App Context] Restaurant: MaitreD Restaurant. Order Type: ${initialContext.cart.orderType}. Outlet: ${cleanOutletName}. Cart Items: ${initialContext.cart.itemCount}. If customer asks to switch to takeaway, dine in, or delivery, you can use set_order_type ("Take Away", "Dine In", "Delivery"). You represent MaitreD Restaurant.`
           }
         });
       } catch (e) {
@@ -1227,12 +1716,25 @@ export const useVapiStore = create<VapiState>((set, get) => ({
     });
 
     vapi.on('call-end', () => {
+      if (Platform.OS === 'web') {
+        vapiInstance = null;
+        listenersSetup = false;
+      }
       set({
         isConnected: false,
         isConnecting: false,
+        agentState: 'IDLE',
         partialUserTranscript: '',
         partialAgentTranscript: '',
       });
+    });
+
+    vapi.on('speech-start', () => {
+      set({ agentState: 'SPEAKING' });
+    });
+
+    vapi.on('speech-end', () => {
+      set({ agentState: 'LISTENING' });
     });
 
     vapi.on('message', async (message: any) => {
@@ -1258,7 +1760,7 @@ export const useVapiStore = create<VapiState>((set, get) => ({
                   content: `[Confirmed System Action] ${parsed.message || result.result}`,
                 },
               });
-            } catch {}
+            } catch { }
 
             // 2. Also send tool-call result message
             (vapi as any).send({
@@ -1307,118 +1809,6 @@ export const useVapiStore = create<VapiState>((set, get) => ({
         const text: string = message.transcript || '';
         const role: string = message.role || 'user';
 
-        if (role === 'user' && text) {
-          const lower = text.toLowerCase().trim();
-
-          // 1. Order Mode Switches (Takeaway / Dine In / Delivery)
-          if (
-            /\b(switch|change|set|make|select|turn|go|put)\b.*\b(takeaway|take away|take out|parcel|pickup)\b/i.test(lower) ||
-            /^(switch to |change to )?(takeaway|take away)(\s*(please|mode|option))?$/i.test(lower)
-          ) {
-            if (useCartStore.getState().orderType !== 'Take Away') {
-              console.log('[VapiStore] Speech detected intent: switch to takeaway');
-              useCartStore.getState().setOrderType('Take Away');
-              try {
-                (vapi as any).send({
-                  type: 'add-message',
-                  message: {
-                    role: 'system',
-                    content: '[System Update] The user switched order mode to Take Away. App UI has been updated to Takeaway.'
-                  }
-                });
-              } catch {}
-            }
-          } else if (
-            /\b(switch|change|set|make|select|turn|go|put)\b.*\b(dine in|dine-in|dinein|table)\b/i.test(lower) ||
-            /^(switch to |change to )?(dine in|dine-in)(\s*(please|mode|option))?$/i.test(lower)
-          ) {
-            if (useCartStore.getState().orderType !== 'Dine In') {
-              console.log('[VapiStore] Speech detected intent: switch to dine in');
-              useCartStore.getState().setOrderType('Dine In');
-              try {
-                (vapi as any).send({
-                  type: 'add-message',
-                  message: {
-                    role: 'system',
-                    content: '[System Update] The user switched order mode to Dine In. App UI has been updated to Dine-in.'
-                  }
-                });
-              } catch {}
-            }
-          } else if (
-            /\b(switch|change|set|make|select|turn|go|put)\b.*\b(delivery|deliver|home delivery)\b/i.test(lower) ||
-            /^(switch to |change to )?(delivery)(\s*(please|mode|option))?$/i.test(lower)
-          ) {
-            if (useCartStore.getState().orderType !== 'Delivery') {
-              console.log('[VapiStore] Speech detected intent: switch to delivery');
-              useCartStore.getState().setOrderType('Delivery');
-              try {
-                (vapi as any).send({
-                  type: 'add-message',
-                  message: {
-                    role: 'system',
-                    content: '[System Update] The user switched order mode to Delivery. App UI has been updated to Delivery.'
-                  }
-                });
-              } catch {}
-            }
-          }
-          // 2. Menu Navigation ("show all the menus", "show menu", "open menu", "view menu")
-          else if (
-            /\b(show|open|view|see|go to|take me to|display)\b.*\b(menu|menus|all the menu|all menus|items)\b/i.test(lower) ||
-            /\b(all the menus|show menu|browse menu|food menu)\b/i.test(lower) ||
-            /^(menu|the menu|show all the menus)$/i.test(lower)
-          ) {
-            console.log('[VapiStore] Speech detected intent: show all menus');
-            navigateScreen('/menu');
-          }
-          // 3. Profile Navigation ("open profile", "show profile", "my account")
-          else if (
-            /\b(show|open|view|go to|take me to)\b.*\b(profile|account|my profile|my account)\b/i.test(lower) ||
-            /^(profile|my profile|my account)$/i.test(lower)
-          ) {
-            console.log('[VapiStore] Speech detected intent: open profile');
-            navigateScreen('/profile');
-          }
-          // 4. Rewards / Loyalty Points ("loyalty points", "rewards", "my points")
-          else if (
-            /\b(reward|rewards|loyalty|loyalty point|loyalty points|my points|points balance)\b/i.test(lower) ||
-            /^(rewards|loyalty points)$/i.test(lower)
-          ) {
-            console.log('[VapiStore] Speech detected intent: open rewards');
-            navigateScreen('/rewards');
-          }
-          // 5. Addresses ("show addresses", "my address", "select address")
-          else if (
-            /\b(address|addresses|delivery address|saved address)\b/i.test(lower)
-          ) {
-            console.log('[VapiStore] Speech detected intent: address handling');
-            if (/\b(home)\b/i.test(lower)) {
-              executeSingleAction({ action: 'select_address', payload: { address: 'home' } } as any);
-            } else if (/\b(work|office)\b/i.test(lower)) {
-              executeSingleAction({ action: 'select_address', payload: { address: 'work' } } as any);
-            } else {
-              navigateScreen('/(address)/my-addresses');
-            }
-          }
-          // 6. Orders / History ("show orders", "order history", "past orders")
-          else if (
-            /\b(show|open|view|my|past)\b.*\b(orders|order history)\b/i.test(lower) ||
-            /^(orders|my orders|order history)$/i.test(lower)
-          ) {
-            console.log('[VapiStore] Speech detected intent: open orders');
-            navigateScreen('/(order)/orders');
-          }
-          // 7. Cart / Checkout ("show cart", "view cart", "open cart", "checkout")
-          else if (
-            /\b(show|open|view|go to|take me to)\b.*\b(cart|basket|checkout)\b/i.test(lower) ||
-            /^(cart|view cart|open cart|checkout)$/i.test(lower)
-          ) {
-            console.log('[VapiStore] Speech detected intent: open cart');
-            navigateScreen('/(checkout)/checkout');
-          }
-        }
-
         if (message.transcriptType === 'partial') {
           if (role === 'user') {
             set({ partialUserTranscript: text });
@@ -1449,13 +1839,152 @@ export const useVapiStore = create<VapiState>((set, get) => ({
                 role === 'assistant' || role === 'agent' ? '' : state.partialAgentTranscript,
             };
           });
+
+          // ── Speech Intent Processing on FINAL Transcript ───────────────────
+          if (role === 'user' && text) {
+            const lower = text.toLowerCase().trim();
+
+            // 1. Order Mode Switches (Takeaway / Dine In / Delivery)
+            if (
+              /\b(switch|change|set|make|select|turn|go|put)\b.*\b(takeaway|take away|take out|parcel|pickup)\b/i.test(lower) ||
+              /^(switch to |change to )?(takeaway|take away)(\s*(please|mode|option))?$/i.test(lower)
+            ) {
+              if (useCartStore.getState().orderType !== 'Take Away') {
+                console.log('[VapiStore] Speech detected intent: switch to takeaway');
+                useCartStore.getState().setOrderType('Take Away');
+                try {
+                  (vapi as any).send({
+                    type: 'add-message',
+                    message: {
+                      role: 'system',
+                      content: '[System Update] The user switched order mode to Take Away. App UI has been updated to Takeaway.'
+                    }
+                  });
+                } catch { }
+              }
+            } else if (
+              /\b(switch|change|set|make|select|turn|go|put)\b.*\b(dine in|dine-in|dinein|table)\b/i.test(lower) ||
+              /^(switch to |change to )?(dine in|dine-in)(\s*(please|mode|option))?$/i.test(lower)
+            ) {
+              if (useCartStore.getState().orderType !== 'Dine In') {
+                console.log('[VapiStore] Speech detected intent: switch to dine in');
+                useCartStore.getState().setOrderType('Dine In');
+                try {
+                  (vapi as any).send({
+                    type: 'add-message',
+                    message: {
+                      role: 'system',
+                      content: '[System Update] The user switched order mode to Dine In. App UI has been updated to Dine-in.'
+                    }
+                  });
+                } catch { }
+              }
+            } else if (
+              /\b(switch|change|set|make|select|turn|go|put)\b.*\b(delivery|deliver|home delivery)\b/i.test(lower) ||
+              /^(switch to |change to )?(delivery)(\s*(please|mode|option))?$/i.test(lower)
+            ) {
+              if (useCartStore.getState().orderType !== 'Delivery') {
+                console.log('[VapiStore] Speech detected intent: switch to delivery');
+                useCartStore.getState().setOrderType('Delivery');
+                try {
+                  (vapi as any).send({
+                    type: 'add-message',
+                    message: {
+                      role: 'system',
+                      content: '[System Update] The user switched order mode to Delivery. App UI has been updated to Delivery.'
+                    }
+                  });
+                } catch { }
+              }
+            }
+            // 2. Menu Navigation
+            else if (
+              /\b(show|open|view|see|go to|take me to|display)\b.*\b(menu|menus|all the menu|all menus|items)\b/i.test(lower) ||
+              /\b(all the menus|show menu|browse menu|food menu)\b/i.test(lower) ||
+              /^(menu|the menu|show all the menus)$/i.test(lower)
+            ) {
+              console.log('[VapiStore] Speech detected intent: show all menus');
+              navigateScreen('/menu');
+            }
+            // 3. Profile Navigation
+            else if (
+              /\b(show|open|view|go to|take me to)\b.*\b(profile|account|my profile|my account)\b/i.test(lower) ||
+              /^(profile|my profile|my account)$/i.test(lower)
+            ) {
+              console.log('[VapiStore] Speech detected intent: open profile');
+              navigateScreen('/profile');
+            }
+            // 4. Rewards / Loyalty Points
+            else if (
+              /\b(reward|rewards|loyalty|loyalty point|loyalty points|my points|points balance)\b/i.test(lower) ||
+              /^(rewards|loyalty points)$/i.test(lower)
+            ) {
+              console.log('[VapiStore] Speech detected intent: open rewards');
+              navigateScreen('/rewards');
+            }
+            // 5. Addresses
+            else if (
+              /\b(address|addresses|delivery address|saved address)\b/i.test(lower)
+            ) {
+              console.log('[VapiStore] Speech detected intent: address handling');
+              if (/\b(home)\b/i.test(lower)) {
+                executeSingleAction({ action: 'select_address', payload: { address: 'home' } } as any);
+              } else if (/\b(work|office)\b/i.test(lower)) {
+                executeSingleAction({ action: 'select_address', payload: { address: 'work' } } as any);
+              } else {
+                navigateScreen('/(address)/my-addresses');
+              }
+            }
+            // 6. Orders / History
+            else if (
+              /\b(show|open|view|my|past)\b.*\b(orders|order history)\b/i.test(lower) ||
+              /^(orders|my orders|order history)$/i.test(lower)
+            ) {
+              console.log('[VapiStore] Speech detected intent: open orders');
+              navigateScreen('/(order)/orders');
+            }
+            // 7. Cart / Checkout Navigation
+            else if (
+              /\b(show|open|view|go to|take me to|see|check|can you show|where is|what is in)\b.*\b(cart|basket|checkout)\b/i.test(lower) ||
+              /^(cart|view cart|open cart|show cart|show my cart|view my cart|checkout)$/i.test(lower)
+            ) {
+              console.log('[VapiStore] User final transcript intent: OPEN CART');
+              navigateScreen('/(checkout)/checkout');
+            }
+            // 8. Menu Category / Header / Variety Navigation
+            else if (
+              /\b(south indian|north indian|non[- ]?veg|dosa|snack|beverage|tandoori|soup|biryani|bread|breakfast|lunch|dinner|variety|varieties|categories|category)\b/i.test(lower) &&
+              /\b(show|open|view|see|explore|check|go to|take me to|switch to|filter|display)\b/i.test(lower)
+            ) {
+              console.log('[VapiStore] User final transcript intent: OPEN VARIETY/CATEGORY:', text);
+              DeviceEventEmitter.emit('menu_filter_header', { category: lower, search: '' });
+              navigateScreen('/menu', { categoryName: lower, search: '' });
+            }
+          }
+
+          // Navigation handling for finalized assistant speech
+          if ((role === 'bot' || role === 'assistant') && text) {
+            const lower = text.toLowerCase().trim();
+
+            // If assistant says "Here's your current cart" -> navigate to checkout screen immediately
+            if (
+              /\b(here'?s\s+your\s+current\s+cart|your\s+cart\s+currently\s+includes|opened\s+your\s+cart|current\s+cart\s+for\s+dine-in)\b/i.test(lower)
+            ) {
+              console.log('[VapiStore] Assistant speaking cart summary -> Navigating to cart screen');
+              navigateScreen('/(checkout)/checkout');
+            }
+          }
         }
       }
     });
 
     vapi.on('error', (e: any) => {
       console.error('[VapiStore] Vapi error:', e);
-      set({ isConnected: false, isConnecting: false });
+      if (Platform.OS === 'web') {
+        vapiInstance = null;
+        listenersSetup = false;
+      }
+      set({ isConnected: false, isConnecting: false, agentState: 'IDLE' });
     });
   },
 }));

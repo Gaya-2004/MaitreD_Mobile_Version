@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useRestaurantStore } from '../../store/useRestaurantStore';
 import { useCateringSessionStore } from '../../store/useCateringSessionStore';
+import { safeBack } from '../../utils/navigation';
 
 interface CateringPackage {
   name: string;
@@ -269,7 +270,7 @@ export default function ChoosePackage() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => safeBack(router, '/(main)/catering-event-details')}>
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>

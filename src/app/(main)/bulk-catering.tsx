@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, 
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { safeBack } from '../../utils/navigation';
 
 export default function BulkCatering() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function BulkCatering() {
           imageStyle={{ resizeMode: 'cover' }}
         >
           {/* Back button */}
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => safeBack(router, '/(main)/home')}>
             <Ionicons name="arrow-back" size={20} color="#333" />
           </TouchableOpacity>
           
