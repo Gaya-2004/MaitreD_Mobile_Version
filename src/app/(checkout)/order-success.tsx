@@ -310,7 +310,7 @@ export default function OrderSuccessScreen() {
   
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#DF9B34" />
+      <StatusBar barStyle="light-content" />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         
         {/* Header Block */}

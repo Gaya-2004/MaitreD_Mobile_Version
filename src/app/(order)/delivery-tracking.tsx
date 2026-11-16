@@ -316,7 +316,7 @@ export default function DeliveryTrackingScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="dark-content" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -650,7 +650,9 @@ export default function DeliveryTrackingScreen() {
         visible={cancelModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => !cancelling && setCancelModalVisible(false)}
+        onRequestClose={() => {
+          if (!cancelling) setCancelModalVisible(false);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

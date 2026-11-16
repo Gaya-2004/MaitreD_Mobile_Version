@@ -5,7 +5,10 @@ import { Router } from 'expo-router';
  * otherwise navigates to the fallback route (default '/(main)/home').
  * Prevents the warning: "The action 'GO_BACK' was not handled by any navigator."
  */
-export function safeBack(router: Router, fallback: string = '/(main)/home') {
+export function safeBack(
+  router: { canGoBack?: () => boolean; back?: () => void; replace?: (href: any) => void } | any,
+  fallback: string = '/(main)/home'
+) {
   try {
     if (router && typeof router.canGoBack === 'function' && router.canGoBack()) {
       router.back();

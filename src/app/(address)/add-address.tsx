@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, StatusBar, Image, Alert, ActivityIndicator, RefreshControl, Modal, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
-import { API_BASE_URL } from '../../constants/api';
-import { useAuthStore, useAddressStore, useRestaurantStore } from '../../store';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Platform, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomNavBar from '../../components/layout/BottomNavBar';
-import { isWithinDeliveryArea, checkDeliveryCoverage, DeliveryCoverageResult } from '../../utils/deliveryArea';
 import DeliveryUnavailableModal from '../../components/ui/DeliveryUnavailableModal';
 import { LIGHT_MAP_STYLE } from '../../constants/mapStyle';
 import { GOOGLE_MAPS_API_KEY } from '../../constants/maps';
+import { useAddressStore, useAuthStore, useRestaurantStore } from '../../store';
+import { checkDeliveryCoverage, DeliveryCoverageResult } from '../../utils/deliveryArea';
+import { safeBack } from '../../utils/navigation';
 
 const MapView = Platform.OS !== 'web' ? require('react-native-maps').default : null;
 const { PROVIDER_GOOGLE } = Platform.OS !== 'web' ? require('react-native-maps') : { PROVIDER_GOOGLE: 'google' };
@@ -22,7 +22,7 @@ export default function AddAddress() {
   const { phone, customerId, customerName } = useAuthStore();
   const { addAddress, addresses, setSelectedDeliveryAddress } = useAddressStore();
   const { selectedOutlet } = useRestaurantStore();
-  
+
   const [addressType, setAddressType] = useState(params.addressType as string || 'Home');
   const [flat, setFlat] = useState('');
   const [floor, setFloor] = useState('');
@@ -64,7 +64,7 @@ export default function AddAddress() {
         setIsLocating(false);
         return;
       }
-      
+
       let location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       }).catch(async () => {
@@ -89,31 +89,31 @@ export default function AddAddress() {
       setRegion(detectedRegion);
       mapRef.current?.animateToRegion(detectedRegion, 500);
       setHasConfirmedLocation(true);
-      
+
       const apiKey = GOOGLE_MAPS_API_KEY;
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-      
+
       const response = await fetch(geocodeUrl);
       const data = await response.json();
-      
+
       if (data.status === 'OK' && data.results && data.results.length > 0) {
         const result = data.results[0];
         const formatted = result.formatted_address;
-        
+
         setFullAddress(formatted);
-        
+
         let streetNumber = '';
         let route = '';
         let sublocality = '';
         let locality = '';
-        
+
         result.address_components.forEach((comp: any) => {
           if (comp.types.includes('street_number')) streetNumber = comp.long_name;
           if (comp.types.includes('route')) route = comp.long_name;
           if (comp.types.includes('sublocality') || comp.types.includes('sublocality_level_1')) sublocality = comp.long_name;
           if (comp.types.includes('locality')) locality = comp.long_name;
         });
-        
+
         if (streetNumber) setFlat(streetNumber);
         if (route) setBuilding(route);
         if (sublocality || locality) setLandmark(sublocality || locality);
@@ -255,8 +255,8 @@ export default function AddAddress() {
       landmark ? `${landmark}` : ''
     ].filter(Boolean);
     if (parts.length > 0) {
-       // eslint-disable-next-line react-hooks/set-state-in-effect
-       setFullAddress(parts.join(', '));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFullAddress(parts.join(', '));
     }
   }, [flat, floor, building, landmark]);
 
@@ -272,7 +272,7 @@ export default function AddAddress() {
       setShowDeliveryUnavailable(true);
       return;
     }
-    
+
     setIsSaving(true);
     const newId = Date.now();
     const payload = {
@@ -316,7 +316,7 @@ export default function AddAddress() {
           contact_phone: phone || '',
           is_default: addresses.length === 0
         });
-        
+
         // Update store only after backend success
         const finalId = resp?.address?.id || resp?.id || newId;
         payload.id = finalId;
@@ -339,7 +339,7 @@ export default function AddAddress() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle='dark-content' backgroundColor='#fff' />
+      <StatusBar barStyle="dark-content" />
       {/* Background image matching landing page */}
       <Image
         source={require('../../../assets/images/landing_food_bg.jpg')}
@@ -347,26 +347,26 @@ export default function AddAddress() {
         resizeMode="cover"
         blurRadius={Platform.OS === 'ios' ? 14 : 9}
       />
-      
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/my-addresses')}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => safeBack(router, '/my-addresses')}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Address</Text>
       </View>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps='handled'
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DF9B34']} />}
       >
-        
+
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
-          <TextInput 
+          <TextInput
             style={styles.searchInput}
             placeholder="Search for area, street..."
             placeholderTextColor="#999"
@@ -392,12 +392,12 @@ export default function AddAddress() {
         {searchResults.length > 0 && (
           <View style={styles.searchResultsContainer}>
             {searchResults.map((item, index) => (
-              <TouchableOpacity 
-                key={item.place_id} 
+              <TouchableOpacity
+                key={item.place_id}
                 style={[styles.searchResultItem, index < searchResults.length - 1 && styles.searchResultBorder]}
                 onPress={() => handleSelectPlace(item.place_id, item.description, item.coords)}
               >
-                <Ionicons name="location-outline" size={18} color="#666" style={{marginRight: 10}} />
+                <Ionicons name="location-outline" size={18} color="#666" style={{ marginRight: 10 }} />
                 <Text style={styles.searchResultText} numberOfLines={2}>{item.description}</Text>
               </TouchableOpacity>
             ))}
@@ -407,9 +407,9 @@ export default function AddAddress() {
         {/* Map View */}
         <View style={styles.mapContainer}>
           {Platform.OS === 'web' ? (
-            <Image 
-              source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${region.latitude},${region.longitude}&zoom=16&size=600x300&markers=color:red%7C${region.latitude},${region.longitude}&key=${GOOGLE_MAPS_API_KEY}` }} 
-              style={styles.mapImage} 
+            <Image
+              source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${region.latitude},${region.longitude}&zoom=16&size=600x300&markers=color:red%7C${region.latitude},${region.longitude}&key=${GOOGLE_MAPS_API_KEY}` }}
+              style={styles.mapImage}
               resizeMode="cover"
             />
           ) : (
@@ -430,7 +430,7 @@ export default function AddAddress() {
                     const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${newRegion.latitude},${newRegion.longitude}&key=${apiKey}`;
                     const response = await fetch(geocodeUrl);
                     const data = await response.json();
-                    
+
                     if (data.status === 'OK' && data.results && data.results.length > 0) {
                       const result = data.results[0];
                       setFullAddress(result.formatted_address);
@@ -453,11 +453,11 @@ export default function AddAddress() {
               <Text style={{ marginTop: 10, fontWeight: 'bold', color: '#DF9B34', fontSize: 13 }}>Detecting your location...</Text>
             </View>
           )}
-          
+
           {/* Locate Me Button */}
           {!isLocating && (
-            <TouchableOpacity 
-              style={{ position: 'absolute', bottom: 16, right: 16, backgroundColor: '#fff', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 }} 
+            <TouchableOpacity
+              style={{ position: 'absolute', bottom: 16, right: 16, backgroundColor: '#fff', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 }}
               onPress={() => detectLocation(true)}
             >
               <Ionicons name="locate" size={24} color="#DF9B34" />
@@ -469,7 +469,7 @@ export default function AddAddress() {
         <Text style={styles.sectionLabel}>ADDRESS TYPE</Text>
         <View style={styles.typeContainer}>
           {['Home', 'Work', 'Other'].map(type => (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={type}
               style={[styles.typeBtn, addressType === type && styles.typeBtnActive]}
               onPress={() => setAddressType(type)}
@@ -484,9 +484,9 @@ export default function AddAddress() {
           <View style={styles.halfInputContainer}>
             <Text style={styles.inputLabel}>Flat / House No</Text>
             <View style={{ position: 'relative', justifyContent: 'center' }}>
-              <TextInput 
-                style={[styles.input, flat.length > 0 && { paddingRight: 32 }]} 
-                placeholder="e.g. Flat 101" 
+              <TextInput
+                style={[styles.input, flat.length > 0 && { paddingRight: 32 }]}
+                placeholder="e.g. Flat 101"
                 value={flat}
                 onChangeText={setFlat}
               />
@@ -504,9 +504,9 @@ export default function AddAddress() {
           <View style={styles.halfInputContainer}>
             <Text style={styles.inputLabel}>Floor</Text>
             <View style={{ position: 'relative', justifyContent: 'center' }}>
-              <TextInput 
-                style={[styles.input, floor.length > 0 && { paddingRight: 32 }]} 
-                placeholder="e.g. 1st Floor (Optional)" 
+              <TextInput
+                style={[styles.input, floor.length > 0 && { paddingRight: 32 }]}
+                placeholder="e.g. 1st Floor (Optional)"
                 value={floor}
                 onChangeText={setFloor}
               />
@@ -526,9 +526,9 @@ export default function AddAddress() {
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Building / Apartment Name</Text>
           <View style={{ position: 'relative', justifyContent: 'center' }}>
-            <TextInput 
-              style={[styles.input, building.length > 0 && { paddingRight: 32 }]} 
-              placeholder="e.g. Apartment / Building name" 
+            <TextInput
+              style={[styles.input, building.length > 0 && { paddingRight: 32 }]}
+              placeholder="e.g. Apartment / Building name"
               value={building}
               onChangeText={setBuilding}
             />
@@ -547,9 +547,9 @@ export default function AddAddress() {
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Landmark</Text>
           <View style={{ position: 'relative', justifyContent: 'center' }}>
-            <TextInput 
-              style={[styles.input, landmark.length > 0 && { paddingRight: 32 }]} 
-              placeholder="e.g. Nearby landmark" 
+            <TextInput
+              style={[styles.input, landmark.length > 0 && { paddingRight: 32 }]}
+              placeholder="e.g. Nearby landmark"
               value={landmark}
               onChangeText={setLandmark}
             />
@@ -580,8 +580,8 @@ export default function AddAddress() {
             )}
           </View>
           <View style={{ position: 'relative' }}>
-            <TextInput 
-              style={[styles.input, styles.multilineInput, fullAddress.length > 0 && { paddingRight: 36 }]} 
+            <TextInput
+              style={[styles.input, styles.multilineInput, fullAddress.length > 0 && { paddingRight: 36 }]}
               placeholder="e.g. Enter your full address here"
               multiline
               numberOfLines={3}
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    
+
   },
   header: {
     flexDirection: 'row',

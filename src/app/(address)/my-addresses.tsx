@@ -6,6 +6,7 @@ import { useRouter, useNavigation } from 'expo-router';
 import { useAuthStore, useAddressStore } from '../../store';
 import { customerApi } from '../../services/apiService';
 import BottomNavBar from '../../components/layout/BottomNavBar';
+import { safeBack } from '../../utils/navigation';
 
 export default function Profile() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle='dark-content' backgroundColor='#fff' />
+      <StatusBar barStyle="dark-content" />
       {/* Background image matching landing page */}
       <Image
         source={require('../../../assets/images/landing_food_bg.jpg')}
@@ -84,7 +85,7 @@ export default function Profile() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/profile')}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => safeBack(router, '/profile')}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Addresses</Text>
